@@ -108,3 +108,13 @@ Assets/NMLBuildCache
 Assets/StreamingAssets
 ProjectSettings/EditorBuildSettings.asset
 Assets/NMLBuildCache.meta
+
+Assets/UnityXRContent/
+
+Assets/Samples/
+
+Assets/Samples.meta
+
+Assets/UnityXRContent.meta
+
+App_BurstDebugInformation_DoNotShip/
