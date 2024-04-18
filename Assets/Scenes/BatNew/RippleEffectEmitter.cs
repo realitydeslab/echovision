@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using HoloKit;
 using UnityEngine;
+using UnityEngine.InputSystem.XR;
 
 public class RippleEffectEmitter : MonoBehaviour
 {
@@ -21,6 +22,8 @@ public class RippleEffectEmitter : MonoBehaviour
     float[] rippleRangeList;
     int nextEmitIndex = 0;
 
+    Transform tfHead;
+
     void Start()
     {
         rippleOriginList = new float[MAX_RIPPLE_COUNT * 3];
@@ -36,7 +39,9 @@ public class RippleEffectEmitter : MonoBehaviour
 #if UNITY_EDITOR
         Instantiate(prefabEnv, this.transform);
 #endif
-}
+
+        tfHead = FindObjectOfType<TrackedPoseDriver>().transform;
+    }
 
 void Update()
     {
@@ -71,8 +76,7 @@ void Update()
 
     public void EmitRipple()
     {
-        Transform head = FindObjectOfType<HoloKitCameraManager>().transform;
-        EmitRipple(head.position, Quaternion.Euler(head.eulerAngles) * Vector3.forward);
+        EmitRipple(tfHead.position, Quaternion.Euler(tfHead.eulerAngles) * Vector3.forward);
     }
 
     void EmitRipple(Vector3 pos, Vector3 dir)

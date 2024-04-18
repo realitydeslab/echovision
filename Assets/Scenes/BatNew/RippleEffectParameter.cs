@@ -7,7 +7,7 @@ using System;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-public class ParameterController : MonoBehaviour
+public class RippleEffectParameter : MonoBehaviour
 {
     public RectTransform transRootPanel;
     public Material matRipple;
