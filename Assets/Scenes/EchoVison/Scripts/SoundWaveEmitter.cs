@@ -141,19 +141,20 @@ public class SoundWaveEmitter : MonoBehaviour
     void Update()
     {
 
-        if (renderMode != m_HoloKitCameraManager.ScreenRenderMode)
-        {
-            renderMode = m_HoloKitCameraManager.ScreenRenderMode;
-            if(renderMode == ScreenRenderMode.Mono)
-            {
-                shieldRoot.gameObject.SetActive(true);
-            }
-            else
-            {
-                shieldRoot.gameObject.SetActive(false);
-            }
-        }
-            
+        //if (renderMode != m_HoloKitCameraManager.ScreenRenderMode)
+        //{
+        //    renderMode = m_HoloKitCameraManager.ScreenRenderMode;
+        //    if(renderMode == ScreenRenderMode.Mono)
+        //    {
+        //        shieldRoot.gameObject.SetActive(true);
+        //    }
+        //    else
+        //    {
+        //        shieldRoot.gameObject.SetActive(false);
+        //    }
+        //}
+        shieldRoot.gameObject.SetActive(false); // remove shield anyway
+
         // Emit
         if (Input.GetMouseButtonDown(0))
         {
