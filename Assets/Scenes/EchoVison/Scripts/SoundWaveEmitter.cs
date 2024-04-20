@@ -162,7 +162,7 @@ public class SoundWaveEmitter : MonoBehaviour
 
 
         //
-        UpdtaeMeshBounds();
+        //UpdtaeMeshBounds();
 
 
         float max_bloom = 0;

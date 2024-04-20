@@ -6,7 +6,7 @@ using TMPro;
 using System;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-
+using UnityEngine.VFX;
 
 public class ParameterDebugger : MonoBehaviour
 {
@@ -15,7 +15,7 @@ public class ParameterDebugger : MonoBehaviour
     public Volume volume;
 
     public Material mat;
-
+    public VisualEffect vfx;
     public SoundWaveEmitter soundwaveEmitter;
 
     Dictionary<string, Action<float>> sliderActionList;
@@ -42,6 +42,11 @@ public class ParameterDebugger : MonoBehaviour
         sliderActionList.Add("Angle", OnValueChaned_Angle);
         sliderActionList.Add("Thickness", OnValueChaned_Thickness);
 
+        //sliderActionList.Add("ParticleSpeed", OnValueChaned_ParticleSpeed);
+        //sliderActionList.Add("ParticleDamp", OnValueChaned_ParticleDamp);
+        //sliderActionList.Add("ParicleLifeTime", OnValueChaned_ParicleLifeTime);
+        //sliderActionList.Add("EmitParticleCount", OnValueChaned_EmitParticleCount);
+
         for (int i = 0; i < transRootPanel.childCount; i++)
         {
             Transform item = transRootPanel.GetChild(i);
@@ -57,12 +62,17 @@ public class ParameterDebugger : MonoBehaviour
                 display.text = v.ToString("0.00");
                 if (item.name.Contains("MatItem"))
                 {
-                    
+
+                }
+                else if (item.name.Contains("VFXItem"))
+                {
+                    vfx.SetFloat(param_name, v);
                 }
                 else
                 {
                     sliderActionList[param_name]?.Invoke(v);
                 }
+                
             });
 
         }
@@ -93,11 +103,11 @@ public class ParameterDebugger : MonoBehaviour
     }
     void OnValueChaned_Angle(float v)
     {
-        //soundwaveEmitter.soundwaveAngle = new Vector2(v, v * 1.5f);
-        mat.SetFloat("TestRotateY", v);
+        soundwaveEmitter.soundwaveAngle = new Vector2(v, v * 1.5f);
     }
     void OnValueChaned_Thickness(float v)
     {
         soundwaveEmitter.soundwaveThickness = new Vector2(v, v * 1.2f);
     }
+
 }

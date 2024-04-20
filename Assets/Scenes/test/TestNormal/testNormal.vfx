@@ -118,10 +118,10 @@ MonoBehaviour:
   categories: []
   uiBounds:
     serializedVersion: 2
-    x: 470
-    y: 521
-    width: 4110
-    height: 2232
+    x: 0
+    y: 0
+    width: 4580
+    height: 2752
 --- !u!114 &114350483966674976
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -16556,7 +16556,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615471}
   m_ExposedName: DebugMode
   m_Exposed: 1
-  m_Order: 0
+  m_Order: 1
   m_Category: 
   m_Min:
     m_Type:
@@ -16639,7 +16639,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615473}
   m_ExposedName: MeshNormalCache
   m_Exposed: 1
-  m_Order: 0
+  m_Order: 2
   m_Category: 
   m_Min:
     m_Type:
@@ -16719,7 +16719,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615475}
   m_ExposedName: WaveOrigin
   m_Exposed: 1
-  m_Order: 0
+  m_Order: 3
   m_Category: 
   m_Min:
     m_Type:
