@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using TMPro;
 
 public class MicInput : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class MicInput : MonoBehaviour
     private string _device;
 
     public UnityEvent<float, float> OnSoundPlay;
+
+    public TextMeshProUGUI volumeText;
 
     //
     float _lastTriggerTime = 0f;
@@ -59,11 +62,12 @@ public class MicInput : MonoBehaviour
         // levelMax equals to the highest normalized value power 2, a small number because < 1
         // pass the value to a static var so we can access it from anywhere
         MicLoudness = LevelMax();
-        if(MicLoudness > 0.05f)
+        volumeText.text = "Vol:" + MicLoudness.ToString("0.00");
+        if (MicLoudness > 0.05f)
         {
             if(Time.time - _lastTriggerTime > _triggerIntervel)
             {
-                float volume = 1;
+                float volume = (Mathf.Clamp01(MicLoudness) / 0.20f);// 1;
                 float pitch = 1;
                 OnSoundPlay?.Invoke(volume, pitch);
                 Debug.Log("OnSoundPlay with a volume: " + MicLoudness);

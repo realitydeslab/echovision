@@ -127,7 +127,7 @@ Material:
     - _Surface: 0
     - _TestAge: 0.399
     - _TestAngle: 117
-    - _TestRange: 1.9
+    - _TestRange: 2.2
     - _TestThickness: 0.19
     - _WiggleDensity: 0.58
     - _WiggleSpeed: 1.38
