@@ -19,13 +19,12 @@ public class MeshVFX : MonoBehaviour
 
     public TextMeshProUGUI textFPS;
 
-    Transform tfHead;
     ARMeshManager m_MeshManager;
 
     private const int BUFFER_STRIDE = 12; // 12 Bytes for a Vector3 (4,4,4)
     private static readonly int VfxBufferProperty = Shader.PropertyToID("MeshPointCache");
 
-    private int bufferInitialCapacity = 25600;
+    private int bufferInitialCapacity = 64000;
     //[SerializeField] private VisualEffect visualEffect;
     private List<Vector3> data;
     private GraphicsBuffer graphicsBuffer;
@@ -36,7 +35,6 @@ public class MeshVFX : MonoBehaviour
 
     void Start()
     {
-        tfHead = FindObjectOfType<TrackedPoseDriver>().transform;
         m_MeshManager = FindObjectOfType<ARMeshManager>();
     }
     /*
@@ -116,6 +114,12 @@ public class MeshVFX : MonoBehaviour
                 dataNormal.AddRange(mesh.sharedMesh.normals);
             }
 
+            if (vertex_count > bufferInitialCapacity)
+            {
+                data.RemoveRange(bufferInitialCapacity, vertex_count - bufferInitialCapacity);
+                dataNormal.RemoveRange(bufferInitialCapacity, vertex_count - bufferInitialCapacity);
+            }
+
             //if (vertex_count > bufferInitialCapacity)
             //{
             //    for (int i = 0; i < vertex_count - bufferInitialCapacity; i++)
@@ -127,9 +131,6 @@ public class MeshVFX : MonoBehaviour
             //vfx.SetVector3("BoundsMin", min_pos);
             //vfx.SetVector3("BoundsMax", max_pos);
 
-            // You can gather data during frame or construct it here
-            // data.Clear();
-            // data.Add(new Vector3(Random.value, Random.value, Random.value));
 
             // Set Buffer data, but before that ensure there is enough capacity
             EnsureBufferCapacity(ref graphicsBuffer, data.Count, BUFFER_STRIDE, vfx, VfxBufferProperty);
@@ -174,7 +175,7 @@ public class MeshVFX : MonoBehaviour
     private void EnsureBufferCapacity(ref GraphicsBuffer buffer, int capacity, int stride, VisualEffect _vfx, int vfxProperty)
     {
         // Reallocate new buffer only when null or capacity is not sufficient
-        if (buffer == null || buffer.count < capacity)
+        if (buffer == null) // || buffer.count < capacity) // remove dynamic allocating function
         {
             Debug.Log("Graphic Buffer reallocated!");
             // Buffer memory must be released
