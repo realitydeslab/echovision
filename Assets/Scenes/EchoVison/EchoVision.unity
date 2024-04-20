@@ -2469,6 +2469,7 @@ GameObject:
   - component: {fileID: 787533641}
   - component: {fileID: 787533640}
   - component: {fileID: 787533639}
+  - component: {fileID: 787533647}
   m_Layer: 0
   m_Name: HoloKit Camera
   m_TagString: MainCamera
@@ -2768,6 +2769,23 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
+--- !u!114 &787533647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 787533637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b15f82cc229284894964d2d30806969d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_HumanSegmentationStencilMode: 1
+  m_HumanSegmentationDepthMode: 1
+  m_EnvironmentDepthMode: 1
+  m_EnvironmentDepthTemporalSmoothing: 1
+  m_OcclusionPreferenceMode: 0
 --- !u!1 &846542466
 GameObject:
   m_ObjectHideFlags: 0
@@ -3119,6 +3137,7 @@ MonoBehaviour:
   enabled: 1
   transRootPanel: {fileID: 1666500661}
   volume: {fileID: 855594105}
+  mat: {fileID: 2100000, guid: 7d8de0e4aea9445c3acc7f4e6c690555, type: 2}
   soundwaveEmitter: {fileID: 1230832751}
 --- !u!4 &927152633
 Transform:

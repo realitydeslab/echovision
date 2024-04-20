@@ -6,6 +6,7 @@ using UnityEngine.VFX;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using HoloKit;
 
 //[ExecuteInEditMode]
 public class SoundWaveEmitter : MonoBehaviour
@@ -58,13 +59,17 @@ public class SoundWaveEmitter : MonoBehaviour
 
     Transform tfHead;
     ARMeshManager m_MeshManager = null;
-
+    HoloKitCameraManager m_HoloKitCameraManager;
+    ScreenRenderMode renderMode;
     
+
 
     void Start()
     {
         tfHead = FindObjectOfType<TrackedPoseDriver>().transform;
         m_MeshManager = FindObjectOfType<ARMeshManager>();
+        m_HoloKitCameraManager = FindObjectOfType<HoloKitCameraManager>();
+        renderMode = m_HoloKitCameraManager.ScreenRenderMode;
 
         VolumeProfile profile = volume.sharedProfile;        
         profile.TryGet<Bloom>(out bloom);
@@ -127,14 +132,28 @@ public class SoundWaveEmitter : MonoBehaviour
 #endif
 
 #if UNITY_IOS && !UNITY_EDITOR
-        matMeshing.SetInt("DebugMode", 0);
-        matShield.SetInt("DebugMode", 0);
+        matMeshing.SetInt("_DebugMode", 0);
+        matShield.SetInt("_DebugMode", 0);
 #endif
 
     }
 
     void Update()
     {
+
+        if (renderMode != m_HoloKitCameraManager.ScreenRenderMode)
+        {
+            renderMode = m_HoloKitCameraManager.ScreenRenderMode;
+            if(renderMode == ScreenRenderMode.Mono)
+            {
+                shieldRoot.gameObject.SetActive(true);
+            }
+            else
+            {
+                shieldRoot.gameObject.SetActive(false);
+            }
+        }
+            
         // Emit
         if (Input.GetMouseButtonDown(0))
         {
@@ -402,8 +421,8 @@ public class SoundWaveEmitter : MonoBehaviour
             shieldMaterialList[i].SetFloat("_Age", soundwaves[i].age_in_percentage);
             shieldMaterialList[i].SetFloat("_Range", soundwaves[i].range);
 
-            Debug.Log(string.Format("Shield{0}:age:{1}, range:{2}, angle:{3}, thickness:{4}, origin:{5}, dir:{6}",
-                i, soundwaves[i].age_in_percentage, soundwaves[i].range, soundwaves[i].angle, soundwaves[i].thickness, soundwaves[i].origin, soundwaves[i].direction));
+            //Debug.Log(string.Format("Shield{0}:age:{1}, range:{2}, angle:{3}, thickness:{4}, origin:{5}, dir:{6}",
+            //    i, soundwaves[i].age_in_percentage, soundwaves[i].range, soundwaves[i].angle, soundwaves[i].thickness, soundwaves[i].origin, soundwaves[i].direction));
         }
     }
 

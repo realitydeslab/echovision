@@ -14,6 +14,8 @@ public class ParameterDebugger : MonoBehaviour
     public RectTransform transRootPanel;
     public Volume volume;
 
+    public Material mat;
+
     public SoundWaveEmitter soundwaveEmitter;
 
     Dictionary<string, Action<float>> sliderActionList;
@@ -91,7 +93,8 @@ public class ParameterDebugger : MonoBehaviour
     }
     void OnValueChaned_Angle(float v)
     {
-        soundwaveEmitter.soundwaveAngle = new Vector2(v, v * 1.5f);
+        //soundwaveEmitter.soundwaveAngle = new Vector2(v, v * 1.5f);
+        mat.SetFloat("TestRotateY", v);
     }
     void OnValueChaned_Thickness(float v)
     {
