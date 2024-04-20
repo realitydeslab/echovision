@@ -7,13 +7,7 @@
             "m_Id": "68cbb492199a40cda6a62a00bb6a8593"
         },
         {
-            "m_Id": "f316eed793234eb3972d943b1dc3c69d"
-        },
-        {
             "m_Id": "c153b7b354b34954ad71057bd7d9ccc6"
-        },
-        {
-            "m_Id": "98f0934f367940a094cf4e2de02bbdd2"
         },
         {
             "m_Id": "8d8e6b5f891a40389de2fe6e14e6ef23"
@@ -41,6 +35,9 @@
         },
         {
             "m_Id": "537de98246704d2cb3470e726bb59131"
+        },
+        {
+            "m_Id": "eb5e2ebc4bf94905824ccf7f86ef05b3"
         }
     ],
     "m_Keywords": [],
@@ -54,6 +51,9 @@
         },
         {
             "m_Id": "de2f049e684d4bac8ead98a16ba8c23f"
+        },
+        {
+            "m_Id": "5afa5223a31f4bf38063dae1911892d9"
         }
     ],
     "m_Nodes": [
@@ -1064,12 +1064,6 @@
     "m_ChildObjectList": [
         {
             "m_Id": "68cbb492199a40cda6a62a00bb6a8593"
-        },
-        {
-            "m_Id": "e3c2eecf69704c7ea0d99b7d2d1a1d92"
-        },
-        {
-            "m_Id": "c8dfd2a1612d4d27b50445c65eb21d86"
         },
         {
             "m_Id": "3028fd342a074d66aa2849a350b7d763"
@@ -2393,6 +2387,30 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.CategoryData",
+    "m_ObjectId": "5afa5223a31f4bf38063dae1911892d9",
+    "m_Name": "Debug",
+    "m_ChildObjectList": [
+        {
+            "m_Id": "e3c2eecf69704c7ea0d99b7d2d1a1d92"
+        },
+        {
+            "m_Id": "c8dfd2a1612d4d27b50445c65eb21d86"
+        },
+        {
+            "m_Id": "eb5e2ebc4bf94905824ccf7f86ef05b3"
+        },
+        {
+            "m_Id": "8d8e6b5f891a40389de2fe6e14e6ef23"
+        },
+        {
+            "m_Id": "c153b7b354b34954ad71057bd7d9ccc6"
+        }
+    ]
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
     "m_ObjectId": "5b77ae70bd3e4a6aab27731d28acd808",
     "m_Group": {
@@ -2563,7 +2581,7 @@
         "a": 0.0
     },
     "isMainColor": false,
-    "m_ColorMode": 0
+    "m_ColorMode": 1
 }
 
 {
@@ -3185,10 +3203,10 @@
     "m_Guid": {
         "m_GuidSerialized": "a1539e0d-add1-464b-b76c-29a1ae479913"
     },
-    "m_Name": "RippleAngle",
+    "m_Name": "TestAngle",
     "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "RippleAngle",
-    "m_DefaultReferenceName": "_RippleAngle",
+    "m_RefNameGeneratedByDisplayName": "TestAngle",
+    "m_DefaultReferenceName": "_TestAngle",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
     "m_UseCustomSlotLabel": false,
@@ -3382,34 +3400,6 @@
     "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
-    }
-}
-
-{
-    "m_SGVersion": 1,
-    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
-    "m_ObjectId": "98f0934f367940a094cf4e2de02bbdd2",
-    "m_Guid": {
-        "m_GuidSerialized": "4cef2dc9-0b72-4109-b0ec-1fc33ae81675"
-    },
-    "m_Name": "RippleMaxRange",
-    "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "RippleMaxRange",
-    "m_DefaultReferenceName": "_RippleMaxRange",
-    "m_OverrideReferenceName": "",
-    "m_GeneratePropertyBlock": true,
-    "m_UseCustomSlotLabel": false,
-    "m_CustomSlotLabel": "",
-    "m_DismissedVersion": 0,
-    "m_Precision": 0,
-    "overrideHLSLDeclaration": false,
-    "hlslDeclarationOverride": 0,
-    "m_Hidden": false,
-    "m_Value": 4.0,
-    "m_FloatType": 0,
-    "m_RangeValues": {
-        "x": 0.0,
-        "y": 1.0
     }
 }
 
@@ -4196,10 +4186,10 @@
     "m_Guid": {
         "m_GuidSerialized": "ae40d625-a502-472e-96e9-92f39dc14fe1"
     },
-    "m_Name": "RippleThickness",
+    "m_Name": "TestThickness",
     "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "RippleThickness",
-    "m_DefaultReferenceName": "_RippleThickness",
+    "m_RefNameGeneratedByDisplayName": "TestThickness",
+    "m_DefaultReferenceName": "_TestThickness",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
     "m_UseCustomSlotLabel": false,
@@ -4527,18 +4517,6 @@
     "m_Name": "Function",
     "m_ChildObjectList": [
         {
-            "m_Id": "8d8e6b5f891a40389de2fe6e14e6ef23"
-        },
-        {
-            "m_Id": "f316eed793234eb3972d943b1dc3c69d"
-        },
-        {
-            "m_Id": "98f0934f367940a094cf4e2de02bbdd2"
-        },
-        {
-            "m_Id": "c153b7b354b34954ad71057bd7d9ccc6"
-        },
-        {
             "m_Id": "abbefb63bb4f4c50ba03249e96f8ea3b"
         }
     ]
@@ -4744,6 +4722,34 @@
 }
 
 {
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
+    "m_ObjectId": "eb5e2ebc4bf94905824ccf7f86ef05b3",
+    "m_Guid": {
+        "m_GuidSerialized": "c76cb3bd-b6d3-4c7d-bc9a-b943c32198a5"
+    },
+    "m_Name": "TestRange",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "TestRange",
+    "m_DefaultReferenceName": "_TestRange",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": 2.0,
+    "m_FloatType": 1,
+    "m_RangeValues": {
+        "x": 0.0,
+        "y": 10.0
+    }
+}
+
+{
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.DynamicVectorMaterialSlot",
     "m_ObjectId": "ecccd7dda8c146a28d90717ac90453dd",
@@ -4858,34 +4864,6 @@
     "m_Value": 1.0,
     "m_DefaultValue": 1.0,
     "m_Labels": []
-}
-
-{
-    "m_SGVersion": 1,
-    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
-    "m_ObjectId": "f316eed793234eb3972d943b1dc3c69d",
-    "m_Guid": {
-        "m_GuidSerialized": "562db9d1-ae13-4001-8925-b973e4932ce2"
-    },
-    "m_Name": "RippleSpeed",
-    "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "RippleSpeed",
-    "m_DefaultReferenceName": "_RippleSpeed",
-    "m_OverrideReferenceName": "",
-    "m_GeneratePropertyBlock": true,
-    "m_UseCustomSlotLabel": false,
-    "m_CustomSlotLabel": "",
-    "m_DismissedVersion": 0,
-    "m_Precision": 0,
-    "overrideHLSLDeclaration": false,
-    "hlslDeclarationOverride": 0,
-    "m_Hidden": false,
-    "m_Value": 1.0,
-    "m_FloatType": 0,
-    "m_RangeValues": {
-        "x": 0.0,
-        "y": 1.0
-    }
 }
 
 {

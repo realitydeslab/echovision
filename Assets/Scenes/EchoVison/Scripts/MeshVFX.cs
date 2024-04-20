@@ -137,6 +137,8 @@ public class MeshVFX : MonoBehaviour
 
             EnsureBufferCapacity(ref graphicsBufferNormal, dataNormal.Count, BUFFER_STRIDE, vfx, VfxBufferPropertyNormal);
             graphicsBufferNormal.SetData(dataNormal);
+
+            vfx.SetInt("MeshPointCount", vertex_count);
             
         }
         //else

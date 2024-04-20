@@ -2,8 +2,12 @@
 
 uniform float rippleOriginList[MAX_RIPPLE_COUNT*3];
 uniform float rippleDirectionList[MAX_RIPPLE_COUNT*3];
+
 uniform float rippleAgeList[MAX_RIPPLE_COUNT];
 uniform float rippleRangeList[MAX_RIPPLE_COUNT];
+
+uniform float rippleAngleList[MAX_RIPPLE_COUNT];
+uniform float rippleThicknessList[MAX_RIPPLE_COUNT];
 // 2D Random
 float random (float2 st) {
     return frac(sin(dot(st.xy,
@@ -61,11 +65,15 @@ void CalculateAlpha_float(float3 position, float noise_time, out float alpha, ou
     {
         if(_DebugMode)
         {
-            rippleAgeList[i] = _TestAge;
             rippleOriginList[i*3] = rippleOriginList[i*3+1] = rippleOriginList[i*3+2] = 0;
-            rippleDirectionList[i*3] = 0;
-            rippleDirectionList[i*3+1] = 0;
-            rippleDirectionList[i*3+2] = 1;
+            rippleDirectionList[i*3] = 0; rippleDirectionList[i*3+1] = 0; rippleDirectionList[i*3+2] = 1;
+
+            rippleAgeList[i] = _TestAge;
+            rippleRangeList[i] = _TestRange;
+
+            rippleAngleList[i] = _TestAngle;
+            rippleThicknessList[i] = _TestThickness;
+
             if(i>0)continue;
         }        
 
@@ -83,7 +91,7 @@ void CalculateAlpha_float(float3 position, float noise_time, out float alpha, ou
         float3 origin = float3(rippleOriginList[i*3], rippleOriginList[i*3+1], rippleOriginList[i*3+2]);
         float3 direction = normalize(position - origin);
         float dis = distance(position, origin);
-        float temp_thickness = _RippleThickness * smoothstep(0, 0.2, rippleAgeList[i]);   
+        float temp_thickness = rippleThicknessList[i] * smoothstep(0, 0.2, rippleAgeList[i]);   
         ripple_alpha *= pow(smoothstep(0, 1, fadeinout(dis, ripple_range-temp_thickness*0.5, ripple_range+temp_thickness*0.5, 0.4, 0.6)), _RippleBandGamma);
         ripple_alpha *= clamp(noise(float2(direction.x, direction.z) * float2(_NoiseScale, _NoiseScale)) + 0.2, 0.2, 1);
 
@@ -92,7 +100,7 @@ void CalculateAlpha_float(float3 position, float noise_time, out float alpha, ou
         // take the angle between vertex and origin into account 
         float3 ripple_direction = normalize(float3(rippleDirectionList[i*3], rippleDirectionList[i*3+1], rippleDirectionList[i*3+2]));
         float angle = degrees(acos(dot(ripple_direction, direction)));
-        ripple_alpha *= 1 - pow(smoothstep(0, _RippleAngle*0.5, angle), _AngleGamma);
+        ripple_alpha *= 1 - pow(smoothstep(0, rippleAngleList[i]*0.5, angle), _AngleGamma);
         ripple_alpha *= clamp(noise(float2(position.x, position.z) * float2(_NoiseScale, _NoiseScale))+ 0.5, 0.5, 1);
 
        
