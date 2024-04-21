@@ -55,6 +55,13 @@ public class ParameterDebugger : MonoBehaviour
             string param_name = item.Find("Label").GetComponent<TextMeshProUGUI>().text;
             Slider slider = item.Find("Slider").GetComponent<Slider>();
             TextMeshProUGUI display = item.Find("Value").GetComponent<TextMeshProUGUI>();
+
+            if(item.name.Contains("VFXItem"))
+            {
+                slider.value = vfx.GetFloat(param_name);
+            }
+
+
             display.text = slider.value.ToString("0.00");
 
             slider.onValueChanged.AddListener((float v) =>

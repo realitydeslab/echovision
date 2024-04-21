@@ -94,16 +94,15 @@ public class SoundWaveEmitter : MonoBehaviour
 
         // init shield
         shieldMaterialList = new Material[MAX_SOUND_WAVE_COUNT];
-        for(int i=0; i< shieldRoot.childCount; i++)
-        {
-            shieldMaterialList[i] = shieldRoot.GetChild(i).GetComponent<MeshRenderer>().material;
-        }
         for (int i= shieldRoot.childCount; i< MAX_SOUND_WAVE_COUNT; i++)
         {
             GameObject new_shield = Instantiate(prefabShield, shieldRoot);
             MeshRenderer shield_mat = new_shield.GetComponent<MeshRenderer>();
             shield_mat.material = new Material(shield_mat.material);
-            shieldMaterialList[i] = shield_mat.material;
+        }
+        for (int i = 0; i < shieldRoot.childCount; i++)
+        {
+            shieldMaterialList[i] = shieldRoot.GetChild(i).GetComponent<MeshRenderer>().material;
         }
 
         // init mat related parameters
@@ -144,7 +143,7 @@ public class SoundWaveEmitter : MonoBehaviour
         //if (renderMode != m_HoloKitCameraManager.ScreenRenderMode)
         //{
         //    renderMode = m_HoloKitCameraManager.ScreenRenderMode;
-        //    if(renderMode == ScreenRenderMode.Mono)
+        //    if (renderMode == ScreenRenderMode.Mono)
         //    {
         //        shieldRoot.gameObject.SetActive(true);
         //    }
@@ -237,7 +236,7 @@ public class SoundWaveEmitter : MonoBehaviour
 
 
         // Change Bloom
-        bloom.intensity.value = max_bloom * 20f;
+        //bloom.intensity.value = max_bloom * 20f;
 
         // push changes to VFX and Mat
         PushIteratedChanges();

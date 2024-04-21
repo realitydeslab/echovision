@@ -130,7 +130,7 @@ Material:
     - _Parallax: 0.005
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _Range: 7.68
+    - _Range: 5.09
     - _ReceiveShadows: 1
     - _RippleAngle: 85.15
     - _RippleBandGamma: 5.77
