@@ -17,6 +17,13 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
+    "com.unity.demoteam.mesh-to-sdf": {
+      "version": "https://github.com/Unity-Technologies/com.unity.demoteam.mesh-to-sdf.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "1f8ee658aabe2b588aae7d0b635a9941266a52ef"
+    },
     "com.unity.device-simulator.devices": {
       "version": "1.0.0",
       "depth": 0,
@@ -77,6 +84,15 @@
       "depth": 1,
       "source": "registry",
       "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.memoryprofiler": {
+      "version": "1.1.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.editorcoroutines": "1.0.0"
+      },
       "url": "https://packages.unity.com"
     },
     "com.unity.render-pipelines.core": {

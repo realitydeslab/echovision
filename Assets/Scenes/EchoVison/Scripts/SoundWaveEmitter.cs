@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using HoloKit;
 
-//[ExecuteInEditMode]
+
 public class SoundWaveEmitter : MonoBehaviour
 {
     public Volume volume;
