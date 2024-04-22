@@ -3215,6 +3215,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  volumeText: {fileID: 0}
 --- !u!4 &1225988122
 Transform:
   m_ObjectHideFlags: 0
@@ -3303,14 +3304,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f24add9146f74d96982ee5bcdb94db7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  volume: {fileID: 0}
   vfx: {fileID: 1735498855}
+  matMeshing: {fileID: 0}
+  matShield: {fileID: 0}
+  shieldRoot: {fileID: 0}
+  prefabShield: {fileID: 0}
   soundwaveLife: {x: 4, y: 6}
+  soundwaveSpeed: {x: 1, y: 1}
   soundwaveStrength: {x: 0, y: 1}
   soundwaveAngle: {x: 90, y: 180}
-  soundwaveSpeed: {x: 1, y: 1}
-  attractorPrefab: {fileID: 9183901874634772596, guid: 810002f13be5742808c847f54cdf9b83,
-    type: 3}
-  useAttractor: 0
+  soundwaveThickness: {x: 0.01, y: 0.5}
+  debugMode: 0
+  testAge: 0
+  testRange: 1
+  testAngle: 90
+  testThickness: 2
 --- !u!4 &1230832752
 Transform:
   m_ObjectHideFlags: 0
@@ -5350,7 +5359,7 @@ VisualEffect:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1735498851}
   m_Enabled: 1
-  m_Asset: {fileID: 8926484042661614526, guid: 1a820b32f5f2643298745ebfb20e5064, type: 3}
+  m_Asset: {fileID: 8926484042661614526, guid: 2c22872a3dae04840bb93a5d4d88ce36, type: 3}
   m_InitialEventName: OnPlay
   m_InitialEventNameOverriden: 0
   m_StartSeed: 0
