@@ -69,8 +69,8 @@ public class MicInput : MonoBehaviour
             {
                 float volume = (Mathf.Clamp01(MicLoudness) / 0.20f);// 1;
                 float pitch = 1;
-                OnSoundPlay?.Invoke(volume, pitch);
-                Debug.Log("OnSoundPlay with a volume: " + MicLoudness);
+                //OnSoundPlay?.Invoke(volume, pitch);
+                //Debug.Log("OnSoundPlay with a volume: " + MicLoudness);
                 _lastTriggerTime = Time.time;
             }
 

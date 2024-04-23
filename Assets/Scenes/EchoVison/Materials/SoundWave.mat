@@ -53,23 +53,32 @@ Material:
     m_Floats:
     - _AngleGamma: 1.25
     - _DebugMode: 0
-    - _Density: 0.69
+    - _Density: 1.26
     - _Height: 0.97
     - _Interval: 0.42
-    - _LineThickness: 0.25
+    - _LineDensity: 0.74
+    - _LineGamma: 5.71
+    - _LineNoiseScale: 1.41
+    - _LineNoiseSpeed: 1.14
+    - _LineNoiseStrength: 0.58
+    - _LineThickness: 0.21
     - _ModValue: 2
     - _NoiseScale: 0.76
     - _NoiseScaleHeight: 0.14
     - _NoiseScale_Line: 1.5
     - _NoiseSpeed: 2.26
+    - _NoiseStrength: 1
     - _QueueControl: 0
     - _QueueOffset: 0
     - _RippleBandGamma: 7.34
+    - _SoundwaveSpeed: 0
+    - _Step: 8.78
     - _StepValue: 0.95485705
     - _TestAge: 0.54
     - _TestAngle: 143
-    - _TestRange: 5.1
-    - _TestThickness: 4.1
+    - _TestRange: 4
+    - _TestThickness: 2.22
+    - _WaveSpeed: 1
     - _WiggleDensity: 1
     - _WiggleSpeed: 1
     - _WiggleStrength: 0.1

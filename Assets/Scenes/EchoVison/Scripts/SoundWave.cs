@@ -39,7 +39,7 @@ public class SoundWave
     public float thickness = 0.1f;
 
     public float alive = 0;
-    public float age = 1; // originally dead
+    public float age = 0; 
     public float life = 1;
     public float age_in_percentage
     {
