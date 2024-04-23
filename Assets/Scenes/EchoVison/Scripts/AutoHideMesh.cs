@@ -7,7 +7,7 @@ public class AutoHideMesh : MonoBehaviour
     
     void Start()
     {
-#if UNITY_IOS && !UNITY_EDITOR
+#if UNITY_IOS
         foreach(Transform trans in transform)
         {
             Destroy(trans.gameObject);

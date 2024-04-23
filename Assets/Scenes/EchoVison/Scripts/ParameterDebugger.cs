@@ -18,6 +18,8 @@ public class ParameterDebugger : MonoBehaviour
     public VisualEffect vfx;
     public SoundWaveEmitter soundwaveEmitter;
 
+    public TextMeshProUGUI textFPS;
+
     Dictionary<string, Action<float>> sliderActionList;
 
     void Start()
@@ -60,6 +62,10 @@ public class ParameterDebugger : MonoBehaviour
             {
                 slider.value = vfx.GetFloat(param_name);
             }
+            else if(item.name.Contains("MatItem"))
+            {
+                slider.value = mat.GetFloat(param_name);
+            }
 
 
             display.text = slider.value.ToString("0.00");
@@ -69,7 +75,7 @@ public class ParameterDebugger : MonoBehaviour
                 display.text = v.ToString("0.00");
                 if (item.name.Contains("MatItem"))
                 {
-
+                    mat.SetFloat(param_name, v);
                 }
                 else if (item.name.Contains("VFXItem"))
                 {
@@ -83,6 +89,11 @@ public class ParameterDebugger : MonoBehaviour
             });
 
         }
+    }
+
+    private void Update()
+    {
+        textFPS.text = "FPS: " + (1.0f / Time.smoothDeltaTime).ToString("0.0");
     }
 
     void OnValueChaned_DebugMode(float v)
@@ -115,6 +126,7 @@ public class ParameterDebugger : MonoBehaviour
     void OnValueChaned_Thickness(float v)
     {
         soundwaveEmitter.soundwaveThickness = new Vector2(v, v * 1.2f);
+        soundwaveEmitter.testThickness = v;
     }
 
 }

@@ -43,12 +43,13 @@ public class SoundWaveEmitter : MonoBehaviour
 #endif
 
 
-    const int MAX_SOUND_WAVE_COUNT = 3;
+    const int MAX_SOUND_WAVE_COUNT = 20;
     SoundWave[] soundwaves = new SoundWave[MAX_SOUND_WAVE_COUNT];
 
     int nextEmitIndex = 0;
     float[] rippleOriginList;
     float[] rippleDirectionList;
+    float[] rippleAliveList;
     float[] rippleAgeList;
     float[] rippleRangeList;
     float[] rippleAngleList;
@@ -92,6 +93,7 @@ public class SoundWaveEmitter : MonoBehaviour
 #endif
         }
 
+        /*
         // init shield
         shieldMaterialList = new Material[MAX_SOUND_WAVE_COUNT];
         for (int i= shieldRoot.childCount; i< MAX_SOUND_WAVE_COUNT; i++)
@@ -104,10 +106,12 @@ public class SoundWaveEmitter : MonoBehaviour
         {
             shieldMaterialList[i] = shieldRoot.GetChild(i).GetComponent<MeshRenderer>().material;
         }
+        */
 
         // init mat related parameters
         rippleOriginList = new float[MAX_SOUND_WAVE_COUNT * 3];
         rippleDirectionList = new float[MAX_SOUND_WAVE_COUNT * 3];
+        rippleAliveList = new float[MAX_SOUND_WAVE_COUNT];
         rippleAgeList = new float[MAX_SOUND_WAVE_COUNT];
         rippleRangeList = new float[MAX_SOUND_WAVE_COUNT];
         rippleAngleList = new float[MAX_SOUND_WAVE_COUNT];
@@ -131,7 +135,7 @@ public class SoundWaveEmitter : MonoBehaviour
 #endif
 
 #if UNITY_IOS && !UNITY_EDITOR
-        matMeshing.SetInt("_DebugMode", 0);
+        //matMeshing.SetInt("_DebugMode", 0);
         matShield.SetInt("_DebugMode", 0);
 #endif
 
@@ -152,7 +156,8 @@ public class SoundWaveEmitter : MonoBehaviour
         //        shieldRoot.gameObject.SetActive(false);
         //    }
         //}
-        shieldRoot.gameObject.SetActive(false); // remove shield anyway
+
+        // shieldRoot.gameObject.SetActive(false); // remove shield anyway
 
         // Emit
         if (Input.GetMouseButtonDown(0))
@@ -198,7 +203,8 @@ public class SoundWaveEmitter : MonoBehaviour
 
                     wave.origin = tfHead.position;
                     wave.direction = Quaternion.Euler(tfHead.eulerAngles) * Vector3.forward;
-                    
+
+                    wave.alive = 1;
                     wave.age_in_percentage = testAge;
                     wave.range = testRange;
                     wave.angle = testAngle;
@@ -211,27 +217,32 @@ public class SoundWaveEmitter : MonoBehaviour
                 }
                 else
                 {
+                    wave.alive = 0;
                     wave.age = 0;
                     wave.range = 0;
                 }
             }
             else
             {
-                // update wave itself
-                wave.age += Time.deltaTime;
-                if (wave.age > wave.life)
+                if(wave.alive == 1)
                 {
-                    wave.age = wave.life;
+                    // update wave itself
+                    wave.age += Time.deltaTime;
+                    if (wave.age > wave.life)
+                    {
+                        wave.age = wave.life;
+                        wave.alive = 0;
+                    }
+                    else
+                    {
+                        wave.range += wave.speed * Time.deltaTime;
+                    }
+                    float bloom_value = 1 - Mathf.Abs((wave.age_in_percentage - 0.5f) * 2);
+                    max_bloom = Mathf.Max(max_bloom, bloom_value);
                 }
-                else
-                {
-                    wave.range += wave.speed * Time.deltaTime;
-                }
-                
             }
 
-            float bloom_value = 1 - Mathf.Abs((wave.age_in_percentage - 0.5f) * 2);
-            max_bloom = Mathf.Max(max_bloom, bloom_value);
+            
         }
 
 
@@ -259,6 +270,7 @@ public class SoundWaveEmitter : MonoBehaviour
         wave.direction = dir;
         wave.range = 0;
         wave.age = 0;
+        wave.alive = 1;
 
         wave.speed = Random.Range(soundwaveSpeed.x, soundwaveSpeed.y) * pitch; // relative to pitch
         wave.life = Random.Range(soundwaveLife.x, soundwaveLife.y) * pitch; // relative to pitch
@@ -295,23 +307,12 @@ public class SoundWaveEmitter : MonoBehaviour
             }
         }
 #endif
+        /*
         // Emit Shield
         Transform shield_object = shieldRoot.GetChild(nextEmitIndex);
         shield_object.position = wave.origin;
         shield_object.eulerAngles = tfHead.eulerAngles;
-
-
-        //// Update material array
-        //rippleOriginList[nextEmitIndex * 3] = pos.x;
-        //rippleOriginList[nextEmitIndex * 3 + 1] = pos.y;
-        //rippleOriginList[nextEmitIndex * 3 + 2] = pos.z;
-
-        //rippleDirectionList[nextEmitIndex * 3] = dir.x;
-        //rippleDirectionList[nextEmitIndex * 3 + 1] = dir.y;
-        //rippleDirectionList[nextEmitIndex * 3 + 2] = dir.z;
-
-        //rippleAgeList[nextEmitIndex] = 0;
-        //rippleRangeList[nextEmitIndex] = 0;
+        */
 
 
         // Push changes to VFX and Material
@@ -354,18 +355,19 @@ public class SoundWaveEmitter : MonoBehaviour
     {
         // VFX
         SoundWave wave = soundwaves[index];
-        vfx.SetVector3("WaveOrigin", wave.origin);
-        vfx.SetVector3("WaveDirection", wave.direction);
-        vfx.SetFloat("WaveAge", wave.age_in_percentage);
-        vfx.SetFloat("WaveRange", wave.range);
-        vfx.SetFloat("WaveAngle", wave.angle);
-        vfx.SetFloat("WaveThickness", wave.thickness);
+        //vfx.SetVector3("WaveOrigin", wave.origin);
+        //vfx.SetVector3("WaveDirection", wave.direction);
+        //vfx.SetFloat("WaveAge", wave.age_in_percentage);
+        //vfx.SetFloat("WaveRange", wave.range);
+        //vfx.SetFloat("WaveAngle", wave.angle);
+        //vfx.SetFloat("WaveThickness", wave.thickness);
 
 
         // Ripple
         rippleOriginList[index * 3] = wave.origin.x; rippleOriginList[index * 3 + 1] = wave.origin.y; rippleOriginList[index * 3 + 2] = wave.origin.z;
         rippleDirectionList[index * 3] = wave.direction.x; rippleDirectionList[index * 3 + 1] = wave.direction.y; rippleDirectionList[index * 3 + 2] = wave.direction.z;
 
+        rippleAliveList[index] = wave.alive;
         rippleAgeList[index] = wave.age_in_percentage;
         rippleRangeList[index] = wave.range;
         rippleAngleList[index] = wave.angle;
@@ -378,7 +380,11 @@ public class SoundWaveEmitter : MonoBehaviour
         matMeshing.SetFloatArray("rippleAngleList", rippleAngleList);
         matMeshing.SetFloatArray("rippleThicknessList", rippleThicknessList);
 
+        //int i = index;
+        //Debug.Log(string.Format("Ripple{0}:age:{1}, range:{2}, angle:{3}, thickness:{4}, origin:{5}, dir:{6}",
+        //    i, rippleAgeList[i], rippleRangeList[i], rippleAngleList[i], rippleThicknessList[i], soundwaves[i].origin, soundwaves[i].direction));
 
+        /*
         // Shield
         Material matShield = shieldMaterialList[index];
         matShield.SetVector("_Origin", wave.origin);
@@ -387,7 +393,7 @@ public class SoundWaveEmitter : MonoBehaviour
         matShield.SetFloat("_Range", wave.range);
         matShield.SetFloat("_Age", wave.age_in_percentage);
         matShield.SetFloat("_Angle", wave.angle);
-
+        */
     }
 
     void PushIteratedChanges()
@@ -398,23 +404,24 @@ public class SoundWaveEmitter : MonoBehaviour
         {
             wave = soundwaves[0];
         }
-        vfx.SetFloat("WaveRange", wave.range);
-        vfx.SetFloat("WaveAge", wave.age_in_percentage);
+        //vfx.SetFloat("WaveRange", wave.range);
+        //vfx.SetFloat("WaveAge", wave.age_in_percentage);
 
 
         // Ripple
         for (int i = 0; i < MAX_SOUND_WAVE_COUNT; i++)
         {
+            rippleAliveList[i] = soundwaves[i].alive;
             rippleAgeList[i] = soundwaves[i].age_in_percentage;
             rippleRangeList[i] = soundwaves[i].range;
-
-            //Debug.Log(string.Format("Ripple{0}:age:{1}, range:{2}, angle:{3}, thickness:{4}, origin:{5}, dir:{6}",
-            //    i, rippleAgeList[i], rippleRangeList[i], rippleAngleList[i], rippleThicknessList[i], soundwaves[i].origin, soundwaves[i].direction));
         }
+        matMeshing.SetFloatArray("rippleAliveList", rippleAliveList);
         matMeshing.SetFloatArray("rippleAgeList", rippleAgeList);
         matMeshing.SetFloatArray("rippleRangeList", rippleRangeList);
 
 
+
+        /*
         // Shield
         for (int i = 0; i < MAX_SOUND_WAVE_COUNT; i++)
         {
@@ -424,6 +431,7 @@ public class SoundWaveEmitter : MonoBehaviour
             //Debug.Log(string.Format("Shield{0}:age:{1}, range:{2}, angle:{3}, thickness:{4}, origin:{5}, dir:{6}",
             //    i, soundwaves[i].age_in_percentage, soundwaves[i].range, soundwaves[i].angle, soundwaves[i].thickness, soundwaves[i].origin, soundwaves[i].direction));
         }
+        */
     }
 
     float[] Vector3ToArray(Vector3 vec)

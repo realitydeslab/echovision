@@ -95,7 +95,7 @@ Material:
     - _ClearCoatSmoothness: 0
     - _Cull: 2
     - _Cutoff: 0.5
-    - _DebugMode: 0
+    - _DebugMode: 1
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
@@ -127,7 +127,7 @@ Material:
     - _Surface: 0
     - _TestAge: 0.399
     - _TestAngle: 117
-    - _TestRange: 2.7
+    - _TestRange: 2.5
     - _TestThickness: 0.15
     - _WiggleDensity: 0.58
     - _WiggleSpeed: 1.38
