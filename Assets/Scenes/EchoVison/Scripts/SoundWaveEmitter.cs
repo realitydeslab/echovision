@@ -385,13 +385,21 @@ public class SoundWaveEmitter : MonoBehaviour
         for(int i =0; i< soundwaves.Length; i++)
         {
             SoundWave wave = soundwaves[i];
-            if (wave.alive == 1 && wave.thickness < minWaveThickness)
+            if (wave.alive == 1)
             {
-                wave.thickness = wave.range;
-            }
-            else
-            {
-                wave.alive = 0;
+                if(wave.thickness < minWaveThickness)
+                {
+                    wave.thickness = wave.range;
+                }
+                if(wave.age < wave.life)
+                {
+                    wave.age += wave.speed * Time.deltaTime;
+                }
+
+                if(wave.thickness >= minWaveThickness && wave.age >= wave.life)
+                {
+                    wave.alive = 0;
+                }
             }
             
         }
