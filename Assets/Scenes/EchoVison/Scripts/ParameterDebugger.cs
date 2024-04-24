@@ -42,7 +42,6 @@ public class ParameterDebugger : MonoBehaviour
         sliderActionList.Add("Life", OnValueChaned_Life);
         sliderActionList.Add("Speed", OnValueChaned_Speed);
         sliderActionList.Add("Angle", OnValueChaned_Angle);
-        sliderActionList.Add("Thickness", OnValueChaned_Thickness);
 
         sliderActionList.Add("MinimumThickness", OnValueChaned_MinimumThicknesss);
 
@@ -124,11 +123,6 @@ public class ParameterDebugger : MonoBehaviour
     void OnValueChaned_Angle(float v)
     {
         soundwaveEmitter.soundwaveAngle = new Vector2(v, v * 1.5f);
-    }
-    void OnValueChaned_Thickness(float v)
-    {
-        soundwaveEmitter.soundwaveThickness = new Vector2(v, v * 1.2f);
-        soundwaveEmitter.testThickness = v;
     }
     void OnValueChaned_MinimumThicknesss(float v)
     {

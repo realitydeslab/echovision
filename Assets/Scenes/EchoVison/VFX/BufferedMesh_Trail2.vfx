@@ -1773,7 +1773,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614607}
   m_ExposedName: MeshPointCache
   m_Exposed: 1
-  m_Order: 1
+  m_Order: 3
   m_Category: 
   m_Min:
     m_Type:
@@ -2111,7 +2111,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614660}
   m_ExposedName: DebugMode
   m_Exposed: 1
-  m_Order: 3
+  m_Order: 8
   m_Category: 
   m_Min:
     m_Type:
@@ -6901,7 +6901,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614858}
   m_ExposedName: WaveDirection
   m_Exposed: 1
-  m_Order: 20
+  m_Order: 23
   m_Category: Wave
   m_Min:
     m_Type:
@@ -7163,7 +7163,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614865}
   m_ExposedName: BoundsMin
   m_Exposed: 1
-  m_Order: 4
+  m_Order: 9
   m_Category: 
   m_Min:
     m_Type:
@@ -7337,7 +7337,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614870}
   m_ExposedName: BoundsMax
   m_Exposed: 1
-  m_Order: 5
+  m_Order: 12
   m_Category: 
   m_Min:
     m_Type:
@@ -7511,7 +7511,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614903}
   m_ExposedName: MeshNormalCache
   m_Exposed: 1
-  m_Order: 2
+  m_Order: 5
   m_Category: 
   m_Min:
     m_Type:
@@ -16521,7 +16521,7 @@ MonoBehaviour:
   - {fileID: 8926484042661616685}
   m_ExposedName: ParticleSpeed
   m_Exposed: 1
-  m_Order: 2
+  m_Order: 6
   m_Category: Particle
   m_Min:
     m_Type:
@@ -16593,7 +16593,7 @@ MonoBehaviour:
   - {fileID: 8926484042661616691}
   m_ExposedName: ParticleDamp
   m_Exposed: 1
-  m_Order: 4
+  m_Order: 10
   m_Category: Particle
   m_Min:
     m_Type:
@@ -16665,7 +16665,7 @@ MonoBehaviour:
   - {fileID: 8926484042661616693}
   m_ExposedName: ParticleLifeTime
   m_Exposed: 1
-  m_Order: 7
+  m_Order: 16
   m_Category: Particle
   m_Min:
     m_Type:
@@ -16737,7 +16737,7 @@ MonoBehaviour:
   - {fileID: 8926484042661616706}
   m_ExposedName: EmitParticleCount
   m_Exposed: 1
-  m_Order: 9
+  m_Order: 21
   m_Category: Particle
   m_Min:
     m_Type:
@@ -24276,7 +24276,7 @@ MonoBehaviour:
   - {fileID: 8926484042661617634}
   m_ExposedName: PosOffsetScaler
   m_Exposed: 1
-  m_Order: 1
+  m_Order: 4
   m_Category: Line
   m_Min:
     m_Type:
@@ -24348,7 +24348,7 @@ MonoBehaviour:
   - {fileID: 8926484042661617636}
   m_ExposedName: ForceScaler
   m_Exposed: 1
-  m_Order: 4
+  m_Order: 11
   m_Category: Line
   m_Min:
     m_Type:
@@ -24420,7 +24420,7 @@ MonoBehaviour:
   - {fileID: 8926484042661617638}
   m_ExposedName: VelScaler
   m_Exposed: 1
-  m_Order: 2
+  m_Order: 7
   m_Category: Line
   m_Min:
     m_Type:
@@ -24698,7 +24698,7 @@ MonoBehaviour:
   - {fileID: 8926484042661617646}
   m_ExposedName: HeadLifeTime
   m_Exposed: 1
-  m_Order: 7
+  m_Order: 17
   m_Category: 
   m_Min:
     m_Type:
@@ -24784,7 +24784,7 @@ MonoBehaviour:
   - {fileID: 8926484042661617648}
   m_ExposedName: TrailLifeTime
   m_Exposed: 1
-  m_Order: 7
+  m_Order: 18
   m_Category: Line
   m_Min:
     m_Type:
@@ -24861,7 +24861,7 @@ MonoBehaviour:
   - {fileID: 8926484042661617650}
   m_ExposedName: TrailSize
   m_Exposed: 1
-  m_Order: 8
+  m_Order: 19
   m_Category: Line
   m_Min:
     m_Type:
@@ -25038,7 +25038,7 @@ MonoBehaviour:
   - {fileID: 8926484042661617659}
   m_ExposedName: HeadTurbulenceDrag
   m_Exposed: 1
-  m_Order: 5
+  m_Order: 13
   m_Category: Line
   m_Min:
     m_Type:
@@ -25118,7 +25118,7 @@ MonoBehaviour:
   - {fileID: 8926484042661617661}
   m_ExposedName: SpawnRate
   m_Exposed: 1
-  m_Order: 0
+  m_Order: 2
   m_Category: Line
   m_Min:
     m_Type:
@@ -25198,7 +25198,7 @@ MonoBehaviour:
   - {fileID: 8926484042661617663}
   m_ExposedName: HeadLinearDrag
   m_Exposed: 1
-  m_Order: 6
+  m_Order: 14
   m_Category: Line
   m_Min:
     m_Type:
@@ -34930,7 +34930,7 @@ MonoBehaviour:
   - {fileID: 8926484042661618416}
   m_ExposedName: MeshPointCount
   m_Exposed: 1
-  m_Order: 0
+  m_Order: 1
   m_Category: 
   m_Min:
     m_Type:
@@ -38808,7 +38808,7 @@ MonoBehaviour:
   - {fileID: 8926484042661618638}
   m_ExposedName: HeadInitialSpeed
   m_Exposed: 1
-  m_Order: 8
+  m_Order: 20
   m_Category: 
   m_Min:
     m_Type:
@@ -38888,7 +38888,7 @@ MonoBehaviour:
   - {fileID: 8926484042661618640}
   m_ExposedName: HeadSpreadRange
   m_Exposed: 1
-  m_Order: 9
+  m_Order: 22
   m_Category: 
   m_Min:
     m_Type:
@@ -41059,7 +41059,7 @@ MonoBehaviour:
   - {fileID: 8926484042661618788}
   m_ExposedName: SpawnProbability
   m_Exposed: 1
-  m_Order: 6
+  m_Order: 15
   m_Category: 
   m_Min:
     m_Type:

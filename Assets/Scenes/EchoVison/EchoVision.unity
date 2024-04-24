@@ -7583,9 +7583,8 @@ MonoBehaviour:
   soundwaveSpeed: {x: 3, y: 4.5}
   soundwaveStrength: {x: 0, y: 1}
   soundwaveAngle: {x: 90, y: 180}
-  soundwaveThickness: {x: 0.01, y: 0.08}
   minWaveThickness: 2
-  emitThreshold: 0.05
+  emitThreshold: 0.02
   debugMode: 0
   testAge: 0.372
   testRange: 2.3

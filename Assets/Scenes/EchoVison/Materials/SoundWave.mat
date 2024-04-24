@@ -61,7 +61,7 @@ Material:
     - _LineNoiseScale: 1.41
     - _LineNoiseSpeed: 1.14
     - _LineNoiseStrength: 0.58
-    - _LineThickness: 0.12
+    - _LineThickness: 1
     - _ModValue: 2
     - _NoiseScale: 0.76
     - _NoiseScaleHeight: 0.14

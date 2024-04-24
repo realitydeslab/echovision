@@ -80,9 +80,18 @@ public class InfoMonitor : MonoBehaviour
 
     void Update()
     {
-        IList<MeshFilter> mesh_list = m_MeshManager.meshes;
-
         SetInfo("FPS", (1.0f / Time.smoothDeltaTime).ToString("0.0"));
+
+        SetInfo("Volume", MicInput.MicLoudness.ToString("0.000"));
+
+        //ShowMeshInfo();
+    }
+
+    void ShowMeshInfo()
+    {
+
+        
+        IList<MeshFilter> mesh_list = m_MeshManager.meshes;
 
         if (mesh_list != null)
         {

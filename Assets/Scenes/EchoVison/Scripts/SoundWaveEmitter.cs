@@ -25,11 +25,11 @@ public class SoundWaveEmitter : MonoBehaviour
     public Vector2 soundwaveSpeed = new Vector2(1, 4);
     public Vector2 soundwaveStrength = new Vector2(0, 1);
     public Vector2 soundwaveAngle = new Vector2(90, 180);
-    public Vector2 soundwaveThickness = new Vector2(0.01f, 0.5f);
+
 
     public float minWaveThickness = 1;
 
-    public float emitThreshold = 0.05f;
+    public float emitThreshold = 0.02f;
 
     public bool debugMode = false;
     [Range(0.0f, 1.0f)]
