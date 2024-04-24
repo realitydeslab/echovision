@@ -226,8 +226,8 @@ public class SoundWaveEmitter : MonoBehaviour
             }
             else
             {
-                Debug.Log(string.Format("Update{0}:alive:{1}, age:{2}, range:{3}, angle:{4}, thickness:{5}, origin:{6}, dir:{7}",
-                    i, wave.alive, wave.age, wave.range, wave.angle, wave.thickness, wave.origin, wave.direction));
+                //Debug.Log(string.Format("Update{0}:alive:{1}, age:{2}, range:{3}, angle:{4}, thickness:{5}, origin:{6}, dir:{7}",
+                //    i, wave.alive, wave.age, wave.range, wave.angle, wave.thickness, wave.origin, wave.direction));
 
                 // If wave is dead
                 if (wave.alive == 0)
