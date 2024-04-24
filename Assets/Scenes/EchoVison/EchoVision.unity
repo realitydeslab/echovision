@@ -7469,6 +7469,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   volumeText: {fileID: 1322601768}
+  _clipRecord: {fileID: 0}
 --- !u!4 &1225988122
 Transform:
   m_ObjectHideFlags: 0
@@ -9158,7 +9159,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3c947fec5fa8849cf851b256d1c1e69e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _recordMicrophone: 0
+  _recordMicrophone: 1
 --- !u!114 &1418006797
 MonoBehaviour:
   m_ObjectHideFlags: 0
