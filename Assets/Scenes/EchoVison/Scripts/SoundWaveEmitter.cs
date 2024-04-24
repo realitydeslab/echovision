@@ -170,7 +170,7 @@ public class SoundWaveEmitter : MonoBehaviour
         {
             EndSoundWave();
         }
-
+        matMeshing.SetFloat("SoundVolume", MicInput.MicLoudness);
 
         //
         //UpdtaeMeshBounds();

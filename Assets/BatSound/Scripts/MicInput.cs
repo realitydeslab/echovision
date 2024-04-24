@@ -33,7 +33,7 @@ public class MicInput : MonoBehaviour
 
 
     AudioClip _clipRecord;
-    int _sampleWindow = 128;
+    int _sampleWindow = 32;
 
     //get data from microphone into audioclip
     float LevelMax()
