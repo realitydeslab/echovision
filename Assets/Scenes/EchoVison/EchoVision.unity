@@ -6593,12 +6593,12 @@ MonoBehaviour:
   shieldRoot: {fileID: 1027659978}
   prefabShield: {fileID: 3754867266021553689, guid: 12008f3447a6c4af7bc21882f0037795,
     type: 3}
-  soundwaveLife: {x: 2, y: 3}
-  soundwaveSpeed: {x: 3, y: 5}
+  soundwaveLife: {x: 1, y: 2}
+  soundwaveSpeed: {x: 4, y: 6}
   soundwaveStrength: {x: 0, y: 1}
   soundwaveAngle: {x: 90, y: 180}
   soundwaveThickness: {x: 0.01, y: 0.08}
-  minSoundRemainTime: 1
+  minSoundRemainTime: 0.6
   emitThreshold: 0.05
   debugMode: 0
   testAge: 0.372
