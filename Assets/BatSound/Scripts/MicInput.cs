@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using TMPro;
+using HoloKit.iOS;
 
 public class MicInput : MonoBehaviour
 {
@@ -14,16 +15,18 @@ public class MicInput : MonoBehaviour
     public UnityEvent<float, float> OnSoundPlay;
 
     public TextMeshProUGUI volumeText;
+    public UnityEngine.UI.Text recordingText;
 
     //
     float _lastTriggerTime = 0f;
     float _triggerIntervel = 0.5f;
+    public HoloKitVideoRecorder videoRecorder;
 
     //mic initialization
     void InitMic()
     {
         if (_device == null) _device = Microphone.devices[0];
-        _clipRecord = Microphone.Start(_device, true, 999, 44100);
+         _clipRecord = Microphone.Start(_device, true, 999, 44100);
     }
 
     void StopMicrophone()
@@ -32,7 +35,7 @@ public class MicInput : MonoBehaviour
     }
 
 
-    AudioClip _clipRecord;
+    public AudioClip _clipRecord;
     int _sampleWindow = 32;
 
     //get data from microphone into audioclip
@@ -156,5 +159,16 @@ public class MicInput : MonoBehaviour
             freqN += 0.5f * (dR * dR - dL * dL);
         }
         pitchVal = freqN * (_fSample / 2) / QSamples; // convert index to frequency
+    }
+
+    public void ToggleRecording()
+    {
+        if(videoRecorder.IsRecording == false)
+        {
+            videoRecorder._microphoneAudioSource.clip = _clipRecord;
+        }
+        videoRecorder.ToggleRecording();
+        recordingText.text = videoRecorder.IsRecording ? "Stop Recording" : "Start Recording";
+        
     }
 }
