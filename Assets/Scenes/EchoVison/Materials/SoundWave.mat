@@ -56,7 +56,7 @@ Material:
     - _Density: 1.26
     - _Height: 0.97
     - _Interval: 0.42
-    - _LineDensity: 0.84
+    - _LineDensity: 0.9
     - _LineGamma: 5.71
     - _LineNoiseScale: 1.41
     - _LineNoiseSpeed: 1.14
