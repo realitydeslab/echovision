@@ -254,7 +254,11 @@ namespace HoloKit.iOS
         public void StartRecording()
         {
             _microphoneAudioSource.loop = true;
+            while (!(Microphone.GetPosition(null) > 0))
+            {
+            }
             _microphoneAudioSource.Play();
+            
 
             _clock = new RealtimeClock();
             // var sampleRate = _audioDevice != null ? _audioDevice.sampleRate : 24000;
