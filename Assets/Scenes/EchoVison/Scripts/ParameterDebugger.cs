@@ -44,6 +44,8 @@ public class ParameterDebugger : MonoBehaviour
         sliderActionList.Add("Angle", OnValueChaned_Angle);
         sliderActionList.Add("Thickness", OnValueChaned_Thickness);
 
+        sliderActionList.Add("MinimumThickness", OnValueChaned_MinimumThicknesss);
+
         //sliderActionList.Add("ParticleSpeed", OnValueChaned_ParticleSpeed);
         //sliderActionList.Add("ParticleDamp", OnValueChaned_ParticleDamp);
         //sliderActionList.Add("ParicleLifeTime", OnValueChaned_ParicleLifeTime);
@@ -128,5 +130,10 @@ public class ParameterDebugger : MonoBehaviour
         soundwaveEmitter.soundwaveThickness = new Vector2(v, v * 1.2f);
         soundwaveEmitter.testThickness = v;
     }
+    void OnValueChaned_MinimumThicknesss(float v)
+    {
+        soundwaveEmitter.minWaveThickness = v;
+    }
+    
 
 }

@@ -97,7 +97,7 @@ void CalculateAlpha_float(float3 position, float noise_time, float noise_value, 
         float dis = distance(position, origin);
 
         
-        float ripple_alpha = smoothstep(0, 0.2, rippleAgeList[i]);
+        float ripple_alpha = 1;//smoothstep(0, 0.2, rippleAgeList[i]);
 
         // take the distance that ripple has travelled into account
         ripple_alpha *= fadeinout(dis, ripple_range-ripple_thickness, ripple_range, 0.2, 0.8);

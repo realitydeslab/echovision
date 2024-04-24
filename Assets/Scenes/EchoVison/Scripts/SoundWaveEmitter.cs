@@ -20,13 +20,14 @@ public class SoundWaveEmitter : MonoBehaviour
     public Transform shieldRoot;
     public GameObject prefabShield;
 
+
     public Vector2 soundwaveLife = new Vector2(4, 6);
     public Vector2 soundwaveSpeed = new Vector2(1, 4);
     public Vector2 soundwaveStrength = new Vector2(0, 1);
     public Vector2 soundwaveAngle = new Vector2(90, 180);
     public Vector2 soundwaveThickness = new Vector2(0.01f, 0.5f);
 
-    public float minSoundRemainTime = 4;
+    public float minWaveThickness = 1;
 
     public float emitThreshold = 0.05f;
 
@@ -242,14 +243,14 @@ public class SoundWaveEmitter : MonoBehaviour
                         //Debug.Log("dying"+i.ToString() + ","+ wave.age.ToString());
 
                         wave.range += wave.speed * Time.deltaTime;
+                    }
 
-                        // check if it's still spreading
-                        if (wave.thickness > 0)
-                        {
-                            wave.thickness -= wave.speed * Time.deltaTime * 2;
-                            if (wave.thickness < 0)
-                                wave.thickness = 0;
-                        }
+                    // check if it's still spreading
+                    if (wave.thickness > 0)
+                    {
+                        wave.thickness -= wave.speed * Time.deltaTime;// * 2;
+                        if (wave.thickness < 0)
+                            wave.thickness = 0;
                     }
                 }
 
@@ -380,11 +381,11 @@ public class SoundWaveEmitter : MonoBehaviour
 
         int cur_emit_index = nextEmitIndex == -1 ? 0 : (nextEmitIndex == 0 ? MAX_SOUND_WAVE_COUNT - 1 : nextEmitIndex - 1);
 
-        // Set all waves to dead
+        // Set all waves to dead except for the wave that has not reached to minimum thickness
         for(int i =0; i< soundwaves.Length; i++)
         {
             SoundWave wave = soundwaves[i];
-            if (wave.alive == 1 && wave.age < minSoundRemainTime)
+            if (wave.alive == 1 && wave.thickness < minWaveThickness)
             {
                 wave.thickness = wave.range;
             }
