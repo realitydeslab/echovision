@@ -9,34 +9,225 @@ using HoloKit;
 using UnityEngine.InputSystem.XR;
 using UnityEngine.VFX;
 
+
 public class MeshVFX : MonoBehaviour
 {
-    
-    public VisualEffect vfx;
+    [SerializeField]
+    private VisualEffect vfx;
 
-    public Transform infoPanel;
-    public GameObject infoPrefab;
 
-    public TextMeshProUGUI textFPS;
-
-    ARMeshManager m_MeshManager;
+    public int bufferInitialCapacity = 64000;
+    public bool dynamicallyResizeBuffer = false;
 
     private const int BUFFER_STRIDE = 12; // 12 Bytes for a Vector3 (4,4,4)
-    private static readonly int VfxBufferProperty = Shader.PropertyToID("MeshPointCache");
 
-    private int bufferInitialCapacity = 64000;
-    //[SerializeField] private VisualEffect visualEffect;
-    private List<Vector3> data;
-    private GraphicsBuffer graphicsBuffer;
+    private static readonly int VertexBufferPropertyID = Shader.PropertyToID("MeshPointCache");
+    private List<Vector3> listVertex;
+    private GraphicsBuffer bufferVertex;
 
-    private static readonly int VfxBufferPropertyNormal = Shader.PropertyToID("MeshNormalCache");
-    private List<Vector3> dataNormal;
-    private GraphicsBuffer graphicsBufferNormal;
+    private static readonly int NormalBufferPropertyID = Shader.PropertyToID("MeshNormalCache");
+    private List<Vector3> listNormal;
+    private GraphicsBuffer bufferNormal;
+
+    List<(float, int)> listMeshDistance = new List<(float, int)>();
 
     void Start()
     {
-        m_MeshManager = FindObjectOfType<ARMeshManager>();
+
     }
+    
+
+    void LateUpdate()
+    {
+        //ShowDebugInfo();
+
+        IList<MeshFilter> mesh_list = GameManager.Instance.MeshManager.meshes;
+
+        if(mesh_list != null)
+        {
+            listVertex.Clear();
+            listNormal.Clear();
+
+            listMeshDistance.Clear();
+
+
+            int mesh_count = mesh_list.Count; 
+            int vertex_count = 0;
+            int triangle_count = 0;
+            Vector3 head_pos = GameManager.Instance.HeadTransform.position;
+            float distance = 0;
+            Vector3 min_pos = Vector3.zero;
+            Vector3 max_pos = Vector3.zero;
+
+            if(dynamicallyResizeBuffer)
+            {
+                // randomize the order of mesh
+                int n = mesh_list.Count;
+                while (n > 1)
+                {
+                    n--;
+                    int k = Random.Range(0, n + 1);
+                    MeshFilter value = mesh_list[k];
+                    mesh_list[k] = mesh_list[n];
+                    mesh_list[n] = value;
+                }
+
+                // push to buffer
+                for (int i = 0; i < mesh_list.Count; i++)
+                {
+                    MeshFilter mesh = mesh_list[i];
+
+                    listVertex.AddRange(mesh.sharedMesh.vertices);
+                    listNormal.AddRange(mesh.sharedMesh.normals);
+
+                    vertex_count += mesh.sharedMesh.vertexCount;
+                    triangle_count += mesh.sharedMesh.triangles.Length / 3;
+
+                    min_pos = Vector3.Min(min_pos, mesh.sharedMesh.bounds.min);
+                    max_pos = Vector3.Max(max_pos, mesh.sharedMesh.bounds.max);
+                }
+            }
+            else
+            {
+                // sort all meshes by distance
+                for (int i = 0; i < mesh_list.Count; i++)
+                {
+                    MeshFilter mesh = mesh_list[i];
+
+                    distance = Vector3.Distance(head_pos, mesh.sharedMesh.bounds.center);
+
+                    listMeshDistance.Add((distance, i));
+                }
+                listMeshDistance.Sort((x, y) => x.Item1.CompareTo(y.Item1));
+
+
+                // push nearest to buffer
+                for (int i = 0; i < listMeshDistance.Count; i++)
+                {
+                    int index = listMeshDistance[i].Item2;
+                    MeshFilter mesh = mesh_list[index];
+
+                    listVertex.AddRange(mesh.sharedMesh.vertices);
+                    listNormal.AddRange(mesh.sharedMesh.normals);
+
+                    vertex_count += mesh.sharedMesh.vertexCount;
+                    triangle_count += mesh.sharedMesh.triangles.Length / 3;
+
+                    min_pos = Vector3.Min(min_pos, mesh.sharedMesh.bounds.min);
+                    max_pos = Vector3.Max(max_pos, mesh.sharedMesh.bounds.max);
+
+                    if (vertex_count > bufferInitialCapacity)
+                        break;
+                }
+
+                if (vertex_count > bufferInitialCapacity)
+                {
+                    listVertex.RemoveRange(bufferInitialCapacity, vertex_count - bufferInitialCapacity);
+                    listNormal.RemoveRange(bufferInitialCapacity, vertex_count - bufferInitialCapacity);
+                }
+            }
+
+            
+
+
+            // Set Buffer data, but before that ensure there is enough capacity
+            EnsureBufferCapacity(ref bufferVertex, listVertex.Count, BUFFER_STRIDE, vfx, VertexBufferPropertyID);
+            bufferVertex.SetData(listVertex);
+
+            EnsureBufferCapacity(ref bufferNormal, listNormal.Count, BUFFER_STRIDE, vfx, NormalBufferPropertyID);
+            bufferNormal.SetData(listNormal);
+
+            // set
+            vfx.SetInt("MeshPointCount", listVertex.Count);
+            //vfx.SetVector3("BoundsMin", min_pos);
+            //vfx.SetVector3("BoundsMax", max_pos);
+
+        }
+
+    }
+
+    // 
+    // https://forum.unity.com/threads/vfx-graph-siggraph-2021-video.1198156/
+    void Awake()
+    {
+
+        // Create initial graphics buffer
+        listVertex = new List<Vector3>(bufferInitialCapacity);
+        EnsureBufferCapacity(ref bufferVertex, bufferInitialCapacity, BUFFER_STRIDE, vfx, VertexBufferPropertyID);
+
+        listNormal = new List<Vector3>(bufferInitialCapacity);
+        EnsureBufferCapacity(ref bufferNormal, bufferInitialCapacity, BUFFER_STRIDE, vfx, NormalBufferPropertyID);
+    }
+
+    void ShowDebugInfo()
+    {
+        IList<MeshFilter> mesh_list = GameManager.Instance.MeshManager.meshes;
+
+        if (mesh_list == null) return;
+
+
+        int mesh_count = mesh_list.Count;
+        GameManager.Instance.SetInfo("MeshCount", mesh_count.ToString());
+
+        int vertex_count = 0;
+        int triangle_count = 0;
+        Vector3 head_pos = GameManager.Instance.HeadTransform.position;
+        float distance = 0;
+        Vector3 min_pos = Vector3.zero;
+        Vector3 max_pos = Vector3.zero;
+        for (int i = 0; i < mesh_list.Count; i++)
+        {
+            MeshFilter mesh = mesh_list[i];
+
+            vertex_count += mesh.sharedMesh.vertexCount;
+            triangle_count += mesh.sharedMesh.triangles.Length / 3;
+
+            min_pos = Vector3.Min(min_pos, mesh.sharedMesh.bounds.min);
+            max_pos = Vector3.Max(max_pos, mesh.sharedMesh.bounds.max);
+
+            distance = Vector3.Distance(head_pos, mesh.sharedMesh.bounds.center);
+
+            //GameManager.Instance.SetInfo("Mesh" + i.ToString(), string.Format("VerCount:{0}, Dis:{1}, Min:{2}, Max:{3}", mesh.sharedMesh.vertexCount, distance.ToString("0.000"), min_pos, max_pos));
+            //GameManager.Instance.SetLabel(i.ToString(), mesh.sharedMesh.bounds.center, i.ToString() + "|" + distance.ToString("0.00"));
+        }
+
+        GameManager.Instance.SetInfo("VertexCount", vertex_count.ToString());
+        GameManager.Instance.SetInfo("TriangleCount", triangle_count.ToString());
+        GameManager.Instance.SetInfo("BoundsMin", min_pos.ToString());
+        GameManager.Instance.SetInfo("BoundsMax", max_pos.ToString());
+        GameManager.Instance.SetInfo("Center", ((min_pos + max_pos) * 0.5f).ToString());
+    }
+
+    void OnDestroy()
+    {
+        ReleaseBuffer(ref bufferVertex);
+
+        ReleaseBuffer(ref bufferNormal);
+    }
+
+    private void EnsureBufferCapacity(ref GraphicsBuffer buffer, int capacity, int stride, VisualEffect _vfx, int vfxProperty)
+    {
+        // Reallocate new buffer only when null or capacity is not sufficient
+        if (buffer == null || (dynamicallyResizeBuffer && buffer.count < capacity)) // remove dynamic allocating function
+        {
+            Debug.Log("Graphic Buffer reallocated!");
+            // Buffer memory must be released
+            buffer?.Release();
+            // Vfx Graph uses structured buffer
+            buffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, capacity, stride);
+            // Update buffer referenece
+            _vfx.SetGraphicsBuffer(vfxProperty, buffer);
+        }
+    }
+
+    private void ReleaseBuffer(ref GraphicsBuffer buffer)
+    {
+        // Buffer memory must be released
+        buffer?.Release();
+        buffer = null;
+    }
+
+
     /*
     /// <summary>
     /// On awake, set up the mesh filter delegates.
@@ -87,110 +278,4 @@ public class MeshVFX : MonoBehaviour
         //}
     }
     */
-
-    void LateUpdate()
-    {
-        textFPS.text = "FPS: " + (1.0f / Time.smoothDeltaTime).ToString("0.0");
-
-        IList<MeshFilter> mesh_list = m_MeshManager.meshes;
-
-        if(mesh_list != null)
-        {
-            data.Clear();
-            dataNormal.Clear();
-            int mesh_count = mesh_list.Count;
-            int vertex_count = 0;
-            Vector3 min_pos = Vector3.zero;
-            Vector3 max_pos = Vector3.zero;
-
-            foreach (MeshFilter mesh in mesh_list)
-            {
-                min_pos = Vector3.Min(min_pos, mesh.sharedMesh.bounds.min);
-                max_pos = Vector3.Max(max_pos, mesh.sharedMesh.bounds.max);
-
-                vertex_count += mesh.sharedMesh.vertexCount;
-
-                data.AddRange(mesh.sharedMesh.vertices);
-                dataNormal.AddRange(mesh.sharedMesh.normals);
-            }
-
-            if (vertex_count > bufferInitialCapacity)
-            {
-                data.RemoveRange(bufferInitialCapacity, vertex_count - bufferInitialCapacity);
-                dataNormal.RemoveRange(bufferInitialCapacity, vertex_count - bufferInitialCapacity);
-            }
-
-            //if (vertex_count > bufferInitialCapacity)
-            //{
-            //    for (int i = 0; i < vertex_count - bufferInitialCapacity; i++)
-            //    {
-            //        data.RemoveAt(Random.Range(0, data.Count));
-            //    }
-            //}
-
-            //vfx.SetVector3("BoundsMin", min_pos);
-            //vfx.SetVector3("BoundsMax", max_pos);
-
-
-            // Set Buffer data, but before that ensure there is enough capacity
-            EnsureBufferCapacity(ref graphicsBuffer, data.Count, BUFFER_STRIDE, vfx, VfxBufferProperty);
-            graphicsBuffer.SetData(data);
-
-            EnsureBufferCapacity(ref graphicsBufferNormal, dataNormal.Count, BUFFER_STRIDE, vfx, VfxBufferPropertyNormal);
-            graphicsBufferNormal.SetData(dataNormal);
-
-            vfx.SetInt("MeshPointCount", data.Count);
-            
-        }
-        //else
-        //{
-        //    data.Clear();
-        //    data.Add(Vector3.zero);
-        //    graphicsBuffer.SetData(data);
-        //}
-    }
-
-    // 
-    // https://forum.unity.com/threads/vfx-graph-siggraph-2021-video.1198156/
-    void Awake()
-    {
-        // List with data used to fill buffer
-        data = new List<Vector3>(bufferInitialCapacity);
-        // Create initial graphics buffer
-        EnsureBufferCapacity(ref graphicsBuffer, bufferInitialCapacity, BUFFER_STRIDE, vfx, VfxBufferProperty);
-
-        dataNormal = new List<Vector3>(bufferInitialCapacity);
-        EnsureBufferCapacity(ref graphicsBufferNormal, bufferInitialCapacity, BUFFER_STRIDE, vfx, VfxBufferPropertyNormal);
-    }
-
-    
-
-    void OnDestroy()
-    {
-        ReleaseBuffer(ref graphicsBuffer);
-
-        ReleaseBuffer(ref graphicsBufferNormal);
-    }
-
-    private void EnsureBufferCapacity(ref GraphicsBuffer buffer, int capacity, int stride, VisualEffect _vfx, int vfxProperty)
-    {
-        // Reallocate new buffer only when null or capacity is not sufficient
-        if (buffer == null) // || buffer.count < capacity) // remove dynamic allocating function
-        {
-            Debug.Log("Graphic Buffer reallocated!");
-            // Buffer memory must be released
-            buffer?.Release();
-            // Vfx Graph uses structured buffer
-            buffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, capacity, stride);
-            // Update buffer referenece
-            _vfx.SetGraphicsBuffer(vfxProperty, buffer);
-        }
-    }
-
-    private void ReleaseBuffer(ref GraphicsBuffer buffer)
-    {
-        // Buffer memory must be released
-        buffer?.Release();
-        buffer = null;
-    }
 }

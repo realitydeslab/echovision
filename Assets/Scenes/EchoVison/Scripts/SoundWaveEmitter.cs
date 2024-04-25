@@ -126,8 +126,11 @@ public class SoundWaveEmitter : MonoBehaviour
             rippleAgeList[i] = 1;
             rippleRangeList[i] = 0;
         }
-
-
+        if(debugMode == false)
+        {
+            PushInitialChanges(0);
+        }
+        
 
         // chech if need to enter debug mode
         vfx.SetBool("DebugMode", debugMode);

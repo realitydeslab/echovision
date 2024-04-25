@@ -15,6 +15,9 @@ public class InfoMonitor : MonoBehaviour
     public Transform infoPanel;
     public GameObject infoPrefab;
 
+    public Transform labelRoot; 
+    public GameObject labelPrefab;
+
 
     Transform tfHead;
     ARMeshManager m_MeshManager;
@@ -82,10 +85,12 @@ public class InfoMonitor : MonoBehaviour
     {
         SetInfo("FPS", (1.0f / Time.smoothDeltaTime).ToString("0.0"));
 
-        SetInfo("Volume", MicInput.MicLoudness.ToString("0.000"));
+        //SetInfo("Volume", MicInput.MicLoudness.ToString("0.000"));
 
-        //ShowMeshInfo();
+        ShowMeshInfo();
     }
+
+    List<(float, int)> distanceList = new List<(float, int)>();
 
     void ShowMeshInfo()
     {
@@ -97,15 +102,18 @@ public class InfoMonitor : MonoBehaviour
         {
             int mesh_count = mesh_list.Count;
             SetInfo("MeshCount", mesh_count.ToString());
-            SetInfo("voxelBounds", sdfTexture.voxelBounds.ToString());
-            SetInfo("voxelResolution", sdfTexture.voxelResolution.ToString());
-            SetInfo("voxelSize", sdfTexture.voxelSize.ToString());
-            SetInfo("resolution", sdfTexture.resolution.ToString());
+
+            //SetInfo("voxelBounds", sdfTexture.voxelBounds.ToString());
+            //SetInfo("voxelResolution", sdfTexture.voxelResolution.ToString());
+            //SetInfo("voxelSize", sdfTexture.voxelSize.ToString());
+            //SetInfo("resolution", sdfTexture.resolution.ToString());
 
             int vertex_count = 0;
             int triangle_count = 0;
             Vector3 min_pos = Vector3.zero;
             Vector3 max_pos = Vector3.zero;
+
+            distanceList.Clear();
 
             for (int i=0; i<mesh_list.Count; i++)
             {
@@ -114,23 +122,33 @@ public class InfoMonitor : MonoBehaviour
                 triangle_count += mesh.sharedMesh.triangles.Length / 3;
                 min_pos = Vector3.Min(min_pos, mesh.sharedMesh.bounds.min);
                 max_pos = Vector3.Max(max_pos, mesh.sharedMesh.bounds.max);
+                float dis = Vector3.Distance(tfHead.transform.position, mesh.sharedMesh.bounds.center);
 
-                //SetInfo(i.ToString()+" Name:", mesh.name);
-                //SetInfo(i.ToString() + " VertexCount", mesh.sharedMesh.vertexCount.ToString());
-                //SetInfo(i.ToString() + " TriangleCount", (mesh.sharedMesh.triangles.Length/3).ToString());
-                //SetInfo(i.ToString() + " BoundsMin", mesh.sharedMesh.bounds.min.ToString());
-                //SetInfo(i.ToString() + " BoundsMax", mesh.sharedMesh.bounds.max.ToString());
+                SetLabel(i.ToString(), mesh.sharedMesh.bounds.center, i.ToString() + "|"+dis.ToString("0.00"));
+
+                distanceList.Add((dis, i));
+            }
+
+            distanceList.Sort((x, y) => y.Item1.CompareTo(x.Item1));
+
+            for(int i=0; i<distanceList.Count; i++)
+            {
+                int index  = distanceList[i].Item2;
+                MeshFilter mesh = mesh_list[index];
+                SetInfo("Mesh" + i.ToString(), string.Format("{0} | VerCount:{1},TriCount:{2}, Dis:{3}", index, mesh.sharedMesh.vertexCount, (mesh.sharedMesh.triangles.Length / 3), distanceList[i].Item1.ToString("0.000")));
             }
 
             
+
+
             SetInfo("VertexCount", vertex_count.ToString());
             SetInfo("TriangleCount", triangle_count.ToString());
             SetInfo("BoundsMin", min_pos.ToString());
             SetInfo("BoundsMax", max_pos.ToString());
             SetInfo("Center", ((min_pos+max_pos)*0.5f).ToString());
 
-            sdfTexture.transform.position = ((min_pos + max_pos) * 0.5f);
-            sdfTexture.transform.localScale = (max_pos - min_pos);
+            //sdfTexture.transform.position = ((min_pos + max_pos) * 0.5f);
+            //sdfTexture.transform.localScale = (max_pos - min_pos);
         }
 
         
@@ -166,5 +184,27 @@ public class InfoMonitor : MonoBehaviour
             item.Find("Label").GetComponent<TextMeshProUGUI>().text = name;
         }
         item.Find("Value").GetComponent<TextMeshProUGUI>().text = text;
+    }
+
+    void RemoveInfo(string name)
+    {
+        Transform item = infoPanel.Find(name);
+        if (item != null)
+        {
+            Destroy(item.gameObject);
+        }
+    }
+
+    void SetLabel(string name, Vector3 pos, string text)
+    {
+        Transform item = labelRoot.Find(name);
+        if (item == null)
+        {
+            item = Instantiate(labelPrefab, labelRoot).transform;
+            item.name = name;
+        }
+        item.GetComponent<TextMesh>().text = text;
+        item.position = pos;
+        item.transform.rotation = Quaternion.LookRotation((pos - tfHead.position), Vector3.up);
     }
 }

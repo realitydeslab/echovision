@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: SimulationEnvironmentAssetsManager
   m_EditorClassIdentifier: 
   m_EnvironmentPrefabPaths:
+  - Assets/Scenes/EchoVison/Models/TestEnv/XREnv_Room17.prefab
   - Assets/Scenes/test/XREnvironment_Room.prefab
   - Assets/UnityXRContent/ARFoundation/SimulationEnvironments/Backyard/Backyard_45ftx40ft.prefab
   - Assets/UnityXRContent/ARFoundation/SimulationEnvironments/Backyard/Backyard_55ftx40ft.prefab

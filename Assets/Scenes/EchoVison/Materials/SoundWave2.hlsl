@@ -69,7 +69,7 @@ void CalculateAlpha_float(float3 position, float noise_time, float noise_value, 
         if(_DebugMode)
         {
             rippleOriginList[i*3] = rippleOriginList[i*3+1] = rippleOriginList[i*3+2] = 0;
-            rippleDirectionList[i*3] = 0; rippleDirectionList[i*3+1] = 0; rippleDirectionList[i*3+2] = -1;
+            rippleDirectionList[i*3] = 0; rippleDirectionList[i*3+1] = 0; rippleDirectionList[i*3+2] = 1;
 
             rippleAliveList[i] = 1;
             rippleAgeList[i] = _TestAge;

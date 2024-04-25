@@ -272,14 +272,13 @@
       "url": "https://packages.unity.com"
     },
     "io.holokit.unity-sdk": {
-      "version": "https://github.com/holokit/holokit-unity-sdk.git",
+      "version": "file:io.holokit.unity-sdk",
       "depth": 0,
-      "source": "git",
+      "source": "embedded",
       "dependencies": {
         "com.unity.xr.arfoundation": "5.1.2",
         "com.unity.xr.arkit": "5.1.2"
-      },
-      "hash": "6ca6fce3cea47502645d383f57011e90d2542ab6"
+      }
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

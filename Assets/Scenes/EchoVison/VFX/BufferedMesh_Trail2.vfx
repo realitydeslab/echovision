@@ -557,7 +557,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
           PublicKeyToken=b77a5c561934e089
-      m_SerializableObject: 0
+      m_SerializableObject: 30000
     min: -Infinity
     max: Infinity
     enumValues: []
@@ -2068,7 +2068,7 @@ MonoBehaviour:
   m_UIIgnoredErrors: []
   m_Parent: {fileID: 114350483966674976}
   m_Children: []
-  m_UIPosition: {x: -939, y: 262}
+  m_UIPosition: {x: -1004, y: 274}
   m_UICollapsed: 0
   m_UISuperCollapsed: 1
   m_InputSlots: []
@@ -2076,7 +2076,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614661}
   - {fileID: 8926484042661614662}
   - {fileID: 8926484042661614663}
-  Asset: {fileID: -3256353808211938606, guid: 9a6a93f6071c94d8c98d6ed4b2c14545, type: 3}
+  Asset: {fileID: -3256353808211938606, guid: 575bab0de27a245edbb520f7c6eb5fea, type: 3}
 --- !u!114 &8926484042661614659
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2435,7 +2435,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"obj":{"fileID":6918954641851045129,"guid":"9a6a93f6071c94d8c98d6ed4b2c14545","type":3}}'
+      m_SerializableObject: '{"obj":{"fileID":6918954641851045129,"guid":"575bab0de27a245edbb520f7c6eb5fea","type":3}}'
     m_Space: 2147483647
   m_Property:
     name: map
@@ -3179,7 +3179,7 @@ MonoBehaviour:
   m_UIIgnoredErrors: []
   m_Parent: {fileID: 114350483966674976}
   m_Children: []
-  m_UIPosition: {x: -349, y: 234}
+  m_UIPosition: {x: -394, y: 244}
   m_UICollapsed: 0
   m_UISuperCollapsed: 1
   m_InputSlots:
@@ -3215,7 +3215,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEditor.VFX.Transform, Unity.VisualEffectGraph.Editor,
           Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"position":{"x":0.0,"y":0.20999999344348908,"z":0.0},"angles":{"x":90.0,"y":0.0,"z":0.0},"scale":{"x":99.0,"y":99.0,"z":99.0}}'
+      m_SerializableObject: '{"position":{"x":0.0,"y":0.0,"z":0.0},"angles":{"x":0.0,"y":0.0,"z":0.0},"scale":{"x":1.0,"y":1.0,"z":1.0}}'
     m_Space: 0
   m_Property:
     name: transform
@@ -3223,8 +3223,7 @@ MonoBehaviour:
       m_SerializableType: UnityEditor.VFX.Transform, Unity.VisualEffectGraph.Editor,
         Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
   m_Direction: 0
-  m_LinkedSlots:
-  - {fileID: 8926484042661614977}
+  m_LinkedSlots: []
 --- !u!114 &8926484042661614728
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8492,7 +8491,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"obj":{"fileID":8714772487333450258,"guid":"9a6a93f6071c94d8c98d6ed4b2c14545","type":3}}'
+      m_SerializableObject: '{"obj":{"fileID":8714772487333450258,"guid":"575bab0de27a245edbb520f7c6eb5fea","type":3}}'
     m_Space: 2147483647
   m_Property:
     name: map
@@ -9177,9 +9176,7 @@ MonoBehaviour:
       m_SerializableType: UnityEditor.VFX.Transform, Unity.VisualEffectGraph.Editor,
         Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
   m_Direction: 1
-  m_LinkedSlots:
-  - {fileID: 8926484042661614727}
-  - {fileID: 8926484042661615362}
+  m_LinkedSlots: []
 --- !u!114 &8926484042661614978
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12496,7 +12493,7 @@ MonoBehaviour:
   m_UIIgnoredErrors: []
   m_Parent: {fileID: 114350483966674976}
   m_Children: []
-  m_UIPosition: {x: -448, y: 648}
+  m_UIPosition: {x: -476, y: 636}
   m_UICollapsed: 0
   m_UISuperCollapsed: 1
   m_InputSlots:
@@ -12540,8 +12537,7 @@ MonoBehaviour:
       m_SerializableType: UnityEditor.VFX.Transform, Unity.VisualEffectGraph.Editor,
         Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
   m_Direction: 0
-  m_LinkedSlots:
-  - {fileID: 8926484042661614977}
+  m_LinkedSlots: []
 --- !u!114 &8926484042661615363
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12964,7 +12960,7 @@ MonoBehaviour:
   m_Children:
   - {fileID: 8926484042661615376}
   m_UIPosition: {x: 0, y: 0}
-  m_UICollapsed: 0
+  m_UICollapsed: 1
   m_UISuperCollapsed: 0
   m_MasterSlot: {fileID: 8926484042661615375}
   m_MasterData:
@@ -13002,7 +12998,7 @@ MonoBehaviour:
   - {fileID: 8926484042661615378}
   - {fileID: 8926484042661615379}
   m_UIPosition: {x: 0, y: 0}
-  m_UICollapsed: 0
+  m_UICollapsed: 1
   m_UISuperCollapsed: 0
   m_MasterSlot: {fileID: 8926484042661615375}
   m_MasterData:
@@ -34558,7 +34554,7 @@ MonoBehaviour:
     linkedSlots:
     - outputSlot: {fileID: 8926484042661618416}
       inputSlot: {fileID: 8926484042661618812}
-    position: {x: 204.5, y: 2110.5}
+    position: {x: 282.5, y: 1977}
     expandedSlots: []
     expanded: 0
 --- !u!114 &8926484042661618416
@@ -34586,7 +34582,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
           PublicKeyToken=b77a5c561934e089
-      m_SerializableObject: 0
+      m_SerializableObject: 30000
     m_Space: 2147483647
   m_Property:
     name: o
@@ -41470,9 +41466,9 @@ MonoBehaviour:
   m_UIIgnoredErrors: []
   m_Parent: {fileID: 114350483966674976}
   m_Children: []
-  m_UIPosition: {x: 426, y: 2052}
+  m_UIPosition: {x: 406, y: 2046}
   m_UICollapsed: 0
-  m_UISuperCollapsed: 0
+  m_UISuperCollapsed: 1
   m_InputSlots:
   - {fileID: 8926484042661618812}
   - {fileID: 8926484042661618813}
@@ -41714,9 +41710,9 @@ MonoBehaviour:
   m_UIIgnoredErrors: []
   m_Parent: {fileID: 114350483966674976}
   m_Children: []
-  m_UIPosition: {x: 634, y: 1975}
+  m_UIPosition: {x: 488, y: 1963}
   m_UICollapsed: 0
-  m_UISuperCollapsed: 0
+  m_UISuperCollapsed: 1
   m_InputSlots:
   - {fileID: 8926484042661618820}
   - {fileID: 8926484042661618821}
