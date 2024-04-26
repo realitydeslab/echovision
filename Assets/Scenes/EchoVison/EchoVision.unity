@@ -1092,8 +1092,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1225988121}
-        m_TargetAssemblyTypeName: MicInput, Assembly-CSharp
+      - m_Target: {fileID: 1225988125}
+        m_TargetAssemblyTypeName: AudioProcessor, Assembly-CSharp
         m_MethodName: ToggleRecording
         m_Mode: 1
         m_Arguments:
@@ -7608,8 +7608,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1225988122}
-  - component: {fileID: 1225988121}
-  - component: {fileID: 1225988123}
+  - component: {fileID: 1225988124}
+  - component: {fileID: 1225988125}
   m_Layer: 0
   m_Name: Mic Input
   m_TagString: Untagged
@@ -7617,25 +7617,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1225988121
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1225988120}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 553a5d02e7b9a42478abb29306ec8bac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  OnSoundPlay:
-    m_PersistentCalls:
-      m_Calls: []
-  volumeText: {fileID: 1322601768}
-  recordingText: {fileID: 237215421}
-  videoRecorder: {fileID: 1418006796}
-  _clipRecord: {fileID: 0}
 --- !u!4 &1225988122
 Transform:
   m_ObjectHideFlags: 0
@@ -7651,21 +7632,120 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1225988123
+--- !u!82 &1225988124
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1225988120}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &1225988125
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1225988120}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3eee7ba54517d4a46b16e20344e5adfb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  RmsValue: 0
-  DbValue: 0
-  PitchValue: 0
+  masterAudioGroup: {fileID: 24300002, guid: 9a467474f54c14281a0d4c71bba942bf, type: 2}
+  microphoneAudioGroup: {fileID: -2809456021065275261, guid: 9a467474f54c14281a0d4c71bba942bf,
+    type: 2}
+  useAudioMixerMethod: 1
+  videoRecorder: {fileID: 1418006796}
+  recordingText: {fileID: 237215421}
 --- !u!1 &1228819578
 GameObject:
   m_ObjectHideFlags: 0
@@ -7746,7 +7826,7 @@ MonoBehaviour:
   shieldRoot: {fileID: 1027659978}
   prefabShield: {fileID: 3754867266021553689, guid: 12008f3447a6c4af7bc21882f0037795,
     type: 3}
-  soundwaveLife: {x: 7, y: 9}
+  soundwaveLife: {x: 3, y: 4}
   soundwaveSpeed: {x: 3, y: 4.5}
   soundwaveStrength: {x: 0, y: 1}
   soundwaveAngle: {x: 90, y: 180}
@@ -9246,13 +9326,13 @@ GameObject:
   m_Component:
   - component: {fileID: 1418006794}
   - component: {fileID: 1418006801}
-  - component: {fileID: 1418006800}
   - component: {fileID: 1418006799}
   - component: {fileID: 1418006798}
   - component: {fileID: 1418006797}
   - component: {fileID: 1418006796}
   - component: {fileID: 1418006795}
   - component: {fileID: 1418006802}
+  - component: {fileID: 1418006803}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -9466,14 +9546,6 @@ MonoBehaviour:
   m_LightEstimation: 0
   m_FacingDirection: 1
   m_RenderMode: 0
---- !u!81 &1418006800
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1418006793}
-  m_Enabled: 1
 --- !u!20 &1418006801
 Camera:
   m_ObjectHideFlags: 0
@@ -9542,6 +9614,14 @@ MonoBehaviour:
   m_EnvironmentDepthMode: 1
   m_EnvironmentDepthTemporalSmoothing: 1
   m_OcclusionPreferenceMode: 0
+--- !u!81 &1418006803
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1418006793}
+  m_Enabled: 1
 --- !u!1 &1419121177
 GameObject:
   m_ObjectHideFlags: 0

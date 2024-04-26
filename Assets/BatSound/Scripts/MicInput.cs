@@ -5,6 +5,10 @@ using UnityEngine.Events;
 using TMPro;
 using HoloKit.iOS;
 
+
+/// <summary>
+/// Code from https://forum.unity.com/threads/check-current-microphone-input-volume.133501/
+/// </summary>
 public class MicInput : MonoBehaviour
 {
 
@@ -27,6 +31,8 @@ public class MicInput : MonoBehaviour
     {
         if (_device == null) _device = Microphone.devices[0];
          _clipRecord = Microphone.Start(_device, true, 1, 44100);
+        audioSource = GetComponent<AudioSource>();
+        audioSource.clip = _clipRecord;
     }
 
     void StopMicrophone()
@@ -34,8 +40,8 @@ public class MicInput : MonoBehaviour
         Microphone.End(_device);
     }
 
-
-    public AudioClip _clipRecord;
+    AudioSource audioSource;
+    AudioClip _clipRecord;
     int _sampleWindow = 32;
 
     //get data from microphone into audioclip
@@ -78,6 +84,7 @@ public class MicInput : MonoBehaviour
             }
 
         }
+        Debug.Log("LevelMax:" + MicLoudness.ToString("0.0000"));
     }
 
     bool _isInitialized;

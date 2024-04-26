@@ -30,6 +30,7 @@ public class MeshVFX : MonoBehaviour
     private GraphicsBuffer bufferNormal;
 
     List<(float, int)> listMeshDistance = new List<(float, int)>();
+    List<int> listRandomIndex = new List<int>();
 
     void Start()
     {
@@ -39,7 +40,7 @@ public class MeshVFX : MonoBehaviour
 
     void LateUpdate()
     {
-        //ShowDebugInfo();
+        ShowDebugInfo();
 
         IList<MeshFilter> mesh_list = GameManager.Instance.MeshManager.meshes;
 
@@ -47,9 +48,6 @@ public class MeshVFX : MonoBehaviour
         {
             listVertex.Clear();
             listNormal.Clear();
-
-            listMeshDistance.Clear();
-
 
             int mesh_count = mesh_list.Count; 
             int vertex_count = 0;
@@ -62,20 +60,27 @@ public class MeshVFX : MonoBehaviour
             if(dynamicallyResizeBuffer)
             {
                 // randomize the order of mesh
-                int n = mesh_list.Count;
+                listRandomIndex.Clear();
+                for (int i = 0; i < mesh_list.Count; i++)
+                {
+                    listRandomIndex.Add(i);
+                }
+
+                int n = listRandomIndex.Count;
                 while (n > 1)
                 {
                     n--;
                     int k = Random.Range(0, n + 1);
-                    MeshFilter value = mesh_list[k];
-                    mesh_list[k] = mesh_list[n];
-                    mesh_list[n] = value;
+                    int value = listRandomIndex[k];
+                    listRandomIndex[k] = listRandomIndex[n];
+                    listRandomIndex[n] = value;
                 }
 
                 // push to buffer
-                for (int i = 0; i < mesh_list.Count; i++)
+                for (int i = 0; i < listRandomIndex.Count; i++)
                 {
-                    MeshFilter mesh = mesh_list[i];
+                    int index = listRandomIndex[i];
+                    MeshFilter mesh = mesh_list[index];
 
                     listVertex.AddRange(mesh.sharedMesh.vertices);
                     listNormal.AddRange(mesh.sharedMesh.normals);
@@ -90,6 +95,7 @@ public class MeshVFX : MonoBehaviour
             else
             {
                 // sort all meshes by distance
+                listMeshDistance.Clear();
                 for (int i = 0; i < mesh_list.Count; i++)
                 {
                     MeshFilter mesh = mesh_list[i];

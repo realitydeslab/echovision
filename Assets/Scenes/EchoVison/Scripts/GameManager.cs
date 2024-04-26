@@ -13,6 +13,11 @@ public class GameManager : MonoBehaviour
     private ARMeshManager meshManager;
     public ARMeshManager MeshManager { get { return meshManager; } }
 
+    private AudioProcessor audioProcessor;
+    private float audioVolume;
+    public float AudioVolume { get { return audioProcessor.AudioVolume; } }
+    public float AudioPitch { get { return audioProcessor.AudioPitch; } }
+
     private Helper helper;
     public Helper Helper { get { return helper; } }
 
@@ -28,6 +33,12 @@ public class GameManager : MonoBehaviour
         if (headTransform == null)
         {
             Debug.LogError("No ARMeshManager Found.");
+        }
+
+        audioProcessor = FindObjectOfType<AudioProcessor>();
+        if (audioProcessor == null)
+        {
+            Debug.LogError("No AudioProcessor Found.");
         }
 
         helper = FindObjectOfType<Helper>();

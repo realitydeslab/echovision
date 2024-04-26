@@ -166,7 +166,7 @@ public class SoundWaveEmitter : MonoBehaviour
         // shieldRoot.gameObject.SetActive(false); // remove shield anyway
 
         // Emit
-        if (Input.GetMouseButton(0) ||  MicInput.MicLoudness > emitThreshold)
+        if (Input.GetMouseButton(0) ||  GameManager.Instance.AudioVolume > emitThreshold)
         {
             EmitSoundWave();
         }
@@ -174,7 +174,7 @@ public class SoundWaveEmitter : MonoBehaviour
         {
             EndSoundWave();
         }
-        matMeshing.SetFloat("SoundVolume", MicInput.MicLoudness);
+        matMeshing.SetFloat("SoundVolume", GameManager.Instance.AudioVolume);
 
         //
         //UpdtaeMeshBounds();
