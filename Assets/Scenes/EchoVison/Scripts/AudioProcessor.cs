@@ -58,6 +58,7 @@ public class AudioProcessor : MonoBehaviour
         {
             float level = LevelMax();
             float level_decimal = 20 * Mathf.Log10(Mathf.Abs(level));
+
             audioVolume = Remap(level_decimal, -30, 0, 0, 1, true);
             audioPitch = 0;
             //Debug.Log(string.Format("LevelMax:{0}, Decimal:{1}", level.ToString("0.0000"), level_decimal.ToString("0.000")));
@@ -69,8 +70,9 @@ public class AudioProcessor : MonoBehaviour
         if(useAudioMixerMethod)
         {
             AnalyzeSound();
+
             audioVolume = Remap(DbValue, -10, 10, 0, 1, true);
-            audioPitch = PitchValue;
+            audioPitch = Remap(PitchValue, 0, 600, 0, 1, true);
             //GameManager.Instance.SetInfo("db", DbValue.ToString("0.000"));
             //GameManager.Instance.SetInfo("pitch", PitchValue.ToString("0.000"));
         }

@@ -7744,6 +7744,7 @@ MonoBehaviour:
   microphoneAudioGroup: {fileID: -2809456021065275261, guid: 9a467474f54c14281a0d4c71bba942bf,
     type: 2}
   useAudioMixerMethod: 1
+  valueSmoothDampTime: 0.1
   videoRecorder: {fileID: 1418006796}
   recordingText: {fileID: 237215421}
 --- !u!1 &1228819578
@@ -7819,24 +7820,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f24add9146f74d96982ee5bcdb94db7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  volume: {fileID: 855594105}
   vfx: {fileID: 1735498855}
   matMeshing: {fileID: 2100000, guid: df52db65414324e219b9434628b66c19, type: 2}
-  matShield: {fileID: 2100000, guid: 7d8de0e4aea9445c3acc7f4e6c690555, type: 2}
-  shieldRoot: {fileID: 1027659978}
-  prefabShield: {fileID: 3754867266021553689, guid: 12008f3447a6c4af7bc21882f0037795,
-    type: 3}
-  soundwaveLife: {x: 3, y: 4}
+  volume: {fileID: 855594105}
+  soundwaveLife: {x: 2, y: 3}
   soundwaveSpeed: {x: 3, y: 4.5}
-  soundwaveStrength: {x: 0, y: 1}
   soundwaveAngle: {x: 90, y: 180}
   minWaveThickness: 1
-  emitThreshold: 0.05
+  emitVolumeThreshold: 0.02
   debugMode: 0
   testAge: 0.372
-  testRange: 2.3
+  testRange: 3.26
   testAngle: 90
   testThickness: 0.36
+  testAudioVolume: 0
+  testAudioPitch: 0
 --- !u!4 &1230832752
 Transform:
   m_ObjectHideFlags: 0

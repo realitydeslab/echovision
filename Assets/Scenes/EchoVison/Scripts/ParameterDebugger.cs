@@ -114,7 +114,7 @@ public class ParameterDebugger : MonoBehaviour
 
     void OnValueChaned_Life(float v)
     {
-        soundwaveEmitter.soundwaveLife = new Vector2(v, v*1.5f);
+        //soundwaveEmitter.soundwaveLife = new Vector2(v, v*1.5f);
     }
     void OnValueChaned_Speed(float v)
     {
