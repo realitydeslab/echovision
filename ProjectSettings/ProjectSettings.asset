@@ -167,7 +167,7 @@ PlayerSettings:
   applicationIdentifier:
     Android: com.UnityTechnologies.com.unity.template.urpblank
     Standalone: com.Unity-Technologies.com.unity.template.urp-blank
-    iPhone: com.holoi.holokit.becoming-bats
+    iPhone: org.realitydeslab.echovision
   buildNumber:
     Standalone: 0
     VisionOS: 0
