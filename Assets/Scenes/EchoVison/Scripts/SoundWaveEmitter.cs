@@ -176,12 +176,12 @@ public class SoundWaveEmitter : MonoBehaviour
         // Emit New SoundWave
         if (Input.GetMouseButton(0) || GameManager.Instance.AudioVolume > emitVolumeThreshold)
         {
-            Debug.Log("Start");
+            //Debug.Log("Start");
             EmitSoundWave(GameManager.Instance.AudioVolume, GameManager.Instance.AudioPitch);
         }
         else
         {
-            Debug.Log("End");
+            //Debug.Log("End");
             EndSoundWave();
         }
 
@@ -211,7 +211,7 @@ public class SoundWaveEmitter : MonoBehaviour
 #endif
             SoundWave wave = soundwaves[i];
 
-            PrintDebugInfo("Update", i);
+            //PrintDebugInfo("Update", i);
 
             // IF Wave is totally dead. Skip
             if (IsWaveTotallyDead(wave))
