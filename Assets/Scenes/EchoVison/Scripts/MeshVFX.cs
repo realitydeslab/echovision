@@ -40,7 +40,7 @@ public class MeshVFX : MonoBehaviour
 
     void LateUpdate()
     {
-        ShowDebugInfo();
+        //ShowDebugInfo();
 
         IList<MeshFilter> mesh_list = GameManager.Instance.MeshManager.meshes;
 
