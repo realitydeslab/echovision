@@ -71,6 +71,7 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _RippleBandGamma: 7.34
+    - _SoundPitch: 0
     - _SoundVolume: 0
     - _SoundwaveSpeed: 0
     - _Step: 8.78
@@ -79,7 +80,7 @@ Material:
     - _TestAngle: 143
     - _TestRange: 4
     - _TestThickness: 2.22
-    - _WaveSpeed: 1
+    - _WaveSpeed: 3.8579335
     - _WiggleDensity: 1
     - _WiggleSpeed: 1
     - _WiggleStrength: 0.1

@@ -253,30 +253,27 @@ namespace HoloKit.iOS
 
         public void StartRecording()
         {
-            //_microphoneAudioSource.loop = true;
-            //while (!(Microphone.GetPosition(null) > 0))
-            //{
-            //}
-            //_microphoneAudioSource.Play();
+            _microphoneAudioSource.loop = true;
+            while (!(Microphone.GetPosition(null) > 0))
+            {
+            }
+            _microphoneAudioSource.Play();
 
-            Debug.Log("1");
             _clock = new RealtimeClock();
             // var sampleRate = _audioDevice != null ? _audioDevice.sampleRate : 24000;
             // var channelCount = _audioDevice != null ? _audioDevice.channelCount : 2;
 
             var path = PathUtil.GetTemporaryFilePath();
-            Debug.Log("2");
             var sampleRate = AudioSettings.outputSampleRate;
             var channelCount = 2;
             var width = Screen.width;
             var height = Screen.height;
-            Debug.Log("3");
+
             // ARGBHalf will make sure the camera renders post-processing.
             var _descriptor = new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGBHalf, 32);
             _cameraRt = new RenderTexture(_descriptor);
             _frameRt = new RenderTexture(width, height, 0);
             int status = HoloKitVideoRecorder_StartRecording(path, width, height, sampleRate, channelCount);
-            Debug.Log("4");
             _timeQueue.Clear();
             if (status != 0)
             {
@@ -286,20 +283,20 @@ namespace HoloKit.iOS
             {
                 IsRecording = true;
             }
-            Debug.Log("5");
+
             OnHoloKitRenderModeChanged(_holokitCameraManager.ScreenRenderMode);
-            Debug.Log("6");
+
             StartCoroutine(CommitFrames());
-            Debug.Log("7");
+
         }
 
         public void EndRecording()
         {
-            //if (_recordMicrophone && _microphoneAudioSource != null)
-            //{
-            //    _microphoneAudioSource.Stop();
-            //    //Microphone.End(null);
-            //}
+            if (_recordMicrophone && _microphoneAudioSource != null)
+            {
+                _microphoneAudioSource.Stop();
+                //Microphone.End(null);
+            }
 
             AsyncGPUReadback.WaitAllRequests();
             HoloKitVideoRecorder_EndRecording();

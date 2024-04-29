@@ -4,6 +4,10 @@ using UnityEngine.Audio;
 
 public class AudioProcessor : MonoBehaviour
 {
+    [Header("Auido Source")]
+    public AudioSource microphoneAudioSource;
+    public AudioSource masterAudioSource;
+
     [Header("Auido Mixer")]
     public AudioMixerGroup masterAudioGroup;
     public AudioMixerGroup microphoneAudioGroup;
@@ -14,7 +18,7 @@ public class AudioProcessor : MonoBehaviour
     public bool useAudioMixerMethod = true;
 
     bool isInitialized = false;
-    AudioSource audioSource;
+    
     AudioClip clipRecord;
     string deviceName;
 
@@ -116,7 +120,7 @@ public class AudioProcessor : MonoBehaviour
     float _fSample;
     void AnalyzeSound()
     {
-        GetComponent<AudioSource>().GetOutputData(_samples, 0); // fill array with samples
+        microphoneAudioSource.GetOutputData(_samples, 0); // fill array with samples
         int i;
         float sum = 0;
         for (i = 0; i < QSamples; i++)
@@ -127,7 +131,7 @@ public class AudioProcessor : MonoBehaviour
         DbValue = 20 * Mathf.Log10(RmsValue / RefValue); // calculate dB
         if (DbValue < -160) DbValue = -160; // clamp it to -160dB min
                                             // get sound spectrum
-        GetComponent<AudioSource>().GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
+        microphoneAudioSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
         float maxV = 0;
         var maxN = 0;
         for (i = 0; i < QSamples; i++)
@@ -180,19 +184,27 @@ public class AudioProcessor : MonoBehaviour
         }
 
         // Send clip to audio source
-        audioSource = GetComponent<AudioSource>();
-        audioSource.clip = clipRecord;
-        audioSource.loop = true;
+        //microphoneAudioSource = GetComponent<AudioSource>();
+        microphoneAudioSource.clip = clipRecord;
+        microphoneAudioSource.loop = true;
+        microphoneAudioSource.volume = 1;
+        
+        masterAudioSource.clip = clipRecord;
+        masterAudioSource.loop = true;
+        masterAudioSource.volume = 0.01f; // Can not be set to zero cause that will cut off the data stream
 
-
-        if(useAudioMixerMethod)
+        if (useAudioMixerMethod)
         {
-            audioSource.outputAudioMixerGroup = microphoneAudioGroup;
+            microphoneAudioSource.outputAudioMixerGroup = microphoneAudioGroup;
+            masterAudioSource.outputAudioMixerGroup = masterAudioGroup;
+
             // loop to clear buffer
             while (!(Microphone.GetPosition(null) > 0))
             {
             }
-            audioSource.Play();
+
+            microphoneAudioSource.Play();
+            //masterAudioSource.Play();
         }
 
 
@@ -250,30 +262,34 @@ public class AudioProcessor : MonoBehaviour
     {
         if (videoRecorder.IsRecording == false)
         {
-            videoRecorder._microphoneAudioSource = audioSource;
-            if(useAudioMixerMethod)
-            {
-                audioSource.outputAudioMixerGroup = masterAudioGroup;
-            }
-            else
-            {
-                while (!(Microphone.GetPosition(null) > 0))
-                {
-                }
-                if (audioSource.isPlaying == false)
-                    audioSource.Play();
-            }
+            //videoRecorder._microphoneAudioSource = microphoneAudioSource;
+            videoRecorder._microphoneAudioSource = masterAudioSource;
+
+            //masterAudioSource.Play();
+            //if (useAudioMixerMethod)
+            //{
+            //    microphoneAudioSource.outputAudioMixerGroup = masterAudioGroup;
+            //}
+            //else
+            //{
+            //    while (!(Microphone.GetPosition(null) > 0))
+            //    {
+            //    }
+            //    if (microphoneAudioSource.isPlaying == false)
+            //        microphoneAudioSource.Play();
+            //}
         }
         else
         {
             if(useAudioMixerMethod)
             {
-                audioSource.outputAudioMixerGroup = microphoneAudioGroup;
+                //microphoneAudioSource.outputAudioMixerGroup = microphoneAudioGroup;
+                //masterAudioSource.Stop();
             }
             else
             {
-                if (audioSource.isPlaying)
-                    audioSource.Stop();
+                if (microphoneAudioSource.isPlaying)
+                    microphoneAudioSource.Stop();
             }
         }
         videoRecorder.ToggleRecording();
