@@ -27,9 +27,12 @@ public class Helper : MonoBehaviour
     public GameObject infoPrefab;
 
     public Transform labelRoot;
-    public GameObject labelPrefab;    
+    public GameObject labelPrefab;
 
+    [Header("Extra")]
+    public Transform extraPanelRoot;
     public TextMeshProUGUI textFPS;
+    public RawImage humanTexture;
 
 
     Dictionary<string, Action<float>> sliderActionList;
@@ -38,7 +41,7 @@ public class Helper : MonoBehaviour
     {
         controlPanelRoot.gameObject.SetActive(controlPanelEnabled);
         infoPanelRoot.gameObject.SetActive(infoPanelEnabled);
-        textFPS.transform.parent.gameObject.SetActive(extraInfoEnabled);
+        extraPanelRoot.gameObject.SetActive(extraInfoEnabled);
 
 
         if(controlPanelEnabled)
@@ -84,7 +87,9 @@ public class Helper : MonoBehaviour
     void Update()
     {
         if (extraInfoEnabled)
+        {
             textFPS.text = "FPS: " + (1.0f / Time.smoothDeltaTime).ToString("0.0");
+        }
     }
 
 
@@ -150,36 +155,14 @@ public class Helper : MonoBehaviour
         item.transform.rotation = Quaternion.LookRotation((pos - GameManager.Instance.HeadTransform.position), Vector3.up);
     }
 
-
-    void OnValueChaned_DebugMode(float v)
+    public void SetHumanTexture(Texture tex)
     {
-        soundwaveEmitter.debugMode = v > 0.5f ? true : false;
-    }
+        if (extraInfoEnabled == false) return;
 
-    void OnValueChaned_TestAge(float v)
-    {
-        soundwaveEmitter.testAge = v;
-    }
+        if (humanTexture.gameObject.activeSelf == false)
+            humanTexture.gameObject.SetActive(true);
 
-    void OnValueChaned_TestRange(float v)
-    {
-        soundwaveEmitter.testRange = v;
+        humanTexture.texture = tex;
     }
 
-    void OnValueChaned_Life(float v)
-    {
-        //soundwaveEmitter.soundwaveLife = new Vector2(v, v * 1.5f);
-    }
-    void OnValueChaned_Speed(float v)
-    {
-        soundwaveEmitter.soundwaveSpeed = new Vector2(v, v * 1.5f);
-    }
-    void OnValueChaned_Angle(float v)
-    {
-        soundwaveEmitter.soundwaveAngle = new Vector2(v, v * 1.5f);
-    }
-    void OnValueChaned_MinimumThicknesss(float v)
-    {
-        soundwaveEmitter.minWaveThickness = v;
-    }
 }

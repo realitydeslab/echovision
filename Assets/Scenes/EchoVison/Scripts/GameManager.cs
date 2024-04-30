@@ -13,6 +13,9 @@ public class GameManager : MonoBehaviour
     private ARMeshManager meshManager;
     public ARMeshManager MeshManager { get { return meshManager; } }
 
+    private AROcclusionManager occlusionManager;
+    public AROcclusionManager OcclusionManager { get { return occlusionManager; } }
+
     private AudioProcessor audioProcessor;
     private float audioVolume;
     public float AudioVolume { get { return audioProcessor.AudioVolume; } }
@@ -30,9 +33,15 @@ public class GameManager : MonoBehaviour
         }
 
         meshManager = FindObjectOfType<ARMeshManager>();
-        if (headTransform == null)
+        if (meshManager == null)
         {
             Debug.LogError("No ARMeshManager Found.");
+        }
+
+        occlusionManager = FindObjectOfType<AROcclusionManager>();
+        if (occlusionManager == null)
+        {
+            Debug.LogError("No AROcclusionManager Found.");
         }
 
         audioProcessor = FindObjectOfType<AudioProcessor>();
@@ -42,7 +51,7 @@ public class GameManager : MonoBehaviour
         }
 
         helper = FindObjectOfType<Helper>();
-        if (headTransform == null)
+        if (helper == null)
         {
             Debug.LogError("No Healper Found.");
         }
@@ -57,6 +66,10 @@ public class GameManager : MonoBehaviour
     public void SetLabel(string name, Vector3 pos, string text)
     {
         helper?.SetLabel(name, pos, text);
+    }
+    public void SetHumanTexture(Texture2D tex)
+    {
+        helper?.SetHumanTexture(tex);
     }
 
     #region Instance
