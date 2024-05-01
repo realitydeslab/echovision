@@ -101,7 +101,7 @@ void CalculateAlpha_float(float3 position, float noise_time, float noise_value, 
 
         // take the distance that ripple has travelled into account
         ripple_alpha *= fadeinout(dis, ripple_range-ripple_thickness, ripple_range, 0.2, 0.8);
-        ripple_alpha *= clamp(noise(float2(direction.x, direction.z) * float2(_NoiseScale, _NoiseScale)) + 0.2, 0.2, 1);
+        // ripple_alpha *= clamp(noise(float2(direction.x, direction.z) * float2(_NoiseScale, _NoiseScale)) + 0.2, 0.2, 1);
 
 
         // check if it's within the angle
@@ -109,7 +109,7 @@ void CalculateAlpha_float(float3 position, float noise_time, float noise_value, 
         float3 ripple_direction = normalize(float3(rippleDirectionList[i*3], rippleDirectionList[i*3+1], rippleDirectionList[i*3+2]));
         float angle = degrees(acos(dot(ripple_direction, direction)));
         ripple_alpha *= 1 - pow(smoothstep(0, rippleAngleList[i]*0.5, angle), _AngleGamma);
-        ripple_alpha *= clamp(noise(float2(position.x, position.z) * float2(_NoiseScale, _NoiseScale))+ 0.5, 0.5, 1);
+        // ripple_alpha *= clamp(noise(float2(position.x, position.z) * float2(_NoiseScale, _NoiseScale))+ 0.5, 0.5, 1);
 
        
         // output alpha

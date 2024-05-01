@@ -15,8 +15,6 @@ public class MeshVFX : MonoBehaviour
     [SerializeField]
     private VisualEffect vfx;
 
-    public DisplayDepthImage depthImageProcessor;
-
 
     public int bufferInitialCapacity = 64000;
     public bool dynamicallyResizeBuffer = false;
@@ -36,7 +34,7 @@ public class MeshVFX : MonoBehaviour
 
     void Start()
     {
-        depthImageProcessor.TextureDisplayMode = DisplayDepthImage.DisplayMode.HumanStencil;
+        
     }
     
 
@@ -147,16 +145,6 @@ public class MeshVFX : MonoBehaviour
 
 
             // Push Changes to VFX
-            Texture2D human_tex = GameManager.Instance.OcclusionManager.humanStencilTexture;
-            
-            if (human_tex != null && depthImageProcessor != null)
-            {
-                human_tex.wrapMode = TextureWrapMode.Repeat;
-                vfx.SetTexture("HumanStencilTexture", human_tex);
-                vfx.SetMatrix4x4("HumanStencilTextureMatrix", depthImageProcessor.DisplayRotatioMatrix);
-                //GameManager.Instance.SetInfo("Matrix", depthImageProcessor.DisplayRotatioMatrix.ToString());
-            }
-
             vfx.SetInt("MeshPointCount", listVertex.Count);
             //vfx.SetVector3("BoundsMin", min_pos);
             //vfx.SetVector3("BoundsMax", max_pos);

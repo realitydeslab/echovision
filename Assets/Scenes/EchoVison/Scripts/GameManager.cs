@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.InputSystem.XR;
-
+using UnityEngine.XR.ARFoundation.Samples;
 
 public class GameManager : MonoBehaviour
 {
@@ -15,6 +15,9 @@ public class GameManager : MonoBehaviour
 
     private AROcclusionManager occlusionManager;
     public AROcclusionManager OcclusionManager { get { return occlusionManager; } }
+
+    private DisplayDepthImage depthImageProcessor;
+    public DisplayDepthImage DepthImageProcessor { get { return depthImageProcessor; } }
 
     private AudioProcessor audioProcessor;
     private float audioVolume;
@@ -42,6 +45,12 @@ public class GameManager : MonoBehaviour
         if (occlusionManager == null)
         {
             Debug.LogError("No AROcclusionManager Found.");
+        }
+
+        depthImageProcessor = FindObjectOfType<DisplayDepthImage>();
+        if (depthImageProcessor == null)
+        {
+            Debug.LogError("No DisplayDepthImage Found.");
         }
 
         audioProcessor = FindObjectOfType<AudioProcessor>();

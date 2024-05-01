@@ -8,6 +8,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using HoloKit;
 using UnityEngine.InputSystem;
+using UnityEngine.XR.ARFoundation.Samples;
 
 public class SoundWaveEmitter : MonoBehaviour
 {
@@ -83,7 +84,7 @@ public class SoundWaveEmitter : MonoBehaviour
     {
         VolumeProfile profile = volume.sharedProfile;        
         profile.TryGet<Bloom>(out bloom);
-
+        
 
 
         // Init Soundwave and Attractors
@@ -288,6 +289,19 @@ public class SoundWaveEmitter : MonoBehaviour
 
         // Alter Post-Processing effects
         //bloom.intensity.value = max_bloom * 2f;
+
+        Texture2D human_tex = GameManager.Instance.OcclusionManager.humanStencilTexture;
+
+        if (human_tex != null && GameManager.Instance.DepthImageProcessor != null)
+        {
+            human_tex.wrapMode = TextureWrapMode.Repeat;
+            vfx.SetTexture("HumanStencilTexture", human_tex);
+            vfx.SetMatrix4x4("HumanStencilTextureMatrix", GameManager.Instance.DepthImageProcessor.DisplayRotatioMatrix);
+            matMeshing.SetTexture("_HumanStencilTexture", human_tex);
+            matMeshing.SetMatrix("_HumanStencilTextureMatrix", GameManager.Instance.DepthImageProcessor.DisplayRotatioMatrix);
+            //GameManager.Instance.SetInfo("Matrix", depthImageProcessor.DisplayRotatioMatrix.ToString());
+        }
+
     }
 
     bool IsWaveTotallyDead(SoundWave wave)

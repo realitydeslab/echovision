@@ -65,7 +65,7 @@ namespace UnityEngine.XR.ARFoundation.Samples
         /// <summary>
         /// The mode indicating which texture to display.
         /// </summary>
-        DisplayMode m_DisplayMode = DisplayMode.EnvironmentDepthRaw;
+        DisplayMode m_DisplayMode = DisplayMode.HumanStencil;
         public DisplayMode TextureDisplayMode
         {
             get => m_DisplayMode;

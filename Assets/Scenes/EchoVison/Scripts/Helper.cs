@@ -78,7 +78,7 @@ public class Helper : MonoBehaviour
                 {
                     display_value.text = v.ToString("0.00");
 
-                    SliderCallbackFunction(param_name, v);
+                    SliderCallbackFunction(item.name,param_name, v);
                 });
             }
         }
@@ -93,13 +93,13 @@ public class Helper : MonoBehaviour
     }
 
 
-    void SliderCallbackFunction(string param_name, float v)
+    void SliderCallbackFunction(string item_name, string param_name, float v)
     {
-        if (param_name.ToLower().Contains("mat"))
+        if (item_name.ToLower().Contains("mat"))
         {
             matMeshing.SetFloat(param_name, v);
         }
-        else if (param_name.ToLower().Contains("vfx"))
+        else if (item_name.ToLower().Contains("vfx"))
         {
             vfxParticle.SetFloat(param_name, v);
         }
