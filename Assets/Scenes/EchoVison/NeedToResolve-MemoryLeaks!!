@@ -1,0 +1,123 @@
+This issue might be caused by XRInit.cs
+
+Found 1 leak(s) from callstack:
+ Leak Detected : Persistent allocates 5 individual allocations.
+
+ 
+ #0  (Mono JIT Code) [NativeArray.cs:116] Unity.Collections.NativeArray`1<UnityEngine.Vector3>:Allocate (int,Unity.Collections.Allocator,Unity.Collections.NativeArray`1<UnityEngine.Vector3>&)
+ #1  (Mono JIT Code) [NativeArray.cs:80] Unity.Collections.NativeArray`1<UnityEngine.Vector3>:.ctor (UnityEngine.Vector3[],Unity.Collections.Allocator)
+ #2  (Mono JIT Code) [SimulationMeshSubsystem.cs:87] UnityEngine.XR.Simulation.SimulationMeshSubsystem:AddOrUpdateMesh (UnityEngine.XR.Simulation.SimulationMesh)
+ #3  (Mono JIT Code) [SimulationMeshSubsystem.cs:264] UnityEngine.XR.Simulation.SimulationMeshSubsystem:AddSimulationMesh (UnityEngine.Mesh,string)
+ #4  (Mono JIT Code) [SimulationMeshSubsystem.cs:239] UnityEngine.XR.Simulation.SimulationMeshSubsystem:AddMeshesWithClassification (System.Collections.Generic.List`1<UnityEngine.MeshFilter>,UnityEngine.Matrix4x4,string)
+ #5  (Mono JIT Code) [SimulationMeshSubsystem.cs:194] UnityEngine.XR.Simulation.SimulationMeshSubsystem:AddMeshes (UnityEngine.GameObject)
+ #6  (Mono JIT Code) [SimulationMeshSubsystem.cs:156] UnityEngine.XR.Simulation.SimulationMeshSubsystem/<>c__DisplayClass12_0:<OnEnvironmentReady>b__0 ()
+ #7  (Mono JIT Code) [EditorApplication.cs:396] UnityEditor.EditorApplication:Internal_CallDelayFunctions ()
+ #8  (Mono JIT Code) (wrapper runtime-invoke) object:runtime_invoke_void (object,intptr,intptr,intptr)
+ #9 mono_jit_runtime_invoke
+ #10 do_runtime_invoke
+ #11 mono_runtime_invoke
+ #12 scripting_method_invoke(ScriptingMethodPtr, ScriptingObjectPtr, ScriptingArguments&, ScriptingExceptionPtr*, bool)
+ #13 ScriptingInvocation::Invoke(ScriptingExceptionPtr*, bool)
+ #14 Scripting::UnityEditor::EditorApplicationProxy::Internal_CallDelayFunctions(ScriptingExceptionPtr*)
+ #15 Application::TickTimer()
+ #16 -[EditorApplication TickTimer]
+ #17 __NSFireTimer
+ #18 ???
+ #19 ???
+
+
+
+ Found 1 leak(s) from callstack:
+ #0  (Mono JIT Code) [NativeArray.cs:116] Unity.Collections.NativeArray`1<UnityEngine.Vector3>:Allocate (int,Unity.Collections.Allocator,Unity.Collections.NativeArray`1<UnityEngine.Vector3>&)
+ #1  (Mono JIT Code) [NativeArray.cs:68] Unity.Collections.NativeArray`1<UnityEngine.Vector3>:.ctor (int,Unity.Collections.Allocator,Unity.Collections.NativeArrayOptions)
+ #2  (Mono JIT Code) [SimulationEnvironmentScanner.cs:74] UnityEngine.XR.Simulation.SimulationEnvironmentScanner:Initialize (UnityEngine.XR.Simulation.SimulationCamera,UnityEngine.PhysicsScene,UnityEngine.GameObject)
+ #3  (Mono JIT Code) [SimulationSessionSubsystem.cs:67] UnityEngine.XR.Simulation.SimulationSessionSubsystem/SimulationProvider:Initialize ()
+ #4  (Mono JIT Code) [SimulationSessionSubsystem.cs:73] UnityEngine.XR.Simulation.SimulationSessionSubsystem/SimulationProvider:Start ()
+ #5  (Mono JIT Code) [SubsystemWithProvider.cs:55] UnityEngine.SubsystemsImplementation.SubsystemWithProvider`3<TSubsystem_REF, TSubsystemDescriptor_REF, TProvider_REF>:OnStart ()
+ #6  (Mono JIT Code) [SubsystemWithProvider.cs:11] UnityEngine.SubsystemsImplementation.SubsystemWithProvider:Start ()
+ #7  (Mono JIT Code) [ARSession.cs:397] UnityEngine.XR.ARFoundation.ARSession:StartSubsystem ()
+ #8  (Mono JIT Code) [ARSession.cs:384] UnityEngine.XR.ARFoundation.ARSession/<Initialize>d__39:MoveNext ()
+ #9  (Mono JIT Code) [Coroutines.cs:17] UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr)
+ #10  (Mono JIT Code) (wrapper runtime-invoke) <Module>:runtime_invoke_void_object_intptr (object,intptr,intptr,intptr)
+ #11 mono_jit_runtime_invoke
+ #12 do_runtime_invoke
+ #13 mono_runtime_invoke
+ #14 scripting_method_invoke(ScriptingMethodPtr, ScriptingObjectPtr, ScriptingArguments&, ScriptingExceptionPtr*, bool)
+ #15 ScriptingInvocation::Invoke(ScriptingExceptionPtr*, bool)
+ #16 Coroutine::InvokeMoveNext(ScriptingExceptionPtr*)
+ #17 Coroutine::Run(bool*)
+ #18 ???
+ #19 ???
+
+
+
+Found 1 leak(s) from callstack:
+ #0  (Mono JIT Code) [NativeArray.cs:116] Unity.Collections.NativeArray`1<UnityEngine.Vector3>:Allocate (int,Unity.Collections.Allocator,Unity.Collections.NativeArray`1<UnityEngine.Vector3>&)
+ #1  (Mono JIT Code) [NativeArray.cs:68] Unity.Collections.NativeArray`1<UnityEngine.Vector3>:.ctor (int,Unity.Collections.Allocator,Unity.Collections.NativeArrayOptions)
+ #2  (Mono JIT Code) [SimulationEnvironmentScanner.cs:75] UnityEngine.XR.Simulation.SimulationEnvironmentScanner:Initialize (UnityEngine.XR.Simulation.SimulationCamera,UnityEngine.PhysicsScene,UnityEngine.GameObject)
+ #3  (Mono JIT Code) [SimulationSessionSubsystem.cs:67] UnityEngine.XR.Simulation.SimulationSessionSubsystem/SimulationProvider:Initialize ()
+ #4  (Mono JIT Code) [SimulationSessionSubsystem.cs:73] UnityEngine.XR.Simulation.SimulationSessionSubsystem/SimulationProvider:Start ()
+ #5  (Mono JIT Code) [SubsystemWithProvider.cs:55] UnityEngine.SubsystemsImplementation.SubsystemWithProvider`3<TSubsystem_REF, TSubsystemDescriptor_REF, TProvider_REF>:OnStart ()
+ #6  (Mono JIT Code) [SubsystemWithProvider.cs:11] UnityEngine.SubsystemsImplementation.SubsystemWithProvider:Start ()
+ #7  (Mono JIT Code) [ARSession.cs:397] UnityEngine.XR.ARFoundation.ARSession:StartSubsystem ()
+ #8  (Mono JIT Code) [ARSession.cs:384] UnityEngine.XR.ARFoundation.ARSession/<Initialize>d__39:MoveNext ()
+ #9  (Mono JIT Code) [Coroutines.cs:17] UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr)
+ #10  (Mono JIT Code) (wrapper runtime-invoke) <Module>:runtime_invoke_void_object_intptr (object,intptr,intptr,intptr)
+ #11 mono_jit_runtime_invoke
+ #12 do_runtime_invoke
+ #13 mono_runtime_invoke
+ #14 scripting_method_invoke(ScriptingMethodPtr, ScriptingObjectPtr, ScriptingArguments&, ScriptingExceptionPtr*, bool)
+ #15 ScriptingInvocation::Invoke(ScriptingExceptionPtr*, bool)
+ #16 Coroutine::InvokeMoveNext(ScriptingExceptionPtr*)
+ #17 Coroutine::Run(bool*)
+ #18 ???
+ #19 ???
+
+
+
+Found 1 leak(s) from callstack:
+ #0  (Mono JIT Code) [NativeArray.cs:116] Unity.Collections.NativeArray`1<int>:Allocate (int,Unity.Collections.Allocator,Unity.Collections.NativeArray`1<int>&)
+ #1  (Mono JIT Code) [NativeArray.cs:80] Unity.Collections.NativeArray`1<int>:.ctor (int[],Unity.Collections.Allocator)
+ #2  (Mono JIT Code) [SimulationMeshSubsystem.cs:116] UnityEngine.XR.Simulation.SimulationMeshSubsystem:AddOrUpdateMesh (UnityEngine.XR.Simulation.SimulationMesh)
+ #3  (Mono JIT Code) [SimulationMeshSubsystem.cs:264] UnityEngine.XR.Simulation.SimulationMeshSubsystem:AddSimulationMesh (UnityEngine.Mesh,string)
+ #4  (Mono JIT Code) [SimulationMeshSubsystem.cs:239] UnityEngine.XR.Simulation.SimulationMeshSubsystem:AddMeshesWithClassification (System.Collections.Generic.List`1<UnityEngine.MeshFilter>,UnityEngine.Matrix4x4,string)
+ #5  (Mono JIT Code) [SimulationMeshSubsystem.cs:194] UnityEngine.XR.Simulation.SimulationMeshSubsystem:AddMeshes (UnityEngine.GameObject)
+ #6  (Mono JIT Code) [SimulationMeshSubsystem.cs:156] UnityEngine.XR.Simulation.SimulationMeshSubsystem/<>c__DisplayClass12_0:<OnEnvironmentReady>b__0 ()
+ #7  (Mono JIT Code) [EditorApplication.cs:396] UnityEditor.EditorApplication:Internal_CallDelayFunctions ()
+ #8  (Mono JIT Code) (wrapper runtime-invoke) object:runtime_invoke_void (object,intptr,intptr,intptr)
+ #9 mono_jit_runtime_invoke
+ #10 do_runtime_invoke
+ #11 mono_runtime_invoke
+ #12 scripting_method_invoke(ScriptingMethodPtr, ScriptingObjectPtr, ScriptingArguments&, ScriptingExceptionPtr*, bool)
+ #13 ScriptingInvocation::Invoke(ScriptingExceptionPtr*, bool)
+ #14 Scripting::UnityEditor::EditorApplicationProxy::Internal_CallDelayFunctions(ScriptingExceptionPtr*)
+ #15 Application::TickTimer()
+ #16 -[EditorApplication TickTimer]
+ #17 __NSFireTimer
+ #18 ???
+ #19 ???
+
+
+
+Found 1 leak(s) from callstack:
+ #0  (Mono JIT Code) [NativeArray.cs:116] Unity.Collections.NativeArray`1<UnityEngine.Vector3>:Allocate (int,Unity.Collections.Allocator,Unity.Collections.NativeArray`1<UnityEngine.Vector3>&)
+ #1  (Mono JIT Code) [NativeArray.cs:80] Unity.Collections.NativeArray`1<UnityEngine.Vector3>:.ctor (UnityEngine.Vector3[],Unity.Collections.Allocator)
+ #2  (Mono JIT Code) [SimulationMeshSubsystem.cs:90] UnityEngine.XR.Simulation.SimulationMeshSubsystem:AddOrUpdateMesh (UnityEngine.XR.Simulation.SimulationMesh)
+ #3  (Mono JIT Code) [SimulationMeshSubsystem.cs:264] UnityEngine.XR.Simulation.SimulationMeshSubsystem:AddSimulationMesh (UnityEngine.Mesh,string)
+ #4  (Mono JIT Code) [SimulationMeshSubsystem.cs:239] UnityEngine.XR.Simulation.SimulationMeshSubsystem:AddMeshesWithClassification (System.Collections.Generic.List`1<UnityEngine.MeshFilter>,UnityEngine.Matrix4x4,string)
+ #5  (Mono JIT Code) [SimulationMeshSubsystem.cs:194] UnityEngine.XR.Simulation.SimulationMeshSubsystem:AddMeshes (UnityEngine.GameObject)
+ #6  (Mono JIT Code) [SimulationMeshSubsystem.cs:156] UnityEngine.XR.Simulation.SimulationMeshSubsystem/<>c__DisplayClass12_0:<OnEnvironmentReady>b__0 ()
+ #7  (Mono JIT Code) [EditorApplication.cs:396] UnityEditor.EditorApplication:Internal_CallDelayFunctions ()
+ #8  (Mono JIT Code) (wrapper runtime-invoke) object:runtime_invoke_void (object,intptr,intptr,intptr)
+ #9 mono_jit_runtime_invoke
+ #10 do_runtime_invoke
+ #11 mono_runtime_invoke
+ #12 scripting_method_invoke(ScriptingMethodPtr, ScriptingObjectPtr, ScriptingArguments&, ScriptingExceptionPtr*, bool)
+ #13 ScriptingInvocation::Invoke(ScriptingExceptionPtr*, bool)
+ #14 Scripting::UnityEditor::EditorApplicationProxy::Internal_CallDelayFunctions(ScriptingExceptionPtr*)
+ #15 Application::TickTimer()
+ #16 -[EditorApplication TickTimer]
+ #17 __NSFireTimer
+ #18 ???
+ #19 ???
+
