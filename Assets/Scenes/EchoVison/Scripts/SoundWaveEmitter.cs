@@ -12,6 +12,11 @@ using UnityEngine.XR.ARFoundation.Samples;
 
 public class SoundWaveEmitter : MonoBehaviour
 {
+    
+    [SerializeField] HoloKitCameraManager cameraManager;
+    [SerializeField] HolokitAudioProcessor audioProcessor;
+    [SerializeField] DepthImageProcessor depthImageProcessor;
+    [SerializeField] TrackedPoseDriver trackedPoseDriver;
 
     [Header("References")]
     public VisualEffect vfx;
@@ -79,6 +84,8 @@ public class SoundWaveEmitter : MonoBehaviour
     public GameObject prefabShield;
     Material[] shieldMaterialList;
 #endif
+
+    
 
     void Start()
     {
@@ -175,10 +182,10 @@ public class SoundWaveEmitter : MonoBehaviour
 #endif
 
         // Emit New SoundWave
-        if (Input.GetMouseButton(0) || GameManager.Instance.AudioVolume > emitVolumeThreshold)
+        if (Input.GetMouseButton(0) || audioProcessor.AudioVolume > emitVolumeThreshold)
         {
             //Debug.Log("Start");
-            EmitSoundWave(GameManager.Instance.AudioVolume, GameManager.Instance.AudioPitch);
+            EmitSoundWave(audioProcessor.AudioVolume, audioProcessor.AudioPitch);
         }
         else
         {
@@ -186,9 +193,11 @@ public class SoundWaveEmitter : MonoBehaviour
             EndSoundWave();
         }
 
-        
+
         // Update Extant SoundWave        
-        Transform head_transform = GameManager.Instance.HeadTransform;
+        //Transform head_transform = GameManager.Instance.HeadTransform;
+        //Transform head_transform = cameraManager.CenterEyePose;
+        Transform head_transform = trackedPoseDriver.transform;
         float max_bloom = 0;
         for (int i = 0; i < soundwaves.Length; i++)
         {
@@ -290,15 +299,15 @@ public class SoundWaveEmitter : MonoBehaviour
         // Alter Post-Processing effects
         //bloom.intensity.value = max_bloom * 2f;
 
-        Texture2D human_tex = GameManager.Instance.OcclusionManager.humanStencilTexture;
+        Texture2D human_tex = depthImageProcessor.HumanStencilTexture;
 
-        if (human_tex != null && GameManager.Instance.DepthImageProcessor != null)
+        if (human_tex != null && depthImageProcessor != null)
         {
             human_tex.wrapMode = TextureWrapMode.Repeat;
             vfx.SetTexture("HumanStencilTexture", human_tex);
-            vfx.SetMatrix4x4("HumanStencilTextureMatrix", GameManager.Instance.DepthImageProcessor.DisplayRotatioMatrix);
+            vfx.SetMatrix4x4("HumanStencilTextureMatrix", depthImageProcessor.DisplayRotatioMatrix);
             matMeshing.SetTexture("_HumanStencilTexture", human_tex);
-            matMeshing.SetMatrix("_HumanStencilTextureMatrix", GameManager.Instance.DepthImageProcessor.DisplayRotatioMatrix);
+            matMeshing.SetMatrix("_HumanStencilTextureMatrix", depthImageProcessor.DisplayRotatioMatrix);
             //GameManager.Instance.SetInfo("Matrix", depthImageProcessor.DisplayRotatioMatrix.ToString());
         }
 
@@ -348,7 +357,7 @@ public class SoundWaveEmitter : MonoBehaviour
 
     public void EmitSoundWave(float volume = 1, float pitch = 1)
     {
-        Transform head_transform = GameManager.Instance.HeadTransform;
+        Transform head_transform = trackedPoseDriver.transform;
         EmitSoundWave(head_transform.position, Quaternion.Euler(head_transform.eulerAngles) * Vector3.forward, volume, pitch);
     }
 
@@ -504,12 +513,12 @@ public class SoundWaveEmitter : MonoBehaviour
         matMeshing.SetFloatArray("rippleThicknessList", rippleThicknessList);
 
         float src_value = lastSoundVolume;
-        float dst_value = debugMode ? testAudioVolume : GameManager.Instance.AudioVolume;
+        float dst_value = debugMode ? testAudioVolume : audioProcessor.AudioVolume;
         float temp_vel = 0;
         matMeshing.SetFloat("_SoundVolume", Mathf.SmoothDamp(src_value, dst_value, ref temp_vel, 0.1f));
 
         src_value = lastSoundPitch;
-        dst_value = debugMode ? testAudioPitch : GameManager.Instance.AudioPitch;
+        dst_value = debugMode ? testAudioPitch : audioProcessor.AudioPitch;
         temp_vel = 0;
         matMeshing.SetFloat("_SoundPitch", Mathf.SmoothDamp(src_value, dst_value, ref temp_vel, 0.1f));
 

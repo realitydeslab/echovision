@@ -32,6 +32,14 @@ public class MeshVFX : MonoBehaviour
     List<(float, int)> listMeshDistance = new List<(float, int)>();
     List<int> listRandomIndex = new List<int>();
 
+    [SerializeField]
+    ARMeshManager meshManager;
+
+    [SerializeField]
+    HoloKitCameraManager cameraManager;
+
+    [SerializeField] TrackedPoseDriver trackedPoseDriver;
+
     void Start()
     {
         
@@ -42,7 +50,7 @@ public class MeshVFX : MonoBehaviour
     {
         //ShowDebugInfo();
 
-        IList<MeshFilter> mesh_list = GameManager.Instance.MeshManager.meshes;
+        IList<MeshFilter> mesh_list = meshManager.meshes;
 
         if(mesh_list != null)
         {
@@ -52,7 +60,9 @@ public class MeshVFX : MonoBehaviour
             int mesh_count = mesh_list.Count; 
             int vertex_count = 0;
             int triangle_count = 0;
-            Vector3 head_pos = GameManager.Instance.HeadTransform.position;
+            //Vector3 head_pos = GameManager.Instance.HeadTransform.position;
+            //Vector3 head_pos = cameraManager.CenterEyePose.position;
+            Vector3 head_pos = trackedPoseDriver.transform.position;
             float distance = 0;
             Vector3 min_pos = Vector3.zero;
             Vector3 max_pos = Vector3.zero;
@@ -168,17 +178,18 @@ public class MeshVFX : MonoBehaviour
 
     void ShowDebugInfo()
     {
-        IList<MeshFilter> mesh_list = GameManager.Instance.MeshManager.meshes;
+        IList<MeshFilter> mesh_list = meshManager.meshes;
 
         if (mesh_list == null) return;
 
 
         int mesh_count = mesh_list.Count;
-        GameManager.Instance.SetInfo("MeshCount", mesh_count.ToString());
+        HelperModule.Instance.SetInfo("MeshCount", mesh_count.ToString());
 
         int vertex_count = 0;
         int triangle_count = 0;
-        Vector3 head_pos = GameManager.Instance.HeadTransform.position;
+        //Vector3 head_pos = cameraManager.CenterEyePose.position;
+        Vector3 head_pos = trackedPoseDriver.transform.position;
         float distance = 0;
         Vector3 min_pos = Vector3.zero;
         Vector3 max_pos = Vector3.zero;
@@ -198,11 +209,11 @@ public class MeshVFX : MonoBehaviour
             //GameManager.Instance.SetLabel(i.ToString(), mesh.sharedMesh.bounds.center, i.ToString() + "|" + distance.ToString("0.00"));
         }
 
-        GameManager.Instance.SetInfo("VertexCount", vertex_count.ToString());
-        GameManager.Instance.SetInfo("TriangleCount", triangle_count.ToString());
-        GameManager.Instance.SetInfo("BoundsMin", min_pos.ToString());
-        GameManager.Instance.SetInfo("BoundsMax", max_pos.ToString());
-        GameManager.Instance.SetInfo("Center", ((min_pos + max_pos) * 0.5f).ToString());
+        HelperModule.Instance.SetInfo("VertexCount", vertex_count.ToString());
+        HelperModule.Instance.SetInfo("TriangleCount", triangle_count.ToString());
+        HelperModule.Instance.SetInfo("BoundsMin", min_pos.ToString());
+        HelperModule.Instance.SetInfo("BoundsMax", max_pos.ToString());
+        HelperModule.Instance.SetInfo("Center", ((min_pos + max_pos) * 0.5f).ToString());
     }
 
     void OnDestroy()

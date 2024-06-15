@@ -87,8 +87,8 @@ public class DrawBoundingBox : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        GameManager.Instance.SetInfo("BodyCount:", humanBodyTracker.m_SkeletonTracker.Count.ToString());
-        GameManager.Instance.SetInfo("MeshCount:", m_MeshManager.meshes.Count.ToString());
+        HelperModule.Instance.SetInfo("BodyCount:", humanBodyTracker.m_SkeletonTracker.Count.ToString());
+        HelperModule.Instance.SetInfo("MeshCount:", m_MeshManager.meshes.Count.ToString());
 
 
         IList<MeshFilter> mesh_list = m_MeshManager.meshes;
@@ -155,7 +155,7 @@ public class DrawBoundingBox : MonoBehaviour
                 indexList.AddRange(indices);
             }
 
-            GameManager.Instance.SetInfo("MeshCount_ContainBody:", body_inside_count.ToString());
+            HelperModule.Instance.SetInfo("MeshCount_ContainBody:", body_inside_count.ToString());
 
             combinedMesh.SetVertices(vertexList);
             combinedMesh.SetTriangles(indexList, 0);
