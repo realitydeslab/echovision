@@ -334,7 +334,11 @@ namespace UnityEngine.XR.ARFoundation.Samples
         /// <param name="cameraFrameEventArgs">The arguments when a camera frame event is raised.</param>
         void OnCameraFrameEventReceived(ARCameraFrameEventArgs cameraFrameEventArgs)
         {
-            Debug.Assert(m_RawImage != null, "no raw image");
+            if (m_RawImage == null)
+                return;
+
+
+            //Debug.Assert(m_RawImage != null, "no raw image");
             if (m_RawImage.material != null)
             {
                 // Copy the display rotation matrix from the camera.

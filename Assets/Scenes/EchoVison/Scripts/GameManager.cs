@@ -19,7 +19,7 @@ public class GameManager : MonoBehaviour
     private DisplayDepthImage depthImageProcessor;
     public DisplayDepthImage DepthImageProcessor { get { return depthImageProcessor; } }
 
-    private AudioProcessor audioProcessor;
+    private HolokitAudioProcessor audioProcessor;
     private float audioVolume;
     public float AudioVolume { get { return audioProcessor.AudioVolume; } }
     public float AudioPitch { get { return audioProcessor.AudioPitch; } }
@@ -53,7 +53,7 @@ public class GameManager : MonoBehaviour
             Debug.LogError("No DisplayDepthImage Found.");
         }
 
-        audioProcessor = FindObjectOfType<AudioProcessor>();
+        audioProcessor = FindObjectOfType<HolokitAudioProcessor>();
         if (audioProcessor == null)
         {
             Debug.LogError("No AudioProcessor Found.");
