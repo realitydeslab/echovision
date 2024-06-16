@@ -1,12 +1,16 @@
+#if UNITY_IOS
 using HoloKit.iOS;
+#endif
 using UnityEngine;
 using UnityEngine.Audio;
 
 public class HolokitMicrophoneAPI : MonoBehaviour
 {
+#if UNITY_IOS
     [Header("Holokit Recorder")]
     [SerializeField] HoloKitVideoRecorder videoRecorder;
     [SerializeField] UnityEngine.UI.Text recordingText;
+#endif
 
     [Header("Auido Source")]
     [SerializeField] AudioSource audiosourceForRecording;       // is for audio recorder
@@ -17,7 +21,7 @@ public class HolokitMicrophoneAPI : MonoBehaviour
     [SerializeField] AudioMixerGroup audioGroupMaster;          // sound output pipeline for recording. set volume to 0 
     [SerializeField] AudioMixerGroup audioGroupForAnalysis;     // sound output pipeline for analysis. set volume to -80 so that user won't hear echo their sound being analyzing
 
-    AudioClip microphoneAudioClip;   
+    AudioClip microphoneAudioClip;
 
     bool verbose = false;
     public bool Verbose { get => verbose; set => verbose = value; }
@@ -33,7 +37,7 @@ public class HolokitMicrophoneAPI : MonoBehaviour
             return;
         }
 
-        if(verbose)
+        if (verbose)
         {
             for (int i = 0; i < Microphone.devices.Length; i++)
             {
@@ -127,7 +131,7 @@ public class HolokitMicrophoneAPI : MonoBehaviour
     }
     #endregion
 
-
+#if UNITY_IOS
     #region HolokitRecorder Related Functions / Temporal
     public void ToggleRecording()
     {
@@ -140,4 +144,5 @@ public class HolokitMicrophoneAPI : MonoBehaviour
         recordingText.text = videoRecorder.IsRecording ? "Stop Recording" : "Start Recording";
     }
     #endregion
+#endif
 }

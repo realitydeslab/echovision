@@ -9,6 +9,7 @@
 [Bb]uild-Project/
 [Bb]uild.app/
 [Bb]uild_*/
+[Bb]uilds_*/
 [Ll]ibrary/
 [Aa]pp/
 [Ll]ogs/
@@ -118,3 +119,5 @@ Assets/Samples.meta
 Assets/UnityXRContent.meta
 
 App_BurstDebugInformation_DoNotShip/
+
+Builds_BurstDebugInformation_DoNotShip/

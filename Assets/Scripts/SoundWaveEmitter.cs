@@ -1,7 +1,15 @@
 using UnityEngine;
-using UnityEngine.InputSystem.XR;
 using UnityEngine.VFX;
+
+#if UNITY_IOS
 using HoloKit;
+using UnityEngine.InputSystem.XR;
+#endif
+
+#if UNITY_VISIONOS
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+#endif
 
 
 public class SoundWave
@@ -36,10 +44,18 @@ public class SoundWave
 public class SoundWaveEmitter : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] HoloKitCameraManager cameraManager;
+#if UNITY_IOS
+    [SerializeField] TrackedPoseDriver trackedPoseDriver;
+#endif
+
+#if UNITY_VISIONOS
+    [SerializeField] UnityEngine.SpatialTracking.TrackedPoseDriver trackedPoseDriver;
+#endif
+
     [SerializeField] HolokitAudioProcessor audioProcessor;
     [SerializeField] DepthImageProcessor depthImageProcessor;
-    [SerializeField] TrackedPoseDriver trackedPoseDriver;
+
+    
 
     [Header("Effect")]
     [SerializeField] VisualEffect vfx;
@@ -111,7 +127,7 @@ public class SoundWaveEmitter : MonoBehaviour
         PushIteratedChanges();
     }
 
-    #region Emit/Stop/Update SoundWave
+#region Emit/Stop/Update SoundWave
     void EmitSoundWave()
     {        
         int cur_emit_index = GetCurrentWaveIndex();
@@ -293,10 +309,10 @@ public class SoundWaveEmitter : MonoBehaviour
         matMeshing.SetFloat("_SoundVolume", smoothedSoundVolume);
         matMeshing.SetFloat("_SoundPitch", smoothedSoundPitch);
     }
-    #endregion
+#endregion
 
 
-    #region Other Functions
+#region Other Functions
     bool IsWaveTotallyDead(SoundWave wave)
     {
         return wave.alive == 0 && wave.age == 0 && wave.thickness >= minWaveThickness && wave.range >= maxWaveRange/* to make it die far*/;
@@ -356,5 +372,5 @@ public class SoundWaveEmitter : MonoBehaviour
         Debug.Log(prefix + string.Format("|{0}, alive:{1}, age:{2}, range:{3}, angle:{4}, thickness:{5}, origin:{6}, dir:{7}",
                 index, wave.alive, wave.age, wave.range, wave.angle, wave.thickness, wave.origin, wave.direction));
     }
-    #endregion
+#endregion
 }

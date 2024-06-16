@@ -5,7 +5,9 @@ using UnityEngine.XR;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using TMPro;
+#if UNITY_IOS
 using HoloKit;
+#endif
 using UnityEngine.InputSystem.XR;
 using UnityEngine.VFX;
 
@@ -13,8 +15,12 @@ public class MeshVFX : MonoBehaviour
 {
     [Header("Reference")]
     [SerializeField] ARMeshManager meshManager;
-    [SerializeField] HoloKitCameraManager cameraManager;
+#if UNITY_IOS
     [SerializeField] TrackedPoseDriver trackedPoseDriver;
+#elif UNITY_VISIONOS
+    [SerializeField] UnityEngine.SpatialTracking.TrackedPoseDriver trackedPoseDriver;
+#endif
+
     [SerializeField] VisualEffect vfx;
 
     [Header("Buffer Settings")]
@@ -22,26 +28,16 @@ public class MeshVFX : MonoBehaviour
     [SerializeField] bool dynamicallyResizeBuffer = false;
     private const int BUFFER_STRIDE = 12; // 12 Bytes for a Vector3 (4,4,4)
 
-    //private static readonly int VertexBufferPropertyID = Shader.PropertyToID("MeshPointCache");
     string vertexBufferPropertyName = "MeshPointCache";
     List<Vector3> listVertex;
     GraphicsBuffer bufferVertex;
-
-    //private static readonly int NormalBufferPropertyID = Shader.PropertyToID("MeshNormalCache");
+    
     string normalBufferPropertyName = "MeshNormalCache";
     List<Vector3> listNormal;
     GraphicsBuffer bufferNormal;
 
     List<(float, int)> listMeshDistance = new List<(float, int)>();
     List<int> listRandomIndex = new List<int>();
-
-    
-
-    void Start()
-    {
-        
-    }
-    
 
     void LateUpdate()
     {
@@ -138,8 +134,6 @@ public class MeshVFX : MonoBehaviour
                 }
             }
 
-            
-
 
             // Set Buffer data, but before that ensure there is enough capacity
             EnsureBufferCapacity(ref bufferVertex, listVertex.Count, BUFFER_STRIDE, vfx, vertexBufferPropertyName);
@@ -151,6 +145,23 @@ public class MeshVFX : MonoBehaviour
 
             // Push Changes to VFX
             vfx.SetInt("MeshPointCount", listVertex.Count);
+
+
+            // Push Transform to VFX
+            // As meshes may not locate at (0,0,0) like they did in iOS.
+            // We need to push transform into VFX for converting local position to world position
+            if (mesh_list.Count > 0)
+            {
+                vfx.SetVector3("MeshTransform_position", mesh_list[0].transform.position);
+                vfx.SetVector3("MeshTransform_angles", mesh_list[0].transform.rotation.eulerAngles);
+                vfx.SetVector3("MeshTransform_scale", mesh_list[0].transform.localScale);
+            }
+            else
+            {
+                vfx.SetVector3("MeshTransform_position", Vector3.zero);
+                vfx.SetVector3("MeshTransform_angles", Vector3.zero);
+                vfx.SetVector3("MeshTransform_scale", Vector3.one);
+            }
         }
     }
 
@@ -231,5 +242,4 @@ public class MeshVFX : MonoBehaviour
 
         ReleaseBuffer(ref bufferNormal);
     }
-
  }
