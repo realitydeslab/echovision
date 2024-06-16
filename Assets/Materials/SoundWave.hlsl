@@ -3,7 +3,6 @@
 uniform float rippleOriginList[MAX_RIPPLE_COUNT*3];
 uniform float rippleDirectionList[MAX_RIPPLE_COUNT*3];
 
-uniform float rippleAliveList[MAX_RIPPLE_COUNT];
 uniform float rippleAgeList[MAX_RIPPLE_COUNT];
 uniform float rippleRangeList[MAX_RIPPLE_COUNT];
 
@@ -56,7 +55,7 @@ float linstep(float min, float max, float v)
     return clamp((v - min) / (max - min), 0.0, 1.0);
 }
 
-void CalculateAlpha_float(float3 position, out float alpha, out float position_in_ripple, out float alpha_band, out float alpha_angle)
+void CalculateAlpha_float(float3 position, float ripple_min_thickness, out float alpha, out float position_in_ripple, out float alpha_band, out float alpha_angle)
 {
     alpha = 0;
     position_in_ripple = 0;
@@ -66,21 +65,6 @@ void CalculateAlpha_float(float3 position, out float alpha, out float position_i
     [unroll]
     for(int i=0; i<MAX_RIPPLE_COUNT; i++)
     {
-        if(_DebugMode)
-        {
-            rippleOriginList[i*3] = rippleOriginList[i*3+1] = rippleOriginList[i*3+2] = 0;
-            rippleDirectionList[i*3] = 0; rippleDirectionList[i*3+1] = 0; rippleDirectionList[i*3+2] = 1;
-
-            rippleAliveList[i] = 1;
-            rippleAgeList[i] = _TestAge;
-            rippleRangeList[i] = _TestRange;
-
-            rippleAngleList[i] = _TestAngle;
-            rippleThicknessList[i] = _TestThickness ;
-
-            if(i>0)continue;
-        }    
-
         float ripple_range = rippleRangeList[i];
         float ripple_thickness = rippleThicknessList[i];    
 
@@ -100,17 +84,15 @@ void CalculateAlpha_float(float3 position, out float alpha, out float position_i
         float ripple_alpha = 1;//smoothstep(0, 0.2, rippleAgeList[i]);
 
         // take the distance that ripple has travelled into account
-        float dis_per = linstep(ripple_range-ripple_thickness, ripple_range, dis);
-        
-        float base_alpha = 0.1;
+        float dis_per = linstep(ripple_range-ripple_thickness, ripple_range, dis);        
         if(dis_per <= 0)ripple_alpha = 0;
         else if(dis_per >= 1)ripple_alpha = 0;
-        else if(dis_per < 0.5)ripple_alpha = base_alpha;
         else
         {
-            ripple_alpha = fadeinout((dis_per-0.5) / (1-0.5), 0, 1, 0.2, 0.9) + base_alpha;
+            float base_alpha = 0.1;
+            dis_per = linstep(max(0,ripple_range-ripple_min_thickness), ripple_range, dis);
+            ripple_alpha = fadeinout(dis_per, 0, 1, 0.2, 0.9) + base_alpha;
         }
-        // ripple_alpha *= fadeinout(dis, ripple_range-ripple_thickness, ripple_range, 0.7, 0.9) * 0.9 + 0.1;
         // ripple_alpha *= clamp(noise(float2(direction.x, direction.z) * float2(_NoiseScale, _NoiseScale)) + 0.2, 0.2, 1);
 
 
@@ -118,7 +100,7 @@ void CalculateAlpha_float(float3 position, out float alpha, out float position_i
         // take the angle between vertex and origin into account 
         float3 ripple_direction = normalize(float3(rippleDirectionList[i*3], rippleDirectionList[i*3+1], rippleDirectionList[i*3+2]));
         float angle = degrees(acos(dot(ripple_direction, direction)));
-        // ripple_alpha *= 1 - pow(smoothstep(0, rippleAngleList[i]*0.5, angle), _AngleGamma);
+        ripple_alpha *= 1 - pow(smoothstep(0, rippleAngleList[i]*0.5, angle), _AngleGamma);
         // ripple_alpha *= clamp(noise(float2(position.x, position.z) * float2(_NoiseScale, _NoiseScale))+ 0.5, 0.5, 1);
 
        

@@ -9,7 +9,6 @@ Library: /Users/aaron/Desktop/Aaron/EchoVision/src/echovision/Temp/BurstOutput/S
 --target-framework=NetFramework
 --assembly-defines=Assembly-CSharp;
 --assembly-defines=HoloKit;
---assembly-defines=InputSystem.Samples.Visualizers;
 --assembly-defines=Mono.Security;
 --assembly-defines=mscorlib;
 --assembly-defines=System.Configuration;
@@ -19,7 +18,6 @@ Library: /Users/aaron/Desktop/Aaron/EchoVision/src/echovision/Temp/BurstOutput/S
 --assembly-defines=Unity.Burst;
 --assembly-defines=Unity.DemoTeam.MeshToSDF;
 --assembly-defines=Unity.InputSystem;
---assembly-defines=Unity.InputSystem.RebindingUI;
 --assembly-defines=Unity.Mathematics;
 --assembly-defines=Unity.RenderPipeline.Universal.ShaderLibrary;
 --assembly-defines=Unity.RenderPipelines.Core.Runtime;
@@ -64,7 +62,6 @@ Library: /Users/aaron/Desktop/Aaron/EchoVision/src/echovision/Temp/BurstOutput/S
 --float-mode=Fast
 --assembly-defines=Assembly-CSharp;
 --assembly-defines=HoloKit;
---assembly-defines=InputSystem.Samples.Visualizers;
 --assembly-defines=Mono.Security;
 --assembly-defines=mscorlib;
 --assembly-defines=System.Configuration;
@@ -74,7 +71,6 @@ Library: /Users/aaron/Desktop/Aaron/EchoVision/src/echovision/Temp/BurstOutput/S
 --assembly-defines=Unity.Burst;
 --assembly-defines=Unity.DemoTeam.MeshToSDF;
 --assembly-defines=Unity.InputSystem;
---assembly-defines=Unity.InputSystem.RebindingUI;
 --assembly-defines=Unity.Mathematics;
 --assembly-defines=Unity.RenderPipeline.Universal.ShaderLibrary;
 --assembly-defines=Unity.RenderPipelines.Core.Runtime;
