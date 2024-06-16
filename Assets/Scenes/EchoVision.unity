@@ -238,8 +238,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1225988125}
-        m_TargetAssemblyTypeName: AudioProcessor, Assembly-CSharp
+      - m_Target: {fileID: 1225988126}
+        m_TargetAssemblyTypeName: HolokitMicrophoneAPI, Assembly-CSharp
         m_MethodName: ToggleRecording
         m_Mode: 1
         m_Arguments:
@@ -1659,13 +1659,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f24add9146f74d96982ee5bcdb94db7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cameraManager: {fileID: 1148376388}
+  trackedPoseDriver: {fileID: 1418006797}
   audioProcessor: {fileID: 1225988125}
   depthImageProcessor: {fileID: 1230832753}
-  trackedPoseDriver: {fileID: 1418006797}
   vfx: {fileID: 1735498855}
   matMeshing: {fileID: 2100000, guid: df52db65414324e219b9434628b66c19, type: 2}
-  soundwaveLife: {x: 0.5, y: 1.5}
+  soundwaveLife: {x: 1, y: 1}
   soundwaveSpeed: {x: 3, y: 4.5}
   soundwaveAngle: {x: 90, y: 180}
   minWaveThickness: 1
@@ -2617,7 +2616,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   meshManager: {fileID: 1419121179}
-  cameraManager: {fileID: 1148376388}
   trackedPoseDriver: {fileID: 1418006797}
   vfx: {fileID: 1735498855}
   bufferInitialCapacity: 100000
