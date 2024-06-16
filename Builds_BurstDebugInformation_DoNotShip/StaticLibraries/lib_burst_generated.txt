@@ -16,7 +16,6 @@ Library: /Users/aaron/Desktop/Aaron/EchoVision/src/echovision/Temp/BurstOutput/S
 --assembly-defines=System;
 --assembly-defines=System.Xml;
 --assembly-defines=Unity.Burst;
---assembly-defines=Unity.DemoTeam.MeshToSDF;
 --assembly-defines=Unity.InputSystem;
 --assembly-defines=Unity.Mathematics;
 --assembly-defines=Unity.RenderPipeline.Universal.ShaderLibrary;
@@ -69,7 +68,6 @@ Library: /Users/aaron/Desktop/Aaron/EchoVision/src/echovision/Temp/BurstOutput/S
 --assembly-defines=System;
 --assembly-defines=System.Xml;
 --assembly-defines=Unity.Burst;
---assembly-defines=Unity.DemoTeam.MeshToSDF;
 --assembly-defines=Unity.InputSystem;
 --assembly-defines=Unity.Mathematics;
 --assembly-defines=Unity.RenderPipeline.Universal.ShaderLibrary;
