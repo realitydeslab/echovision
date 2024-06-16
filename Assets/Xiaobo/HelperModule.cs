@@ -33,17 +33,17 @@ public class HelperModule : GenericSingleton<HelperModule>
     [Header("Info Panel")]
     [SerializeField] private Transform rootInfo;
     [SerializeField] private GameObject prefabInfo;
-    Dictionary<string, GameObject> infoList;
+    Dictionary<string, GameObject> infoList = new Dictionary<string, GameObject>();
 
     [Header("Slider Panel")]
     [SerializeField] private Transform rootSlider;
     [SerializeField] private GameObject prefabSlider;
-    Dictionary<string, GameObject> sliderList;
+    Dictionary<string, GameObject> sliderList = new Dictionary<string, GameObject>();
 
     [Header("SpaceInfo Panel")]
     [SerializeField] private Transform rootSpaceInfo;
     [SerializeField] private GameObject prefabSpaceInfo;
-    Dictionary<string, GameObject> spaceInfoList;
+    Dictionary<string, GameObject> spaceInfoList = new Dictionary<string, GameObject>();
 
     [Header("UI System")]
     [SerializeField] private Button buttonTogglePanel;
@@ -83,6 +83,8 @@ public class HelperModule : GenericSingleton<HelperModule>
         {
             ShowPanel(HelperItemType.Info);
         }
+
+        buttonTogglePanel.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = state ? "Hide Panel" : "Show Panel";
     }
 
     public void SetInfo(string name, string info)

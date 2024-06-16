@@ -56,7 +56,7 @@ float linstep(float min, float max, float v)
     return clamp((v - min) / (max - min), 0.0, 1.0);
 }
 
-void CalculateAlpha_float(float3 position, float noise_time, float noise_value, out float alpha, out float position_in_ripple, out float alpha_band, out float alpha_angle)
+void CalculateAlpha_float(float3 position, out float alpha, out float position_in_ripple, out float alpha_band, out float alpha_angle)
 {
     alpha = 0;
     position_in_ripple = 0;
@@ -100,7 +100,17 @@ void CalculateAlpha_float(float3 position, float noise_time, float noise_value, 
         float ripple_alpha = 1;//smoothstep(0, 0.2, rippleAgeList[i]);
 
         // take the distance that ripple has travelled into account
-        ripple_alpha *= fadeinout(dis, ripple_range-ripple_thickness, ripple_range, 0.2, 0.8);
+        float dis_per = linstep(ripple_range-ripple_thickness, ripple_range, dis);
+        
+        float base_alpha = 0.1;
+        if(dis_per <= 0)ripple_alpha = 0;
+        else if(dis_per >= 1)ripple_alpha = 0;
+        else if(dis_per < 0.5)ripple_alpha = base_alpha;
+        else
+        {
+            ripple_alpha = fadeinout((dis_per-0.5) / (1-0.5), 0, 1, 0.2, 0.9) + base_alpha;
+        }
+        // ripple_alpha *= fadeinout(dis, ripple_range-ripple_thickness, ripple_range, 0.7, 0.9) * 0.9 + 0.1;
         // ripple_alpha *= clamp(noise(float2(direction.x, direction.z) * float2(_NoiseScale, _NoiseScale)) + 0.2, 0.2, 1);
 
 
@@ -108,7 +118,7 @@ void CalculateAlpha_float(float3 position, float noise_time, float noise_value, 
         // take the angle between vertex and origin into account 
         float3 ripple_direction = normalize(float3(rippleDirectionList[i*3], rippleDirectionList[i*3+1], rippleDirectionList[i*3+2]));
         float angle = degrees(acos(dot(ripple_direction, direction)));
-        ripple_alpha *= 1 - pow(smoothstep(0, rippleAngleList[i]*0.5, angle), _AngleGamma);
+        // ripple_alpha *= 1 - pow(smoothstep(0, rippleAngleList[i]*0.5, angle), _AngleGamma);
         // ripple_alpha *= clamp(noise(float2(position.x, position.z) * float2(_NoiseScale, _NoiseScale))+ 0.5, 0.5, 1);
 
        
@@ -116,7 +126,7 @@ void CalculateAlpha_float(float3 position, float noise_time, float noise_value, 
         alpha += ripple_alpha;
 
 
-        // hard edge
+        // output hard edge
         if(dis > ripple_range-ripple_thickness && dis<ripple_range)
         {
             alpha_band += 1;
@@ -133,9 +143,9 @@ void CalculateAlpha_float(float3 position, float noise_time, float noise_value, 
         {
             alpha_angle += 0;
         }
+
         // output precentage in ripple
         position_in_ripple = max(position_in_ripple, linstep(ripple_range-ripple_thickness, ripple_range, dis));
-
     }
 }
 

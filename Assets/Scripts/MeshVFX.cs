@@ -36,9 +36,9 @@ public class MeshVFX : MonoBehaviour
     ARMeshManager meshManager;
 
     [SerializeField]
-    HoloKitCameraManager cameraManager;
+    HoloKitCameraManager cameraManager; 
 
-    [SerializeField] TrackedPoseDriver trackedPoseDriver;
+     [SerializeField] TrackedPoseDriver trackedPoseDriver;
 
     void Start()
     {

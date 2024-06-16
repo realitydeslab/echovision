@@ -6,6 +6,8 @@ using UnityEngine.XR.Management;
 
 /// <summary>
 /// copy from https://communityforums.atmeta.com/t5/Unity-VR-Development/Meta-XR-Simulator-starts-only-once/td-p/1141806
+/// might be the reason of causing memory leak when running in Editor mode.
+/// memory leak doesn't exist in Play mode
 /// </summary>
 public class XRInit : MonoBehaviour
 {

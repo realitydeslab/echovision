@@ -61,9 +61,10 @@ Material:
     - _Height: 0.97
     - _Interval: 0.42
     - _LineDensity: 0.9
+    - _LineForwardSpeed: 1
     - _LineGamma: 5.97
     - _LineNoiseScale: 1
-    - _LineNoiseSpeed: 0.3
+    - _LineNoiseSpeed: 3
     - _LineNoiseStrength: 3
     - _LineThickness: 1
     - _ModValue: 2
@@ -84,7 +85,7 @@ Material:
     - _TestAngle: 143
     - _TestRange: 4
     - _TestThickness: 2.22
-    - _WaveSpeed: 4.495542
+    - _WaveSpeed: 3.4176226
     - _WiggleDensity: 1
     - _WiggleSpeed: 1
     - _WiggleStrength: 0.1
