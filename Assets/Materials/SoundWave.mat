@@ -85,6 +85,7 @@ Material:
     - _TestAngle: 143
     - _TestRange: 4
     - _TestThickness: 2.22
+    - _WaveMinThickness: 1
     - _WaveSpeed: 3.4176226
     - _WiggleDensity: 1
     - _WiggleSpeed: 1

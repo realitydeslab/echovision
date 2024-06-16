@@ -8,7 +8,6 @@ using TMPro;
 using HoloKit;
 using UnityEngine.InputSystem.XR;
 using UnityEngine.VFX;
-using UnityEngine.XR.ARFoundation.Samples;
 
 public class MeshVFX : MonoBehaviour
 {
