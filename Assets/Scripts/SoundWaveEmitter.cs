@@ -204,11 +204,23 @@ public class SoundWaveEmitter : MonoBehaviour
     {
         // VFX
         SoundWave wave = soundwaves[index];
-        vfx.SetVector3("WaveOrigin", wave.origin);
-        vfx.SetVector3("WaveDirection", wave.direction);
-        vfx.SetFloat("WaveAge", wave.age_in_percentage);
-        vfx.SetFloat("WaveRange", wave.range);
-        vfx.SetFloat("WaveAngle", wave.angle);
+        if(index ==0)
+        {
+            // parameters of SoundWave0 are separated
+            vfx.SetVector3("WaveOrigin", wave.origin);
+            vfx.SetVector3("WaveDirection", wave.direction);
+            vfx.SetFloat("WaveRange", wave.range);
+            vfx.SetFloat("WaveAngle", wave.angle);
+            vfx.SetFloat("WaveAge", wave.age_in_percentage);
+        }else if(index == 1 || index == 2)
+        {
+            // parameters of SoundWave1 and SoundWave2 are merged in a transform struct for convinience
+            string prefix = "WaveParameter" + index.ToString();
+            vfx.SetVector3(prefix + "_position", wave.origin);
+            vfx.SetVector3(prefix + "_angles", wave.direction);
+            vfx.SetVector3(prefix + "_scale", new Vector3(wave.range, wave.angle, wave.age_in_percentage));
+        }
+        vfx.SetFloat("WaveMinThickness", minWaveThickness);
 
 
         // Material
@@ -235,11 +247,23 @@ public class SoundWaveEmitter : MonoBehaviour
     {
 
         // VFX, Update using latest sound wave
-        int cur_wave_index = GetCurrentWaveIndex();
-        SoundWave wave = soundwaves[cur_wave_index];
-
-        vfx.SetFloat("WaveRange", wave.range);
-        vfx.SetFloat("WaveAge", wave.age_in_percentage);
+        for (int i = 0; i < MAX_SOUND_WAVE_COUNT; i++)
+        {
+            SoundWave wave = soundwaves[i];
+            if (i == 0)
+            {
+                // parameters of SoundWave0 are separated
+                vfx.SetFloat("WaveRange", wave.range);
+                vfx.SetFloat("WaveAngle", wave.angle);
+                vfx.SetFloat("WaveAge", wave.age_in_percentage);
+            }
+            else if (i == 1 || i == 2)
+            {
+                // parameters of SoundWave1 and SoundWave2 are merged in a transform struct for convinience
+                string prefix = "WaveParameter" + i.ToString();
+                vfx.SetVector3(prefix + "_scale", new Vector3(wave.range, wave.angle, wave.age_in_percentage));
+            }
+        }        
 
         // VFX, Update Depth Image
         if (depthImageProcessor != null)

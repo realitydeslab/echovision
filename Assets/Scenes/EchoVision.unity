@@ -2756,12 +2756,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 086c4be8cd2564b0a8d3a7d2e0fac307, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vfx: {fileID: 1735498855}
-  bufferInitialCapacity: 100000
-  dynamicallyResizeBuffer: 0
   meshManager: {fileID: 1419121179}
   cameraManager: {fileID: 1148376388}
   trackedPoseDriver: {fileID: 1418006797}
+  vfx: {fileID: 1735498855}
+  bufferInitialCapacity: 100000
+  dynamicallyResizeBuffer: 0
 --- !u!73398921 &1735498854
 VFXRenderer:
   serializedVersion: 1
