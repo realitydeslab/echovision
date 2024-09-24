@@ -150,13 +150,13 @@ public class MeshVFX : MonoBehaviour
             // Push Transform to VFX
             // As meshes may not locate at (0,0,0) like they did in iOS.
             // We need to push transform into VFX for converting local position to world position
-            if (mesh_list.Count > 0)
-            {
-                vfx.SetVector3("MeshTransform_position", mesh_list[0].transform.position);
-                vfx.SetVector3("MeshTransform_angles", mesh_list[0].transform.rotation.eulerAngles);
-                vfx.SetVector3("MeshTransform_scale", mesh_list[0].transform.localScale);
-            }
-            else
+            //if (mesh_list.Count > 0)
+            //{
+            //    vfx.SetVector3("MeshTransform_position", mesh_list[0].transform.position);
+            //    vfx.SetVector3("MeshTransform_angles", mesh_list[0].transform.rotation.eulerAngles);
+            //    vfx.SetVector3("MeshTransform_scale", mesh_list[0].transform.localScale);
+            //}
+            //else
             {
                 vfx.SetVector3("MeshTransform_position", Vector3.zero);
                 vfx.SetVector3("MeshTransform_angles", Vector3.zero);

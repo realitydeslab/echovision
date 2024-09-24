@@ -143,6 +143,22 @@ public class HolokitMicrophoneAPI : MonoBehaviour
         videoRecorder.ToggleRecording();
         recordingText.text = videoRecorder.IsRecording ? "Stop Recording" : "Start Recording";
     }
+
+    public void StartRecording()
+    {
+        if (videoRecorder.IsRecording == false)
+        {
+            ToggleRecording();
+        }
+    }
+
+    public void StopRecording()
+    {
+        if (videoRecorder.IsRecording == true)
+        {
+            ToggleRecording();
+        }
+    }
     #endregion
 #endif
 }
