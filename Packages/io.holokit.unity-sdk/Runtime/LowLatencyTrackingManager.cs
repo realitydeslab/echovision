@@ -93,6 +93,7 @@ namespace HoloKit
             bool isPositionValid = m_InputDevice.TryGetFeatureValue(CommonUsages.centerEyePosition, out Vector3 position) || m_InputDevice.TryGetFeatureValue(CommonUsages.colorCameraPosition, out position);
             bool isRotationValid = m_InputDevice.TryGetFeatureValue(CommonUsages.centerEyeRotation, out Quaternion rotation) || m_InputDevice.TryGetFeatureValue(CommonUsages.colorCameraRotation, out rotation);
 
+            Debug.Log($"isPositionValid:{position} | isRotationValid:{rotation}");
             if (isPositionValid && isRotationValid)
             {
                 float[] positionArr = new float[] { position.x, position.y, position.z };

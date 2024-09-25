@@ -82,7 +82,7 @@ public class PowerSaver : MonoBehaviour
 
         animationTime = Mathf.Clamp(animationTime, 0, animationDuration);
 
-        coverImage.color = new Color(1, 1, 1, animationTime / animationDuration);
+        coverImage.color = new Color(0, 0, 0, animationTime / animationDuration);
     }
 
     void EnterSleepMode()
