@@ -13,7 +13,6 @@ using UnityEngine.VFX;
 
 public class MeshVFX : MonoBehaviour
 {
-    public TextMeshProUGUI debugText;
     [Header("Reference")]
     [SerializeField] ARMeshManager meshManager;
 #if UNITY_IOS
@@ -55,8 +54,6 @@ public class MeshVFX : MonoBehaviour
             int vertex_count = 0;
             int triangle_count = 0;
             Vector3 head_pos = trackedPoseDriver.transform.position;
-
-            debugText.text = $"position:{trackedPoseDriver.transform.position}, rotatation:{trackedPoseDriver.transform.rotation.eulerAngles}";
 
             float distance = 0;
             Vector3 min_pos = Vector3.zero;
@@ -108,8 +105,6 @@ public class MeshVFX : MonoBehaviour
                     distance = Vector3.Distance(head_pos, mesh.sharedMesh.bounds.center);
 
                     listMeshDistance.Add((distance, i));
-
-                    debugText.text += $"mesh {i} : position:{mesh.transform.position}, rotatation:{mesh.transform.rotation.eulerAngles} \n";
                 }
                 listMeshDistance.Sort((x, y) => x.Item1.CompareTo(y.Item1));
 
