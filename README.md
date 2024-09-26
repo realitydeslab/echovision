@@ -23,7 +23,7 @@ You can download the app from app store by searching "EchoVision".
 
 
 ## How to run
-- Unity Version: 2022.3 or above
+- Unity Version: 6000.0
 - Change build target to iOS in `Project Setting/Player settings`
 - Enable "Requires ARKit Support" in `Project Setting/Player settings`
 - Enable "Apple ARKit" in `Project Setting/XR Plug-in Management`
