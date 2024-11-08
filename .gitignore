@@ -65,7 +65,7 @@ obj/
 # ============================ #
 .vscode/
 .vs/
-
+.idea/
 
 # This is only needed because docfx chooses the first alphabetically occurring
 # .cs file's folder to create an obj/xdoc cache folder inside.
