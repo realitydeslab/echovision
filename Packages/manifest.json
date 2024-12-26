@@ -10,7 +10,7 @@
     "com.unity.visualeffectgraph": "17.0.3",
     "com.unity.xr-content.xr-sim-environments": "file:../ContentPackages/com.unity.xr-content.xr-sim-environments-1.0.0.tgz",
     "com.unity.xr.arfoundation": "6.0.3",
-    "com.unity.xr.arkit": "6.0.3",
+    "com.unity.xr.arkit": "6.0.4",
     "io.holokit.unity-sdk": "https://github.com/holokit/holokit-unity-sdk.git",
     "com.unity.modules.accessibility": "1.0.0",
     "com.unity.modules.ai": "1.0.0",
