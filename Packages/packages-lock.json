@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.unity.burst": {
-      "version": "1.8.19",
+      "version": "1.8.21",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -21,13 +21,6 @@
         "com.unity.test-framework.performance": "3.0.3"
       },
       "url": "https://packages.unity.com"
-    },
-    "com.unity.demoteam.mesh-to-sdf": {
-      "version": "https://github.com/Unity-Technologies/com.unity.demoteam.mesh-to-sdf.git",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "1f8ee658aabe2b588aae7d0b635a9941266a52ef"
     },
     "com.unity.device-simulator.devices": {
       "version": "1.0.0",
@@ -50,7 +43,7 @@
       "dependencies": {}
     },
     "com.unity.ide.rider": {
-      "version": "3.0.35",
+      "version": "3.0.36",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -59,7 +52,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.inputsystem": {
-      "version": "1.13.1",
+      "version": "1.14.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -102,7 +95,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.render-pipelines.core": {
-      "version": "17.0.4",
+      "version": "17.1.0",
       "depth": 1,
       "source": "builtin",
       "dependencies": {
@@ -117,12 +110,12 @@
       }
     },
     "com.unity.render-pipelines.universal": {
-      "version": "17.0.4",
+      "version": "17.1.0",
       "depth": 0,
       "source": "builtin",
       "dependencies": {
-        "com.unity.render-pipelines.core": "17.0.4",
-        "com.unity.shadergraph": "17.0.4",
+        "com.unity.render-pipelines.core": "17.1.0",
+        "com.unity.shadergraph": "17.1.0",
         "com.unity.render-pipelines.universal-config": "17.0.3"
       }
     },
@@ -152,11 +145,11 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.shadergraph": {
-      "version": "17.0.4",
+      "version": "17.1.0",
       "depth": 1,
       "source": "builtin",
       "dependencies": {
-        "com.unity.render-pipelines.core": "17.0.4",
+        "com.unity.render-pipelines.core": "17.1.0",
         "com.unity.searcher": "4.9.3"
       }
     },
@@ -171,11 +164,11 @@
       }
     },
     "com.unity.test-framework.performance": {
-      "version": "3.0.3",
+      "version": "3.1.0",
       "depth": 2,
       "source": "registry",
       "dependencies": {
-        "com.unity.test-framework": "1.1.31",
+        "com.unity.test-framework": "1.1.33",
         "com.unity.modules.jsonserialize": "1.0.0"
       },
       "url": "https://packages.unity.com"
@@ -202,24 +195,16 @@
       }
     },
     "com.unity.visualeffectgraph": {
-      "version": "17.0.4",
+      "version": "17.1.0",
       "depth": 0,
       "source": "builtin",
       "dependencies": {
-        "com.unity.shadergraph": "17.0.4",
-        "com.unity.render-pipelines.core": "17.0.4"
-      }
-    },
-    "com.unity.xr-content.xr-sim-environments": {
-      "version": "file:../ContentPackages/com.unity.xr-content.xr-sim-environments-1.0.0.tgz",
-      "depth": 0,
-      "source": "local-tarball",
-      "dependencies": {
-        "com.unity.xr.arfoundation": "5.0.0"
+        "com.unity.shadergraph": "17.1.0",
+        "com.unity.render-pipelines.core": "17.1.0"
       }
     },
     "com.unity.xr.arfoundation": {
-      "version": "6.0.5",
+      "version": "6.1.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -227,7 +212,7 @@
         "com.unity.modules.ui": "1.0.0",
         "com.unity.inputsystem": "1.6.3",
         "com.unity.mathematics": "1.2.6",
-        "com.unity.xr.core-utils": "2.3.0",
+        "com.unity.xr.core-utils": "2.5.1",
         "com.unity.xr.management": "4.4.0",
         "com.unity.editorcoroutines": "1.0.0",
         "com.unity.modules.particlesystem": "1.0.0",
@@ -237,13 +222,13 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.arkit": {
-      "version": "6.0.5",
+      "version": "6.1.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {
         "com.unity.xr.core-utils": "2.2.2",
         "com.unity.xr.management": "4.4.0",
-        "com.unity.xr.arfoundation": "6.0.5",
+        "com.unity.xr.arfoundation": "6.1.0",
         "com.unity.editorcoroutines": "1.0.0"
       },
       "url": "https://packages.unity.com"
@@ -268,14 +253,15 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.management": {
-      "version": "4.5.0",
+      "version": "4.5.1",
       "depth": 1,
       "source": "registry",
       "dependencies": {
         "com.unity.modules.vr": "1.0.0",
         "com.unity.modules.xr": "1.0.0",
+        "com.unity.xr.core-utils": "2.2.1",
         "com.unity.modules.subsystems": "1.0.0",
-        "com.unity.xr.legacyinputhelpers": "2.1.7"
+        "com.unity.xr.legacyinputhelpers": "2.1.11"
       },
       "url": "https://packages.unity.com"
     },

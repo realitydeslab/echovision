@@ -42,7 +42,8 @@ RenderSettings:
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 12
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -2077,7 +2078,7 @@ GameObject:
   - component: {fileID: 1636807006}
   - component: {fileID: 1636807005}
   m_Layer: 0
-  m_Name: LiDarRequirement
+  m_Name: LIDARRequirement
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2437,7 +2438,7 @@ GameObject:
   - component: {fileID: 1767140472}
   - component: {fileID: 1767140471}
   m_Layer: 0
-  m_Name: LiDarRequirement
+  m_Name: LIDARRequirement
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

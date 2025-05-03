@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: Copyright 2024-2025 Reality Design Lab <dev@reality.design>
+// SPDX-FileContributor: Botao Amber Hu <amber@reality.design>
+// SPDX-License-Identifier: MIT
+
 using UnityEngine;
 using UnityEngine.VFX;
 
@@ -52,7 +56,7 @@ public class SoundWaveEmitter : MonoBehaviour
     [SerializeField] UnityEngine.SpatialTracking.TrackedPoseDriver trackedPoseDriver;
 #endif
 
-    [SerializeField] HolokitAudioProcessor audioProcessor;
+    [SerializeField] HoloKitAudioProcessor audioProcessor;
     [SerializeField] DepthImageProcessor depthImageProcessor;
 
     

@@ -4,10 +4,10 @@ using HoloKit.iOS;
 using UnityEngine;
 using UnityEngine.Audio;
 
-public class HolokitMicrophoneAPI : MonoBehaviour
+public class HoloKitMicrophoneAPI : MonoBehaviour
 {
 #if UNITY_IOS
-    [Header("Holokit Recorder")]
+    [Header("HoloKit Recorder")]
     [SerializeField] HoloKitVideoRecorder videoRecorder;
     [SerializeField] UnityEngine.UI.Text recordingText;
 #endif

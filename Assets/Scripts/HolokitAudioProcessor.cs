@@ -1,7 +1,11 @@
+// SPDX-FileCopyrightText: Copyright 2024-2025 Reality Design Lab <dev@reality.design>
+// SPDX-FileContributor: Botao Amber Hu <amber@reality.design>
+// SPDX-License-Identifier: MIT
+
 using UnityEngine;
 using UnityEngine.Audio;
 
-public class HolokitAudioProcessor : MonoBehaviour
+public class HoloKitAudioProcessor : MonoBehaviour
 {
     [SerializeField]  AudioSource audioSource;
     public AudioSource AudioSource { get => audioSource; set => audioSource = value; }

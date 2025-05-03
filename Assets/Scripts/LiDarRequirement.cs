@@ -1,7 +1,10 @@
+// SPDX-FileCopyrightText: Copyright 2024-2025 Reality Design Lab <dev@reality.design>
+// SPDX-FileContributor: Botao Amber Hu <amber@reality.design>
+// SPDX-License-Identifier: MIT
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LiDarRequirement : MonoBehaviour
+public class LIDARRequirement : MonoBehaviour
 {
     [SerializeField]
     GameObject instructionPanel;
