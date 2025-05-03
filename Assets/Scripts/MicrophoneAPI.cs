@@ -4,7 +4,7 @@ using HoloKit.iOS;
 using UnityEngine;
 using UnityEngine.Audio;
 
-public class HoloKitMicrophoneAPI : MonoBehaviour
+public class MicrophoneAPI : MonoBehaviour
 {
 #if UNITY_IOS
     [Header("HoloKit Recorder")]

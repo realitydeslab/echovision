@@ -56,7 +56,7 @@ public class SoundWaveEmitter : MonoBehaviour
     [SerializeField] UnityEngine.SpatialTracking.TrackedPoseDriver trackedPoseDriver;
 #endif
 
-    [SerializeField] HoloKitAudioProcessor audioProcessor;
+    [SerializeField] AudioProcessor audioProcessor;
     [SerializeField] DepthImageProcessor depthImageProcessor;
 
     

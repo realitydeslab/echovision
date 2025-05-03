@@ -5,7 +5,7 @@
 using UnityEngine;
 using UnityEngine.Audio;
 
-public class HoloKitAudioProcessor : MonoBehaviour
+public class AudioProcessor : MonoBehaviour
 {
     [SerializeField]  AudioSource audioSource;
     public AudioSource AudioSource { get => audioSource; set => audioSource = value; }
