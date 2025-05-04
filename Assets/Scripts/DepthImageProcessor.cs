@@ -22,7 +22,7 @@ public class DepthImageProcessor : MonoBehaviour
         set => m_CameraManager = value;
     }
     [Tooltip("The ARCameraManager which will produce camera frame events.")]
-    [SerializeField]ARCameraManager m_CameraManager;
+    [SerializeField] ARCameraManager m_CameraManager;
 
     /// <summary>
     /// Get or set the <c>AROcclusionManager</c>.
@@ -33,7 +33,7 @@ public class DepthImageProcessor : MonoBehaviour
         set => m_OcclusionManager = value;
     }
     [Tooltip("The AROcclusionManager which will produce depth textures.")]
-    [SerializeField]AROcclusionManager m_OcclusionManager;
+    [SerializeField] AROcclusionManager m_OcclusionManager;
 
     /// <summary>
     /// The current screen orientation remembered so that we are only updating the raw image layout when it changes.

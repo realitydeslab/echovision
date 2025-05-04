@@ -7,14 +7,9 @@ using UnityEngine.VFX;
 
 #if UNITY_IOS
 using HoloKit;
+#endif
+
 using UnityEngine.InputSystem.XR;
-#endif
-
-#if UNITY_VISIONOS
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
-#endif
-
 
 public class SoundWave
 {
@@ -48,18 +43,9 @@ public class SoundWave
 public class SoundWaveEmitter : MonoBehaviour
 {
     [Header("References")]
-#if UNITY_IOS
     [SerializeField] TrackedPoseDriver trackedPoseDriver;
-#endif
-
-#if UNITY_VISIONOS
-    [SerializeField] UnityEngine.SpatialTracking.TrackedPoseDriver trackedPoseDriver;
-#endif
-
     [SerializeField] AudioProcessor audioProcessor;
     [SerializeField] DepthImageProcessor depthImageProcessor;
-
-    
 
     [Header("Effect")]
     [SerializeField] VisualEffect vfx;
@@ -115,7 +101,7 @@ public class SoundWaveEmitter : MonoBehaviour
         smoothedSoundPitch = Mathf.SmoothDamp(smoothedSoundPitch, audioProcessor.AudioPitch, ref temp_vel, 0.05f);
 
         // Emit New SoundWave
-        if (Input.GetMouseButton(0) || audioProcessor.AudioVolume > emitVolumeThreshold)
+        if (audioProcessor.AudioVolume > emitVolumeThreshold)
         {
             EmitSoundWave();
         }

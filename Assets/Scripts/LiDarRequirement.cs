@@ -12,9 +12,11 @@ public class LIDARRequirement : MonoBehaviour
     void Start()
     {
         if (instructionPanel == null) return;
-
+        
+    #if UNITY_IOS && !UNITY_EDITOR
         bool supported = HoloKit.iOS.DeviceData.SupportLiDAR();
-
+        
         instructionPanel.SetActive(!supported);
+    #endif 
     }
 }

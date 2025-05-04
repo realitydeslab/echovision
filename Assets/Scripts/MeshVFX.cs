@@ -18,12 +18,7 @@ public class MeshVFX : MonoBehaviour
 {
     [Header("Reference")]
     [SerializeField] ARMeshManager meshManager;
-#if UNITY_IOS
     [SerializeField] TrackedPoseDriver trackedPoseDriver;
-#elif UNITY_VISIONOS
-    [SerializeField] UnityEngine.SpatialTracking.TrackedPoseDriver trackedPoseDriver;
-#endif
-
     [SerializeField] VisualEffect vfx;
 
     [Header("Buffer Settings")]

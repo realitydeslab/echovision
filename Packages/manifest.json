@@ -9,6 +9,7 @@
     "com.unity.visualeffectgraph": "17.1.0",
     "com.unity.xr.arfoundation": "6.1.0",
     "com.unity.xr.arkit": "6.1.0",
+    "com.unity.xr.visionos": "2.2.4",
     "io.holokit.unity-sdk": "https://github.com/holokit/holokit-unity-sdk.git",
     "com.unity.modules.accessibility": "1.0.0",
     "com.unity.modules.ai": "1.0.0",

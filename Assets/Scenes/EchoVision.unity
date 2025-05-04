@@ -1228,8 +1228,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea4463779e4ea43048a3e8f8b160cf90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  videoRecorder: {fileID: 1418006796}
-  recordingText: {fileID: 237215421}
   audiosourceForRecording: {fileID: 2046641357}
   audioSourceForAnalysis: {fileID: 1913013587}
   audioGroupMaster: {fileID: 24300002, guid: 9a467474f54c14281a0d4c71bba942bf, type: 2}
@@ -1360,7 +1358,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RenderModeButtonText: {fileID: 1203263600}
-  RecordButtonText: {fileID: 237215421}
 --- !u!114 &1305125610
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1869,7 +1866,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 10, y: 10, z: 10}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1354722526}
