@@ -28,6 +28,12 @@
 #include <deque>
 #include <mutex>
 
+// Diagnostics, readable from C#. Defined outside the anonymous namespace below
+// because VideoRecorder.mm's slot path increments the very same counters; inside
+// it they would have internal linkage and the other file could not see them.
+int g_SubmittedFrames = 0;
+int g_DroppedFrames = 0;
+
 namespace {
 
 struct PendingFrame
@@ -42,10 +48,6 @@ IUnityGraphicsMetalV2* g_MetalV2 = nullptr;
 
 std::deque<PendingFrame> g_Queue;
 std::mutex g_QueueMutex;
-
-// Diagnostics, readable from C#.
-int g_SubmittedFrames = 0;
-int g_DroppedFrames = 0;
 
 id<MTLCommandBuffer> CurrentCommandBuffer()
 {
@@ -118,6 +120,15 @@ void UNITY_INTERFACE_API OnRenderEvent(int /*eventId*/)
 }
 
 } // namespace
+
+// NOTE: iOS static-plugin registration was attempted here via
+// __attribute__((constructor)) calling UnityRegisterPlugin(). It crashed the app
+// with SIGSEGV on launch -- at constructor time (dyld load) the Unity runtime is
+// not yet initialised, so UnityRegisterPlugin touches state that does not exist.
+// Reverted. On iOS the GPU path therefore stays unavailable and the recorder
+// falls back to CPU readback (see HoloKitVideoRecorder._useGpuPath).
+// A correct fix needs a registration point after Unity is up but before graphics
+// initialisation; +load was not verified.
 
 extern "C" {
 

@@ -155,7 +155,7 @@ intended this and did not finish it.
   `m_DisableVideoEnhancementInStereoMode` defaults to true, which switches 4K off in stereo
   mode. Without it the recording is an upscale rather than real detail.
 - **Frame-rate gate** is hardcoded to 60 in `TimeQueue`.
-- **`getUnityMatrix` leaks** 64 bytes per frame (`new float[16]`, never freed).
+- ~~`getUnityMatrix` leak~~ — retracted: `HoloKitARKitNativeProvider.mm:97` frees it with `delete[](matrix)` inside the dispatch block. The claim came from grepping the C# side only.
 
 ## Measured results (Editor, macOS)
 
@@ -172,3 +172,116 @@ A/V duration agreed within 0.08 s in both cases. The bitrate difference is **not
 to the GPU path: the two recordings have different content, and this scene is largely dark and
 low-detail, so adaptive bitrate drops sharply. The real issue is that no bitrate is specified
 at all.
+
+---
+
+# 3. GPU path on iOS: the slot design (2026-09-21)
+
+## Why the first design could not work on device
+
+`VideoRecorderMetalBridge.mm` obtains Unity's Metal command buffer through
+`IUnityGraphicsMetal`, which is handed over in `UnityPluginLoad`. **`UnityPluginLoad` is never
+called on iOS**: the plugin is statically linked into UnityFramework, so nothing dlopens it and
+nothing calls the entry point. `HoloKitVideoRecorder_IsGPUPathAvailable()` therefore returned
+false on device and every frame fell back to CPU readback, while the same code worked in the
+macOS Editor, where the bundle really is dlopened.
+
+Registering the plugin from an `__attribute__((constructor))` was tried and crashed with
+SIGSEGV. That attempt is reverted; the crash log could not be retrieved, so the cause is
+**unverified** and no explanation for it is claimed here.
+
+## The design that does work
+
+Skip `IUnityInterfaces` entirely. Native pre-allocates N IOSurface-backed `CVPixelBuffer`s and
+wraps each as an `MTLTexture`; C# wraps those as external `Texture2D`s and copies into them with
+`Graphics.CopyTexture`.
+
+```
+native  CVPixelBufferCreate (IOSurface + Metal compatible)
+          -> CVMetalTextureCacheCreateTextureFromImage  -> MTLTexture  (slot i)
+C#      Texture2D.CreateExternalTexture(..., slotPtr)
+          -> Graphics.CopyTexture(_frameRt, slot[i])
+          -> HoloKitVideoRecorder_SubmitGPUSlot(i - 2, time)
+native  bufferAdaptor appendPixelBuffer: (the same IOSurface, never copied)
+```
+
+Two properties make it safe without Unity's command buffer:
+
+1. **Unity schedules the copy itself.** `Graphics.CopyTexture` is queued on Unity's own render
+   thread after the frame is rendered, so the ordering problem the bridge existed to solve
+   disappears.
+2. **Submission is deferred by `k_SlotLatency = 2` frames.** With 3 slots, the buffer being
+   appended is two frames older than the one being written, so the GPU has certainly finished.
+   Submitting immediately would race the copy and encode a half-written frame.
+
+`MTLCreateSystemDefaultDevice()` is safe here: iOS has a single GPU, so it returns the very
+device Unity renders with, and the textures are shareable.
+
+The pending slots are flushed in `EndRecording` before the writer finishes; without that, the
+last two frames of every recording would be dropped.
+
+## Measured on device (iPhone 15 Pro, iOS 26, A17 Pro)
+
+| | value |
+|---|---|
+| GPU path | enabled (`Allocated 3/3 GPU slots at 2544x1168`) |
+| Frames submitted / dropped | **354 / 0** |
+| Video frames in the file | 354 — exactly matches |
+| Resolution | 2544x1168 |
+| Duration | video 11.80 s, audio 11.89 s (0.09 s apart) |
+| Frame rate during recording | 30.0 fps, no dip |
+| Crash | none |
+
+Bitrate on that run was 9.19 Mbps, still AVFoundation's own choice; the encoder parameters below
+were added afterwards.
+
+## P0 encoder parameters: now fixed
+
+`AVVideoCompressionPropertiesKey` and `AVVideoColorPropertiesKey` are now set:
+
+- `AVVideoAverageBitRateKey` scales with the pixel count (`width * height * 7`), clamped to
+  8-60 Mbps. At 2544x1168 that is ~20.8 Mbps against the ~9 Mbps AVFoundation was choosing.
+- `AVVideoExpectedSourceFrameRateKey` and `AVVideoMaxKeyFrameIntervalKey` = 60.
+- BT.709 primaries, transfer function and matrix, so `color_space` is no longer `unknown`.
+
+`AVVideoProfileLevelKey` is deliberately not set: AVFoundation only exports H.264 profile
+constants, and the HEVC ones live in VideoToolbox. Left unset the encoder picks an appropriate
+HEVC profile for the resolution.
+
+Measured on device after the change: **20.4 Mbps** (was 9.2), and `color_space`,
+`color_primaries` and `color_transfer` all read `bt709` instead of `unknown`.
+
+## Red and blue were swapped -- found by correlating against the live screen
+
+The first device recording looked plausible on its own, so it was checked against a
+`devicectl device capture screenshot` taken 7 s into the same recording. Sampling matching
+pixels:
+
+| point | screen | video | video with R/B swapped |
+|---|---|---|---|
+| (0.15, 0.55) | (82, 47, 26) | (18, 41, 84) | (84, 41, 18) |
+| (0.35, 0.70) | (72, 44, 24) | (19, 41, 76) | (76, 41, 19) |
+| (0.50, 0.85) | (60, 38, 25) | (20, 38, 62) | (62, 38, 20) |
+
+Swapping the channels reproduces the screen to within compression noise, so the copy was
+correct and only the channel order was wrong.
+
+Cause: `_frameRt` was `RenderTextureFormat.ARGB32`, which is RGBA-ordered on Metal, while the
+slot's `CVPixelBuffer` is `kCVPixelFormatType_32BGRA`. `Graphics.CopyTexture` copies raw bytes
+and does not reorder them. The CPU path never had this bug because it permutes explicitly:
+
+```objc
+// RGBA to BGRA: swap R (index 0) and B (index 2)
+const uint8_t permuteMap[4] = { 2, 1, 0, 3 };
+vImagePermuteChannels_ARGB8888(&srcBuffer, &dstBuffer, permuteMap, kvImageNoFlags);
+```
+
+Fixed by allocating `_frameRt` as `RenderTextureFormat.BGRA32`, so `Graphics.Blit` writes the
+correct order and the raw copy is right by construction -- no per-frame swizzle pass. The CPU
+fallback is unaffected: it asks `AsyncGPUReadback` for `RGBA32` explicitly, which converts, and
+native still permutes. If a backend does not support `BGRA32`, the slot path is not enabled and
+the CPU path is used.
+
+**This bug was invisible in the Editor**, where every verification frame was a grayscale LiDAR
+mesh. A grayscale image is unchanged by swapping R and B. Only a colour frame from the device
+camera exposed it.

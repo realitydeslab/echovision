@@ -198,6 +198,20 @@ namespace HoloKit.iOS
         private RenderTexture _frameRt;
         private TimeQueue _timeQueue = new TimeQueue();
         private bool _useGpuPath = false;
+
+        // Slot-based GPU path. Unity copies each frame into one of these
+        // externally-created textures, which are backed by IOSurface pixel
+        // buffers the writer can consume directly -- no CPU readback.
+        //
+        // A slot is submitted only after k_SlotLatency further frames, giving the
+        // GPU time to finish the copy. Submitting immediately would race the
+        // copy and write a partially-updated frame.
+        const int k_SlotCount = 3;
+        const int k_SlotLatency = 2;
+        Texture2D[] _gpuSlots;
+        double[] _gpuSlotTimes;
+        bool[] _gpuSlotPending;
+        int _gpuSlotCursor;
         private HoloKitCameraManager _holokitCameraManager;
 
         // private readonly RingBuffer<float> __deviceRingBuffer;
@@ -274,13 +288,29 @@ namespace HoloKit.iOS
             // ARGBHalf will make sure the camera renders post-processing.
             var _descriptor = new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGBHalf, 32);
             _cameraRt = new RenderTexture(_descriptor);
-            _frameRt = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
+            // The GPU slot path copies raw bytes straight into a 32BGRA CVPixelBuffer,
+            // so the source must already be in BGRA order. ARGB32 is RGBA-ordered on
+            // Metal, which showed up on device as a red/blue swap in the recording.
+            // The CPU fallback is unaffected: it asks AsyncGPUReadback for RGBA32
+            // explicitly and native permutes to BGRA with vImage.
+            bool bgraSupported = SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.BGRA32);
+            _frameRt = new RenderTexture(width, height, 0,
+                bgraSupported ? RenderTextureFormat.BGRA32 : RenderTextureFormat.ARGB32);
             Debug.Log($"Camera Render Texture: {width}x{height}");
             int status = HoloKitVideoRecorder_StartRecording(path, width, height, sampleRate, channelCount);
             _timeQueue.Clear();
 
             _useGpuPath = HoloKitVideoRecorder_IsGPUPathAvailable();
             HoloKitVideoRecorder_ResetGPUCounters();
+
+            // The IUnityInterfaces route is unavailable on iOS (UnityPluginLoad is
+            // never called for a statically linked plugin), so fall back to slots
+            // that Unity fills via Graphics.CopyTexture.
+            if (!_useGpuPath && bgraSupported)
+            {
+                _useGpuPath = TryAllocateGpuSlots(width, height);
+            }
+
             Debug.Log($"[HoloKitVideoRecorder] GPU zero-copy path: {(_useGpuPath ? "enabled" : "unavailable, falling back to CPU readback")}");
 
             if (status != 0)
@@ -314,7 +344,13 @@ namespace HoloKit.iOS
                           $"dropped={HoloKitVideoRecorder_GetDroppedFrameCount()}");
             }
 
+            // The slot path submits each frame k_SlotLatency frames late, so the
+            // last few are still pending here. Flush them before the writer
+            // finishes, or the tail of every recording is silently lost.
+            FlushGpuSlots();
+
             HoloKitVideoRecorder_EndRecording();
+            ReleaseGpuSlots();
             IsRecording = false;
 
             OnHoloKitRenderModeChanged(_holokitCameraManager.ScreenRenderMode);
@@ -413,6 +449,117 @@ namespace HoloKit.iOS
             nativeArray.Dispose();
         }
 
+        /// <summary>
+        /// Allocates native IOSurface-backed slots and wraps each as an external
+        /// Texture2D that Graphics.CopyTexture can write into.
+        /// </summary>
+        bool TryAllocateGpuSlots(int width, int height)
+        {
+#if !UNITY_EDITOR && UNITY_IOS
+            if ((SystemInfo.copyTextureSupport & UnityEngine.Rendering.CopyTextureSupport.RTToTexture) == 0)
+            {
+                Debug.LogWarning("[HoloKitVideoRecorder] CopyTexture RT->Texture unsupported; using CPU readback.");
+                return false;
+            }
+
+            int created = HoloKitVideoRecorder_AllocateGPUSlots(k_SlotCount, width, height);
+            if (created <= k_SlotLatency)
+            {
+                Debug.LogWarning($"[HoloKitVideoRecorder] Only {created} GPU slots; using CPU readback.");
+                HoloKitVideoRecorder_ReleaseGPUSlots();
+                return false;
+            }
+
+            _gpuSlots = new Texture2D[created];
+            _gpuSlotTimes = new double[created];
+            _gpuSlotPending = new bool[created];
+            _gpuSlotCursor = 0;
+
+            for (int i = 0; i < created; i++)
+            {
+                IntPtr native = HoloKitVideoRecorder_GetGPUSlotTexture(i);
+                if (native == IntPtr.Zero)
+                {
+                    Debug.LogWarning("[HoloKitVideoRecorder] Null slot texture; using CPU readback.");
+                    ReleaseGpuSlots();
+                    return false;
+                }
+                _gpuSlots[i] = Texture2D.CreateExternalTexture(
+                    width, height, UnityEngine.TextureFormat.BGRA32, false, false, native);
+            }
+
+            Debug.Log($"[HoloKitVideoRecorder] GPU slots ready: {created} at {width}x{height}");
+            return true;
+#else
+            return false;
+#endif
+        }
+
+        /// <summary>
+        /// Submits any slots still waiting out their latency, oldest first, so
+        /// timestamps stay monotonic.
+        /// </summary>
+        void FlushGpuSlots()
+        {
+#if !UNITY_EDITOR && UNITY_IOS
+            if (_gpuSlots == null)
+            {
+                return;
+            }
+
+            // _gpuSlotCursor points at the next slot to write, so the oldest
+            // pending one sits k_SlotLatency places behind it.
+            for (int i = 0; i < _gpuSlots.Length; i++)
+            {
+                int slot = (_gpuSlotCursor + _gpuSlots.Length - k_SlotLatency + i) % _gpuSlots.Length;
+                if (!_gpuSlotPending[slot])
+                {
+                    continue;
+                }
+                HoloKitVideoRecorder_SubmitGPUSlot(slot, _gpuSlotTimes[slot]);
+                _gpuSlotPending[slot] = false;
+            }
+#endif
+        }
+
+        void ReleaseGpuSlots()
+        {
+#if !UNITY_EDITOR && UNITY_IOS
+            HoloKitVideoRecorder_ReleaseGPUSlots();
+#endif
+            _gpuSlots = null;
+            _gpuSlotTimes = null;
+            _gpuSlotPending = null;
+            _gpuSlotCursor = 0;
+        }
+
+        void CommitFrameToGpuSlot()
+        {
+#if !UNITY_EDITOR && UNITY_IOS
+            int slot = _gpuSlotCursor;
+            _gpuSlotCursor = (_gpuSlotCursor + 1) % _gpuSlots.Length;
+
+            // Submit the slot written k_SlotLatency frames ago: by now the GPU has
+            // certainly finished copying into it.
+            int ripe = (slot + _gpuSlots.Length - k_SlotLatency) % _gpuSlots.Length;
+            if (_gpuSlotPending[ripe])
+            {
+                int status = HoloKitVideoRecorder_SubmitGPUSlot(ripe, _gpuSlotTimes[ripe]);
+                _gpuSlotPending[ripe] = false;
+                if (status != 0)
+                {
+                    Debug.LogWarning($"[HoloKitVideoRecorder] Slot {ripe} submit returned {status}");
+                }
+            }
+
+            // GPU-side copy, scheduled by Unity, so no command buffer of ours is
+            // needed and ordering after the render is guaranteed.
+            Graphics.CopyTexture(_frameRt, _gpuSlots[slot]);
+            _gpuSlotTimes[slot] = _timeQueue.Dequeue();
+            _gpuSlotPending[slot] = true;
+#endif
+        }
+
         void CommitFrame(Camera source)
         {
             if (!IsRecording) return;
@@ -424,14 +571,9 @@ namespace HoloKit.iOS
             source.targetTexture = prevTarget;
             Graphics.Blit(_cameraRt, _frameRt, new Vector2(1, -1), new Vector2(0, 1));
 
-            if (_useGpuPath)
+            if (_useGpuPath && _gpuSlots != null)
             {
-                // Zero-copy: the frame is blitted straight into an IOSurface-backed
-                // CVPixelBuffer on the render thread, so pixels never reach the CPU.
-                // The timestamp travels with the frame, so a dropped frame cannot
-                // desynchronise the ones after it.
-                HoloKitVideoRecorder_EnqueueGPUFrame(_frameRt.GetNativeTexturePtr(), _timeQueue.Dequeue());
-                GL.IssuePluginEvent(HoloKitVideoRecorder_GetRenderEventFunc(), 1);
+                CommitFrameToGpuSlot();
                 return;
             }
 
@@ -495,6 +637,19 @@ namespace HoloKit.iOS
 
         [DllImport(DllName)]
         private static extern void HoloKitVideoRecorder_ResetGPUCounters();
+
+        // Slot-based GPU path (iOS): no IUnityInterfaces needed.
+        [DllImport(DllName)]
+        private static extern int HoloKitVideoRecorder_AllocateGPUSlots(int count, int width, int height);
+
+        [DllImport(DllName)]
+        private static extern IntPtr HoloKitVideoRecorder_GetGPUSlotTexture(int index);
+
+        [DllImport(DllName)]
+        private static extern int HoloKitVideoRecorder_SubmitGPUSlot(int index, double time);
+
+        [DllImport(DllName)]
+        private static extern void HoloKitVideoRecorder_ReleaseGPUSlots();
     }
 }
 #endif

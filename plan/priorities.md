@@ -14,6 +14,8 @@
 | iPhone 18 Pro / Pro Max models | Added `iPhone19,1/2/3/7`; YAML validated |
 | Test device identified | iPhone 15 Pro `iPhone16,1`, state `connected` |
 | **Zero-copy GPU recording path** | Editor: `submitted=300 dropped=0`; ffprobe confirms exactly 300 frames with correct picture |
+| **GPU path working on device** | iPhone 15 Pro: `submitted=355 dropped=0`, 357 frames in the file, 30 fps held, no crash |
+| **Recording colour verified against the live screen** | Mean per-channel error 3.4/255 vs a `devicectl` screenshot of the same moment |
 | iOS Xcode project export | Built via the project's own `iOS.asset` build profile |
 
 ---
@@ -22,10 +24,11 @@
 
 **Principle: get the build -> install -> test loop working before changing more code.**
 
-Rationale: there has still been no run on real hardware. Every judgement about the GPU path,
-4K enhancement and bitrate is inference or Editor-only data. Once the loop works, each
-subsequent change can be verified immediately. Test A will also settle whether BUG-2 (pitch
-detection) is real, and that result changes the ordering below.
+That loop now works, and it earned its keep immediately: the red/blue channel swap in the GPU
+path was invisible in the Editor (every verification frame there was a grayscale LiDAR mesh,
+which a channel swap does not change) and only showed up when a device frame was compared
+against a screenshot of the same moment. What remains inference rather than measurement is
+4K enhancement, and Test A, which needs audio.
 
 ---
 
@@ -34,12 +37,13 @@ detection) is real, and that result changes the ordering below.
 | # | Item | Status |
 |---|---|---|
 | 1 | Export the iOS Xcode project | **done** |
-| 2 | `xcodebuild` against the iOS 27 SDK | in progress |
-| 3 | Install (also writes a provisioning profile, fixing the trust problem) | pending |
-| 4 | Run tests A/B/C and capture a baseline | pending |
+| 2 | `xcodebuild` against the iOS 27 SDK | **done** |
+| 3 | Install (also writes a provisioning profile, fixing the trust problem) | **done** |
+| 4 | Run tests B/C unattended and capture a baseline | **done** - `AutoRecordTest` drives a full cycle over USB |
 
-Device state: `devicectl device profile list` returned **No profiles found**, so every
-sideloaded app currently fails to launch. Installing one freshly signed build fixes this.
+The loop is closed: Unity batch build -> `xcodebuild` -> `devicectl install` -> `devicectl
+process launch --console` -> pull the `.mp4` out of `Library/Caches` with `devicectl device
+copy from` -> `ffprobe`. Test A (sound-triggered wave) still needs audio and was not run.
 
 ---
 
@@ -62,14 +66,15 @@ at the moment `vol > 0.02`.
 
 | # | Item | Benefit |
 |---|---|---|
-| 10 | Add `AVVideoAverageBitRateKey` (~24 Mbps), `AVVideoExpectedSourceFrameRateKey`, `AVVideoMaxKeyFrameIntervalKey` | **Biggest quality win.** Measured 4.46 Mbps at 2768x1280 with the encoder left on its default |
-| 11 | Add `AVVideoColorPropertiesKey` (BT.709) | Project uses Linear colour space; ffprobe reports `color_space=unknown` |
+| 10 | ~~Add `AVVideoAverageBitRateKey`, `AVVideoExpectedSourceFrameRateKey`, `AVVideoMaxKeyFrameIntervalKey`~~ | **done** - bitrate scales with pixel count, clamped 8-60 Mbps. On device 9.2 -> **20.4 Mbps** at 2544x1168 |
+| 11 | ~~Add `AVVideoColorPropertiesKey` (BT.709)~~ | **done** - ffprobe now reports `color_space=bt709` instead of `unknown` |
 | 12 | Attach `ARBackgroundVideoEnhancementManager` for 4K | Turns high resolution into real detail rather than an upscale |
 | 13 | ~~Avoid the CPU readback~~ | **done** - zero-copy GPU path |
 | 14 | ~~IOSurface pixel buffer attributes~~ | **done** - required by the GPU path |
 | 15 | Make the frame-rate gate configurable | Currently hardcoded to 60 in `TimeQueue` |
 
-Items 10 and 11 are pure parameter changes with the lowest risk and the largest benefit.
+Items 10 and 11 are done. Item 12 is the remaining quality lever: without it the high
+resolution is an upscale rather than real detail.
 
 ---
 
@@ -77,9 +82,10 @@ Items 10 and 11 are pure parameter changes with the lowest risk and the largest 
 
 | # | Item |
 |---|---|
-| 16 | Missing script in the scene: `EchoVision.unity:238,2474` references `HolokitMicrophoneAPI`, actual class is `MicrophoneAPI` |
+| 16 | Remove the temporary harnesses: `AutoRecordTest.cs`, `PerfProbe.cs` and the `ECHOVISION_AUTOTEST` define in `iOS.asset` |
+| 16b | Missing script in the scene: `EchoVision.unity:238,2474` references `HolokitMicrophoneAPI`, actual class is `MicrophoneAPI` |
 | 17 | Remaining `CS0618 FindObjectOfType` warnings in the HoloKit SDK (one fixed in `HoloKitDefaultUICanvas`) |
-| 18 | `HoloKitARKitNativeProvider.mm:21` leaks 64 bytes per frame (`new float[16]`, never freed) |
+| 18 | ~~`getUnityMatrix` leak~~ — WRONG, retracted. `HoloKitARKitNativeProvider.mm:97` does `delete[](matrix)` inside the dispatch block. The original claim came from grepping only the C# side for `Marshal.FreeHGlobal` without reading the native block. |
 | 19 | `iOSPhoneModelList.asset` lists `iPhone14,5` twice ("iPhone 13" and "iPhone 13 Mini"); iPhone 13 mini is actually `iPhone14,4` and is missing |
 | 20 | Reorganise native sources (`Runtime/Native/Shared` + `Prebuilt`) and add an Editor script that rebuilds the macOS bundle automatically when sources change |
 

@@ -44,6 +44,12 @@
 /// arbitrary thread, so every append is funnelled through this serial queue.
 @property (nonatomic, strong) dispatch_queue_t appendQueue;
 
+// Slot-based GPU path. Parallel arrays, one entry per slot.
+@property (assign) CVPixelBufferRef* slotBuffers;
+@property (assign) CVMetalTextureRef* slotCVTextures;
+@property (nonatomic, strong) NSMutableArray<id<MTLTexture>>* slotTextures;
+@property (assign) int slotCount;
+
 @end
 
 @implementation VideoRecorder
@@ -162,10 +168,39 @@
         return -1;
     }
     
+    // Without an explicit bitrate AVFoundation picks its own, which measured
+    // 4.5 Mbps at 2768x1280 -- high resolution, soft picture. Scale the target
+    // with the pixel count so a 4K capture is not starved and a small one is not
+    // wasteful, at roughly 0.11 bits per pixel per frame at 60 fps.
+    const int frameRate = 60;
+    long long bitRate = (long long)width * height * 7LL;
+    if (bitRate < 8000000LL)  { bitRate = 8000000LL; }
+    if (bitRate > 60000000LL) { bitRate = 60000000LL; }
+
+    NSDictionary* compression = @{
+        AVVideoAverageBitRateKey:          @(bitRate),
+        AVVideoExpectedSourceFrameRateKey: @(frameRate),
+        AVVideoMaxKeyFrameIntervalKey:     @(frameRate),
+        // No AVVideoProfileLevelKey: AVFoundation only defines H.264 profile
+        // constants; the HEVC ones live in VideoToolbox. Left unset, the encoder
+        // picks an appropriate HEVC profile and level for the resolution.
+    };
+
+    // The project renders in Linear colour space and the frames arrive as sRGB
+    // bytes. Tagging them BT.709 stops players guessing; untagged output probed
+    // as color_space=unknown.
+    NSDictionary* colorProperties = @{
+        AVVideoColorPrimariesKey:   AVVideoColorPrimaries_ITU_R_709_2,
+        AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_709_2,
+        AVVideoYCbCrMatrixKey:      AVVideoYCbCrMatrix_ITU_R_709_2,
+    };
+
     NSDictionary* settings = @{
         AVVideoCodecKey: AVVideoCodecTypeHEVC,
         AVVideoWidthKey: @(width),
-        AVVideoHeightKey: @(height) };
+        AVVideoHeightKey: @(height),
+        AVVideoCompressionPropertiesKey: compression,
+        AVVideoColorPropertiesKey: colorProperties };
     
     self.videoWriterInput = [AVAssetWriterInput assetWriterInputWithMediaType: AVMediaTypeVideo outputSettings: settings];
     self.videoWriterInput.expectsMediaDataInRealTime = YES;
@@ -558,6 +593,129 @@
     return 0;
 }
 
+#pragma mark - Slot-based GPU path
+
+- (int)allocateGPUSlots:(int)count width:(int)width height:(int)height
+{
+    [self releaseGPUSlots];
+
+    // iOS has one GPU, so the system default device is the one Unity renders
+    // with; textures created from it are shareable with Unity's.
+    if (self.currentMetalDevice == nil) {
+        id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+        if (device == nil) {
+            NSLog(@"[VideoRecorder] No Metal device; GPU slots unavailable.");
+            return 0;
+        }
+        [self setMetalDevice:device];
+    }
+    if (self.metalTextureCache == NULL) {
+        NSLog(@"[VideoRecorder] No texture cache; GPU slots unavailable.");
+        return 0;
+    }
+
+    NSDictionary* attrs = @{
+        (NSString*)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA),
+        (NSString*)kCVPixelBufferWidthKey: @(width),
+        (NSString*)kCVPixelBufferHeightKey: @(height),
+        (NSString*)kCVPixelBufferMetalCompatibilityKey: @YES,
+        (NSString*)kCVPixelBufferIOSurfacePropertiesKey: @{}
+    };
+
+    self.slotBuffers = (CVPixelBufferRef*)calloc(count, sizeof(CVPixelBufferRef));
+    self.slotCVTextures = (CVMetalTextureRef*)calloc(count, sizeof(CVMetalTextureRef));
+    self.slotTextures = [NSMutableArray arrayWithCapacity:count];
+
+    int created = 0;
+    for (int i = 0; i < count; i++) {
+        CVPixelBufferRef pb = NULL;
+        if (CVPixelBufferCreate(kCFAllocatorDefault, width, height,
+                                kCVPixelFormatType_32BGRA,
+                                (__bridge CFDictionaryRef)attrs, &pb) != kCVReturnSuccess) {
+            break;
+        }
+
+        CVMetalTextureRef cvTex = NULL;
+        if (CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                                      self.metalTextureCache, pb, NULL,
+                                                      MTLPixelFormatBGRA8Unorm,
+                                                      (size_t)width, (size_t)height, 0,
+                                                      &cvTex) != kCVReturnSuccess || cvTex == NULL) {
+            CVPixelBufferRelease(pb);
+            break;
+        }
+
+        id<MTLTexture> tex = CVMetalTextureGetTexture(cvTex);
+        if (tex == nil) {
+            CFRelease(cvTex);
+            CVPixelBufferRelease(pb);
+            break;
+        }
+
+        self.slotBuffers[i] = pb;
+        self.slotCVTextures[i] = cvTex;
+        [self.slotTextures addObject:tex];
+        created++;
+    }
+
+    self.slotCount = created;
+    NSLog(@"[VideoRecorder] Allocated %d/%d GPU slots at %dx%d", created, count, width, height);
+    return created;
+}
+
+- (void*)gpuSlotTexture:(int)index
+{
+    if (index < 0 || index >= self.slotCount) {
+        return NULL;
+    }
+    return (__bridge void*)self.slotTextures[index];
+}
+
+- (int)submitGPUSlot:(int)index time:(double)time
+{
+    if (!self.isRecording) {
+        return -2;
+    }
+    if (index < 0 || index >= self.slotCount || !self.writer) {
+        return -1;
+    }
+    if (!self.videoWriterInput.isReadyForMoreMediaData) {
+        return -3;   // backpressure; caller drops this frame and its timestamp
+    }
+
+    CVPixelBufferRef pb = self.slotBuffers[index];
+    if (pb == NULL) {
+        return -1;
+    }
+
+    CMTime pts = CMTimeMakeWithSeconds(time, 240);
+    if (![self.bufferAdaptor appendPixelBuffer:pb withPresentationTime:pts]) {
+        NSLog(@"[VideoRecorder] appendPixelBuffer failed. status=%ld error=%@",
+              (long)self.writer.status, self.writer.error);
+        return -1;
+    }
+    return 0;
+}
+
+- (void)releaseGPUSlots
+{
+    if (self.slotTextures != nil) {
+        [self.slotTextures removeAllObjects];
+        self.slotTextures = nil;
+    }
+    for (int i = 0; i < self.slotCount; i++) {
+        if (self.slotCVTextures != NULL && self.slotCVTextures[i] != NULL) {
+            CFRelease(self.slotCVTextures[i]);
+        }
+        if (self.slotBuffers != NULL && self.slotBuffers[i] != NULL) {
+            CVPixelBufferRelease(self.slotBuffers[i]);
+        }
+    }
+    if (self.slotCVTextures != NULL) { free(self.slotCVTextures); self.slotCVTextures = NULL; }
+    if (self.slotBuffers != NULL) { free(self.slotBuffers); self.slotBuffers = NULL; }
+    self.slotCount = 0;
+}
+
 - (void)endRecording
 {
     if (!self.isRecording) {
@@ -596,6 +754,8 @@
     self.bufferAdaptor = NULL;
     self.isRecording = NO;
 
+    [self releaseGPUSlots];
+
     if (self.metalTextureCache != NULL) {
         CVMetalTextureCacheFlush(self.metalTextureCache, 0);
     }
@@ -603,6 +763,13 @@
 
 @end
 
+
+// Defined in VideoRecorderMetalBridge.mm, shared so both GPU paths report through
+// the same counters that HoloKitVideoRecorder logs when recording stops. Declared
+// at file scope, not inside the extern "C" block below: the definitions have C++
+// linkage, so a C-linkage declaration here would fail to resolve.
+extern int g_SubmittedFrames;
+extern int g_DroppedFrames;
 
 extern "C" {
 
@@ -624,6 +791,36 @@ int HoloKitVideoRecorder_AppendVideoFrame(void* source, int size, double time)
 void HoloKitVideoRecorder_EndRecording(void)
 {
     [[VideoRecorder sharedInstance] endRecording];
+}
+
+// --- Slot-based GPU path ---
+// Unity copies into these textures with Graphics.CopyTexture, so no Unity
+// command buffer (and therefore no IUnityInterfaces) is needed.
+
+int HoloKitVideoRecorder_AllocateGPUSlots(int count, int width, int height)
+{
+    return [[VideoRecorder sharedInstance] allocateGPUSlots:count width:width height:height];
+}
+
+void* HoloKitVideoRecorder_GetGPUSlotTexture(int index)
+{
+    return [[VideoRecorder sharedInstance] gpuSlotTexture:index];
+}
+
+int HoloKitVideoRecorder_SubmitGPUSlot(int index, double time)
+{
+    int result = [[VideoRecorder sharedInstance] submitGPUSlot:index time:time];
+    if (result == 0) {
+        g_SubmittedFrames++;
+    } else {
+        g_DroppedFrames++;
+    }
+    return result;
+}
+
+void HoloKitVideoRecorder_ReleaseGPUSlots(void)
+{
+    [[VideoRecorder sharedInstance] releaseGPUSlots];
 }
 
 }
