@@ -20,7 +20,7 @@ The installed Release/archive belongs to that checkpoint. No push or upload.
 - Restored runtime-written SoundWave material volume/origin to neutral defaults.
 - Restored original XR simulation GUIDs and Room17 environment; moved ignored duplicate XR/Temp assets outside Assets into `Build_RecoveryArtifacts/xr-simulation-temp-before-cleanup` to prevent GUID collisions.
 - Restored TMP editor visibility preference, original Start/Stop Recording button wording, and original URP reflection-atlas/postprocess-alpha settings. Retained Unity's new asset schema; build-derived prefilter fields may be regenerated.
-- Removed the duplicate iPhone13Mini entry and four iPhone19,* entries explicitly documented in `b88e1d2` as using inherited, uncalibrated offsets. Earlier local iPhone16e/17/Air/SE/mini entries are retained pending provenance/calibration review; they are not covered by the iPhone15Pro result.
+- Removed the duplicate iPhone13Mini entry. The four iPhone19,* entries were removed in cleanup and then restored at the user's explicit request to retain iPhone18-series support. They use inherited offsets, as documented in `b88e1d2`; restoration is not a calibration claim. Earlier local iPhone16e/17/Air/SE/mini entries are also retained pending provenance/calibration review; none are covered by the iPhone15Pro result.
 
 ## Verification boundary
 
