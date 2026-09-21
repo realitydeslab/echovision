@@ -1,17 +1,28 @@
 {
+  "scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.ivanmurzak.unity.mcp",
+        "extensions.unity",
+        "org.nuget"
+      ]
+    }
+  ],
   "dependencies": {
-    "com.unity.device-simulator.devices": "1.0.0",
-    "com.unity.ide.rider": "3.0.36",
-    "com.unity.memoryprofiler": "1.1.6",
-    "com.unity.render-pipelines.universal": "17.1.0",
-    "com.unity.timeline": "1.8.8",
+    "com.unity.device-simulator.devices": "1.0.1",
+    "com.unity.ide.rider": "3.0.40",
+    "com.unity.memoryprofiler": "1.1.12",
+    "com.unity.render-pipelines.universal": "17.4.0",
+    "com.unity.timeline": "1.8.13",
     "com.unity.ugui": "2.0.0",
-    "com.unity.visualeffectgraph": "17.1.0",
-    "com.unity.xr.arfoundation": "6.1.0",
-    "com.unity.xr.arkit": "6.1.0",
-    "com.unity.xr.visionos": "2.2.4",
+    "com.unity.visualeffectgraph": "17.4.0",
+    "com.unity.xr.arfoundation": "6.4.3",
+    "com.unity.xr.arkit": "6.4.3",
     "io.holokit.unity-sdk": "https://github.com/holokit/holokit-unity-sdk.git",
     "com.unity.modules.accessibility": "1.0.0",
+    "com.unity.modules.adaptiveperformance": "1.0.0",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
@@ -38,6 +49,7 @@
     "com.unity.modules.unitywebrequestaudio": "1.0.0",
     "com.unity.modules.unitywebrequesttexture": "1.0.0",
     "com.unity.modules.unitywebrequestwww": "1.0.0",
+    "com.unity.modules.vectorgraphics": "1.0.0",
     "com.unity.modules.vehicles": "1.0.0",
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",

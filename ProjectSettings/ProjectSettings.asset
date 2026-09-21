@@ -66,10 +66,14 @@ PlayerSettings:
   useOSAutorotation: 1
   use32BitDisplayBuffer: 1
   preserveFramebufferAlpha: 1
+  adjustIOSFPSUsingThermalState: 1
+  thermalStateSeriousIOSFPS: 30
+  thermalStateCriticalIOSFPS: 15
   disableDepthAndStencilBuffers: 0
   androidStartInFullscreen: 1
   androidRenderOutsideSafeArea: 1
   androidUseSwappy: 0
+  androidDisplayOptions: 1
   androidBlitType: 0
   androidResizeableActivity: 0
   androidDefaultWindowWidth: 1920
@@ -85,7 +89,8 @@ PlayerSettings:
   runInBackground: 1
   muteOtherAudioSources: 0
   Prepare IOS For Recording: 0
-  Force IOS Speakers When Recording: 0
+  Force IOS Speakers When Recording: 1
+  audioSpatialExperience: 0
   deferSystemGesturesMode: 0
   hideHomeButton: 1
   submitAnalytics: 1
@@ -112,6 +117,7 @@ PlayerSettings:
   xboxEnableGuest: 0
   xboxEnablePIXSampling: 0
   metalFramebufferOnly: 0
+  metalUseMetalDisplayLink: 0
   xboxOneResolution: 0
   xboxOneSResolution: 0
   xboxOneXResolution: 3
@@ -132,6 +138,7 @@ PlayerSettings:
   switchNVNMaxPublicSamplerIDCount: 0
   switchMaxWorkerMultiple: 8
   switchNVNGraphicsFirmwareMemory: 32
+  switchGraphicsJobsSyncAfterKick: 1
   vulkanNumSwapchainBuffers: 3
   vulkanEnableSetSRGBWrite: 0
   vulkanEnablePreTransform: 1
@@ -140,8 +147,11 @@ PlayerSettings:
   loadStoreDebugModeEnabled: 0
   visionOSBundleVersion: 0.2.4
   tvOSBundleVersion: 1.0
-  bundleVersion: 0.2.4
-  preloadedAssets: []
+  bundleVersion: 0.3.0
+  preloadedAssets:
+  - {fileID: 4800000, guid: e7c77f6eaab324a819efdc13b8125a39, type: 3}
+  - {fileID: 4800000, guid: 6743a50a812740be8c0aa3fccc46fae9, type: 3}
+  - {fileID: 1156192282572459886, guid: 3a54aaa1e7ef94b2da18e63a82f8af95, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -174,9 +184,10 @@ PlayerSettings:
     tvOS: 0
   overrideDefaultApplicationIdentifier: 1
   AndroidBundleVersionCode: 1
-  AndroidMinSdkVersion: 23
+  AndroidMinSdkVersion: 25
   AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 1
+  AndroidPreferredDataLocation: 1
   aotOptions: 
   stripEngineCode: 1
   iPhoneStrippingLevel: 0
@@ -191,11 +202,11 @@ PlayerSettings:
   VertexChannelCompressionMask: 4054
   iPhoneSdkVersion: 988
   iOSSimulatorArchitecture: 0
-  iOSTargetOSVersionString: 17.0
+  iOSTargetOSVersionString: 26.0
   tvOSSdkVersion: 0
   tvOSSimulatorArchitecture: 0
   tvOSRequireExtendedGameController: 0
-  tvOSTargetOSVersionString: 13.0
+  tvOSTargetOSVersionString: 15.0
   VisionOSSdkVersion: 0
   VisionOSTargetOSVersionString: 1.0
   uIPrerenderedIcon: 0
@@ -265,6 +276,7 @@ PlayerSettings:
   useCustomGradleSettingsTemplate: 0
   useCustomProguardFile: 0
   AndroidTargetArchitectures: 1
+  AndroidAllowedArchitectures: -1
   AndroidSplashScreenScale: 0
   androidSplashScreen: {fileID: 0}
   AndroidKeystoreName: 
@@ -274,6 +286,9 @@ PlayerSettings:
   AndroidBuildApkPerCpuArchitecture: 0
   AndroidTVCompatibility: 0
   AndroidIsGame: 1
+  androidAppCategory: 3
+  useAndroidAppCategory: 1
+  androidAppCategoryOther: 
   AndroidEnableTango: 0
   androidEnableBanner: 1
   androidUseLowAccuracyLocation: 0
@@ -590,7 +605,7 @@ PlayerSettings:
   locationUsageDescription: Used for AR
   microphoneUsageDescription: Used for AR
   bluetoothUsageDescription: 
-  macOSTargetOSVersion: 11.0
+  macOSTargetOSVersion: 12.0
   switchNMETAOverride: 
   switchNetLibKey: 
   switchSocketMemoryPoolSize: 6144
@@ -845,7 +860,25 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    iPhone: UNITY_XR_ARKIT_LOADER_ENABLED
+    Android: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    EmbeddedLinux: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    GameCoreScarlett: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    GameCoreXboxOne: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    Kepler: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    LinuxHeadlessSimulation: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    Nintendo Switch: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    Nintendo Switch 2: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    PS4: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    PS5: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    QNX: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    Server: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    Standalone: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    VisionOS: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    WebGL: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    Windows Store Apps: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    XboxOne: UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    iPhone: UNITY_XR_ARKIT_LOADER_ENABLED;UNITY_MCP_READY;UNITY_MCP_DEPS_4
+    tvOS: UNITY_MCP_READY;UNITY_MCP_DEPS_4
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}
@@ -972,3 +1005,5 @@ PlayerSettings:
   androidVulkanDenyFilterList: []
   androidVulkanAllowFilterList: []
   androidVulkanDeviceFilterListAsset: {fileID: 0}
+  d3d12DeviceFilterListAsset: {fileID: 0}
+  allowedHttpConnections: 3

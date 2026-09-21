@@ -1228,6 +1228,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea4463779e4ea43048a3e8f8b160cf90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  videoRecorder: {fileID: 1418006796}
+  recordingText: {fileID: 237215421}
   audiosourceForRecording: {fileID: 2046641357}
   audioSourceForAnalysis: {fileID: 1913013587}
   audioGroupMaster: {fileID: 24300002, guid: 9a467474f54c14281a0d4c71bba942bf, type: 2}
@@ -1358,6 +1360,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RenderModeButtonText: {fileID: 1203263600}
+  RecordButtonText: {fileID: 0}
 --- !u!114 &1305125610
 MonoBehaviour:
   m_ObjectHideFlags: 0

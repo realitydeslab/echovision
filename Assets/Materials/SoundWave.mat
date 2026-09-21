@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 9
+  version: 10
 --- !u!21 &2100000
 Material:
   serializedVersion: 8
@@ -78,7 +78,7 @@ Material:
     - _QueueOffset: 0
     - _RippleBandGamma: 7.34
     - _SoundPitch: 0
-    - _SoundVolume: 0
+    - _SoundVolume: 0.00000006337045
     - _SoundwaveSpeed: 0
     - _Step: 8.78
     - _StepValue: 0.95485705
@@ -93,6 +93,6 @@ Material:
     - _WiggleStrength: 0.1
     m_Colors:
     - _Color: {r: 16, g: 0, b: 0, a: 1}
-    - _WaveOrigin: {r: 0, g: 0, b: 0, a: 0}
+    - _WaveOrigin: {r: -4.6, g: 1.5, b: -3.29, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

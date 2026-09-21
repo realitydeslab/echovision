@@ -25,6 +25,7 @@ public class AudioProcessor : MonoBehaviour
         _fSample = AudioSettings.outputSampleRate;
     }
     
+    float _debugTimer = 0;
     void Update()
     {
         if (audioSource == null)
@@ -33,7 +34,14 @@ public class AudioProcessor : MonoBehaviour
         AnalyzeSound();
 
         audioVolume = Remap(DbValue, -10, 10, 0, 1, true);
-        audioPitch = Remap(PitchValue, 0, 600, 0, 1, true);       
+        audioPitch = Remap(PitchValue, 0, 600, 0, 1, true);
+
+        _debugTimer += Time.deltaTime;
+        if (_debugTimer > 0.1f)
+        {
+            _debugTimer = 0;
+            Debug.Log($"[Audio] RMS={RmsValue:F6} dB={DbValue:F1} vol={audioVolume:F3} pitchHz={PitchValue:F0} pitchNorm={audioPitch:F3}");
+        }
     }
 
     #region Analysis Theory
@@ -50,12 +58,21 @@ public class AudioProcessor : MonoBehaviour
     float[] _spectrum;
     float _fSample;
 
-    /// <summary>
-    /// The code is from https://stackoverflow.com/questions/53030560/read-microphone-decibels-and-pitch-frequency
-    /// </summary>
     void AnalyzeSound()
     {
-        audioSource.GetOutputData(_samples, 0); // fill array with samples
+        // Read raw clip data directly to avoid mixer group volume attenuation
+        if (audioSource.clip != null && audioSource.clip.channels > 0)
+        {
+            int clipPos = audioSource.timeSamples;
+            int startPos = clipPos - QSamples;
+            if (startPos < 0) startPos += audioSource.clip.samples;
+            audioSource.clip.GetData(_samples, startPos % audioSource.clip.samples);
+        }
+        else
+        {
+            audioSource.GetOutputData(_samples, 0);
+        }
+
         int i;
         float sum = 0;
         for (i = 0; i < QSamples; i++)
@@ -71,7 +88,7 @@ public class AudioProcessor : MonoBehaviour
         var maxN = 0;
         for (i = 0; i < QSamples; i++)
         {
-            // find max 
+            // find max
             if (!(_spectrum[i] > maxV) || !(_spectrum[i] > Threshold))
                 continue;
 

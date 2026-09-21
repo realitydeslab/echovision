@@ -24,6 +24,7 @@ project.json
 project.lock.json
 *.package
 mono_crash.*.json
+mono_crash.*.blob
 
 # ============ #
 # Certificates #
@@ -121,3 +122,6 @@ Assets/UnityXRContent.meta
 App_BurstDebugInformation_DoNotShip/
 
 Builds_BurstDebugInformation_DoNotShip/
+
+# Recordings produced by HoloKitVideoRecorder (non-iOS writes to the project root)
+Record_*.mp4

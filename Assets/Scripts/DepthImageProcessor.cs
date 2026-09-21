@@ -47,7 +47,20 @@ public class DepthImageProcessor : MonoBehaviour
 
     public Matrix4x4 DisplayRotatioMatrix { get => m_DisplayRotationMatrix; }
 
-    public Texture2D HumanStencilTexture { get => occlusionManager.humanStencilTexture; }
+    public Texture2D HumanStencilTexture
+    {
+        get
+        {
+            try
+            {
+                return occlusionManager.humanStencilTexture;
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
+        }
+    }
 
 
     void Awake()
