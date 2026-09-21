@@ -116,17 +116,6 @@ public class DepthImageProcessor : MonoBehaviour
         // Copy the display rotation matrix from the camera.
         Matrix4x4 cameraMatrix = cameraFrameEventArgs.displayMatrix ?? Matrix4x4.identity;
 
-#if UNITY_IOS
-        // On iOS 27 AR Foundation's displayMatrix is wrong in landscape, and the
-        // camera background is drawn with a corrected one by
-        // ARBackgroundOrientationFix. The depth and stencil overlays have to use
-        // the same transform or they drift out of register with the background
-        // they are drawn over.
-        if (HoloKit.iOS.ARBackgroundOrientationFix.CorrectedDisplayMatrix.HasValue)
-        {
-            cameraMatrix = HoloKit.iOS.ARBackgroundOrientationFix.CorrectedDisplayMatrix.Value;
-        }
-#endif
 
         Vector2 affineBasisX = new Vector2(1.0f, 0.0f);
         Vector2 affineBasisY = new Vector2(0.0f, 1.0f);
