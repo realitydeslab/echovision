@@ -24,7 +24,12 @@ namespace HoloKit.UI
 
         private void Start()
         {
-            m_HoloKitCameraManager = FindObjectOfType<HoloKitCameraManager>();
+            m_HoloKitCameraManager = FindFirstObjectByType<HoloKitCameraManager>();
+            if (m_HoloKitCameraManager == null)
+            {
+                Debug.LogWarning($"[{nameof(HoloKitDefaultUICanvas)}] No HoloKitCameraManager in the scene; this canvas is inert.");
+                return;
+            }
 #if UNITY_IOS
             m_VideoRecorder = m_HoloKitCameraManager.GetComponentInChildren<HoloKitVideoRecorder>();
 #endif
@@ -32,18 +37,36 @@ namespace HoloKit.UI
 
         public void SwitchRenderMode()
         {
+            if (m_HoloKitCameraManager == null)
+                return;
+
             m_HoloKitCameraManager.ScreenRenderMode = m_HoloKitCameraManager.ScreenRenderMode == ScreenRenderMode.Mono ? ScreenRenderMode.Stereo : ScreenRenderMode.Mono;
-            RenderModeButtonText.text = m_HoloKitCameraManager.ScreenRenderMode == ScreenRenderMode.Mono ? "Stereo" : "Mono";
+
+            if (RenderModeButtonText != null)
+                RenderModeButtonText.text = m_HoloKitCameraManager.ScreenRenderMode == ScreenRenderMode.Mono ? "Stereo" : "Mono";
 
 #if UNITY_IOS
-            RecordButtonText.text = m_VideoRecorder.IsRecording ? "Stop Recording" : "Start Recording";
+            // RecordButtonText is optional: a project may drive the record UI itself
+            // rather than through this default canvas.
+            UpdateRecordButtonText();
 #endif
         }
 
 #if UNITY_IOS
         public void ToggleRecording()
         {
+            if (m_VideoRecorder == null)
+                return;
+
             m_VideoRecorder.ToggleRecording();
+            UpdateRecordButtonText();
+        }
+
+        private void UpdateRecordButtonText()
+        {
+            if (RecordButtonText == null || m_VideoRecorder == null)
+                return;
+
             RecordButtonText.text = m_VideoRecorder.IsRecording ? "Stop Recording" : "Start Recording";
         }
 #endif

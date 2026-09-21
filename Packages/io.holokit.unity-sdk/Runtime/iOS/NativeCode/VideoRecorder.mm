@@ -12,6 +12,7 @@
 
 #import <AVFoundation/AVFoundation.h>
 #import <Metal/Metal.h>
+#import <CoreVideo/CVMetalTextureCache.h>
 #import <CoreMedia/CMBlockBuffer.h>
 #import <Accelerate/Accelerate.h>
 #import <AudioToolbox/AudioToolbox.h>
@@ -32,6 +33,16 @@
 @property (nonatomic, strong) AVCaptureDeviceInput* audioInputMic;
 @property (nonatomic, strong) AVAudioEngine* audioEngine;
 @property (nonatomic, strong) AVCaptureAudioDataOutput* audioOutput;
+
+// --- zero-copy GPU path ---
+// NOTE: deliberately NOT named `metalDevice` -- that would synthesise a setter
+// called `setMetalDevice:`, which collides with the public method of the same name
+// and makes it recurse into itself.
+@property (nonatomic, strong) id<MTLDevice> currentMetalDevice;
+@property (assign) CVMetalTextureCacheRef metalTextureCache;
+/// AVAssetWriterInput is not thread-safe and the GPU completion handler fires on an
+/// arbitrary thread, so every append is funnelled through this serial queue.
+@property (nonatomic, strong) dispatch_queue_t appendQueue;
 
 @end
 
@@ -133,7 +144,13 @@
     
     // Asset writer setup
     NSURL* filePathURL = [NSURL fileURLWithPath:[NSString stringWithUTF8String:filePath]];
-    
+
+    // Delete existing file if present — AVAssetWriter fails if file already exists
+    NSFileManager *fm = [NSFileManager defaultManager];
+    if ([fm fileExistsAtPath:filePathURL.path]) {
+        [fm removeItemAtURL:filePathURL error:nil];
+    }
+
     NSError* err;
     self.writer = [[AVAssetWriter alloc] initWithURL: filePathURL
                                         fileType: AVFileTypeMPEG4
@@ -157,7 +174,11 @@
     NSDictionary* attribs = @{
         (NSString*)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA),
         (NSString*)kCVPixelBufferWidthKey: @(width),
-        (NSString*)kCVPixelBufferHeightKey: @(height)
+        (NSString*)kCVPixelBufferHeightKey: @(height),
+        // Required for the zero-copy GPU path: the buffer must be IOSurface-backed so
+        // CVMetalTextureCache can wrap it as an MTLTexture sharing the same memory.
+        (NSString*)kCVPixelBufferMetalCompatibilityKey: @YES,
+        (NSString*)kCVPixelBufferIOSurfacePropertiesKey: @{}
     };
     
     self.bufferAdaptor = [AVAssetWriterInputPixelBufferAdaptor
@@ -218,7 +239,28 @@
     self.width = width;
     self.height = height;
     [self.writer startSessionAtSourceTime:kCMTimeZero];
+
+    // Check writer status after starting session
+    if (self.writer.status == AVAssetWriterStatusFailed) {
+        NSLog(@"Writer failed after starting session: %@", self.writer.error);
+        return -1;
+    }
+
+    if (!self.bufferAdaptor.pixelBufferPool) {
+        NSLog(@"pixelBufferPool is nil after starting session. Writer status: %ld, error: %@",
+              (long)self.writer.status, self.writer.error);
+        return -1;
+    }
+
+    if (self.appendQueue == nil) {
+        self.appendQueue = dispatch_queue_create("io.holokit.videorecorder.append",
+                                                 DISPATCH_QUEUE_SERIAL);
+    }
+
     self.isRecording = YES;
+    NSLog(@"Recording started: %dx%d, writer status: %ld, gpuPath: %@",
+          width, height, (long)self.writer.status,
+          self.metalTextureCache != NULL ? @"yes" : @"no");
 
     return 0;
 }
@@ -259,6 +301,7 @@
     
     if (status != kCMBlockBufferNoErr) {
         NSLog(@"CMBlockBufferReplaceDataBytes error");
+        CFRelease(blockBuffer);
         return -1;
     }
 
@@ -281,18 +324,25 @@
     if (!CMSampleBufferDataIsReady(sampleBuffer))
     {
         NSLog(@"sample buffer is not ready");
+        CFRelease(sampleBuffer);
+        CFRelease(blockBuffer);
         return -1;
     }
    
     if (!CMSampleBufferIsValid(sampleBuffer))
     {
-        NSLog(@"Audio sapmle buffer is not valid");
+        NSLog(@"Audio sample buffer is not valid");
+        CFRelease(sampleBuffer);
+        CFRelease(blockBuffer);
         return -1;
     }
         
     bool result = [self.audioWriterInput appendSampleBuffer:sampleBuffer];
     if (!result) {
-        NSLog(@"appendSampleBuffer error");
+        NSLog(@"appendSampleBuffer error. Writer status: %ld, error: %@",
+              (long)self.writer.status, self.writer.error);
+        CFRelease(sampleBuffer);
+        CFRelease(blockBuffer);
         return -1;
     }
     
@@ -321,7 +371,8 @@
     
     if (!self.bufferAdaptor.pixelBufferPool)
     {
-        NSLog(@"Video Writer pixelBufferPool is empty.");
+        NSLog(@"Video Writer pixelBufferPool is empty. Writer status: %ld, error: %@",
+              (long)self.writer.status, self.writer.error);
         return -1;
     }
 
@@ -354,10 +405,8 @@
     dstBuffer.width = self.width;
     dstBuffer.rowBytes = bytesPerRow;
 
-    // ARGB to BGRA
-    // ARGB
-    // 0 denotes the alpha channel, 1 the red channel, 2 the green channel, and 3 the blue channel.
-    const uint8_t permuteMap[4] = { 0, 1, 2, 3 };
+    // RGBA to BGRA: swap R (index 0) and B (index 2)
+    const uint8_t permuteMap[4] = { 2, 1, 0, 3 };
     assert(size == self.width * self.height * 4);
     vImagePermuteChannels_ARGB8888(&srcBuffer, &dstBuffer, permuteMap, kvImageNoFlags);
     CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
@@ -367,6 +416,144 @@
                     withPresentationTime:CMTimeMakeWithSeconds(time, 240)];
     
     CVPixelBufferRelease(pixelBuffer);
+
+    return 0;
+}
+
+- (void)setMetalDevice:(id<MTLDevice>)device
+{
+    if (self.currentMetalDevice == device) {
+        return;
+    }
+    self.currentMetalDevice = device;
+
+    if (self.metalTextureCache) {
+        CFRelease(self.metalTextureCache);
+        self.metalTextureCache = NULL;
+    }
+    if (device == nil) {
+        return;
+    }
+
+    CVReturn ret = CVMetalTextureCacheCreate(kCFAllocatorDefault, NULL, device, NULL,
+                                             &_metalTextureCache);
+    if (ret != kCVReturnSuccess) {
+        NSLog(@"[VideoRecorder] CVMetalTextureCacheCreate failed (%d); GPU path unavailable.", ret);
+        self.metalTextureCache = NULL;
+    }
+}
+
+- (int)appendVideoFrameFromMetalTexture:(id<MTLTexture>)srcTexture
+                          commandBuffer:(id<MTLCommandBuffer>)commandBuffer
+                                   time:(double)time
+{
+    if (!self.isRecording) {
+        return -2;
+    }
+    if (!self.writer || !self.bufferAdaptor.pixelBufferPool) {
+        return -1;
+    }
+    if (srcTexture == nil || commandBuffer == nil || self.metalTextureCache == NULL) {
+        return -1;
+    }
+
+    // Replaces the old assert(), which compiled out in Release and let a mismatched
+    // frame run off the end of the buffer.
+    if ((int)srcTexture.width != self.width || (int)srcTexture.height != self.height) {
+        NSLog(@"[VideoRecorder] Texture %lux%lu does not match recording size %dx%d.",
+              (unsigned long)srcTexture.width, (unsigned long)srcTexture.height,
+              self.width, self.height);
+        return -1;
+    }
+
+    // Writer backpressure. -3 tells the caller this frame was dropped on purpose so it
+    // can put the timestamp back instead of letting audio and video drift apart.
+    if (!self.videoWriterInput.isReadyForMoreMediaData) {
+        return -3;
+    }
+
+    CVPixelBufferRef pixelBuffer = NULL;
+    CVReturn ret = CVPixelBufferPoolCreatePixelBuffer(NULL, self.bufferAdaptor.pixelBufferPool,
+                                                      &pixelBuffer);
+    if (ret != kCVReturnSuccess) {
+        NSLog(@"[VideoRecorder] CVPixelBufferPoolCreatePixelBuffer failed (%d)", ret);
+        return -1;
+    }
+
+    // Wrap the pixel buffer as an MTLTexture. Because it is IOSurface-backed this shares
+    // memory with the pixel buffer -- no copy, no CPU involvement.
+    CVMetalTextureRef cvTexture = NULL;
+    ret = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                                    self.metalTextureCache,
+                                                    pixelBuffer,
+                                                    NULL,
+                                                    MTLPixelFormatBGRA8Unorm,
+                                                    (size_t)self.width,
+                                                    (size_t)self.height,
+                                                    0,
+                                                    &cvTexture);
+    if (ret != kCVReturnSuccess || cvTexture == NULL) {
+        NSLog(@"[VideoRecorder] CVMetalTextureCacheCreateTextureFromImage failed (%d)", ret);
+        CVPixelBufferRelease(pixelBuffer);
+        return -1;
+    }
+
+    id<MTLTexture> dstTexture = CVMetalTextureGetTexture(cvTexture);
+    if (dstTexture == nil) {
+        CFRelease(cvTexture);
+        CVPixelBufferRelease(pixelBuffer);
+        return -1;
+    }
+
+    // blitCommandEncoder requires matching pixel formats. Unity may hand us the sRGB
+    // variant of BGRA8; reinterpret it through a texture view rather than converting.
+    id<MTLTexture> blitSource = srcTexture;
+    if (srcTexture.pixelFormat != MTLPixelFormatBGRA8Unorm) {
+        blitSource = [srcTexture newTextureViewWithPixelFormat:MTLPixelFormatBGRA8Unorm];
+        if (blitSource == nil) {
+            NSLog(@"[VideoRecorder] Cannot reinterpret source format %lu as BGRA8Unorm.",
+                  (unsigned long)srcTexture.pixelFormat);
+            CFRelease(cvTexture);
+            CVPixelBufferRelease(pixelBuffer);
+            return -1;
+        }
+    }
+
+    id<MTLBlitCommandEncoder> blit = [commandBuffer blitCommandEncoder];
+    if (blit == nil) {
+        CFRelease(cvTexture);
+        CVPixelBufferRelease(pixelBuffer);
+        return -1;
+    }
+    [blit copyFromTexture:blitSource
+              sourceSlice:0
+              sourceLevel:0
+             sourceOrigin:MTLOriginMake(0, 0, 0)
+               sourceSize:MTLSizeMake((NSUInteger)self.width, (NSUInteger)self.height, 1)
+                toTexture:dstTexture
+         destinationSlice:0
+         destinationLevel:0
+        destinationOrigin:MTLOriginMake(0, 0, 0)];
+    [blit endEncoding];
+
+    // Hand the buffer to the writer only once the GPU has actually finished the blit.
+    CMTime presentationTime = CMTimeMakeWithSeconds(time, 240);
+    __weak VideoRecorder* weakSelf = self;
+    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> _Nonnull cb) {
+        VideoRecorder* strongSelf = weakSelf;
+        dispatch_async(strongSelf.appendQueue ?: dispatch_get_main_queue(), ^{
+            if (strongSelf != nil && strongSelf.isRecording &&
+                strongSelf.videoWriterInput.isReadyForMoreMediaData) {
+                if (![strongSelf.bufferAdaptor appendPixelBuffer:pixelBuffer
+                                           withPresentationTime:presentationTime]) {
+                    NSLog(@"[VideoRecorder] appendPixelBuffer failed. status=%ld error=%@",
+                          (long)strongSelf.writer.status, strongSelf.writer.error);
+                }
+            }
+            CFRelease(cvTexture);
+            CVPixelBufferRelease(pixelBuffer);
+        });
+    }];
 
     return 0;
 }
@@ -383,6 +570,13 @@
         return;
     }
     
+    // Frames submitted through the GPU path append asynchronously on appendQueue once
+    // their blit completes. Drain that queue before marking the inputs finished,
+    // otherwise the tail of the recording is silently discarded.
+    if (self.appendQueue != nil) {
+        dispatch_sync(self.appendQueue, ^{});
+    }
+
     [self.videoWriterInput markAsFinished];
     [self.audioWriterInput markAsFinished];
     
@@ -401,6 +595,10 @@
     self.audioWriterInput = NULL;
     self.bufferAdaptor = NULL;
     self.isRecording = NO;
+
+    if (self.metalTextureCache != NULL) {
+        CVMetalTextureCacheFlush(self.metalTextureCache, 0);
+    }
 }
 
 @end

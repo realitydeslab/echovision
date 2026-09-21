@@ -66,7 +66,10 @@
         }
         
         config.videoFormat = ARWorldTrackingConfiguration.recommendedVideoFormatFor4KResolution;
-        if (!config.videoFormat.videoHDRSupported) {
+        // NOTE: this condition used to be inverted (`if (!videoHDRSupported)`), which meant HDR
+        // was requested only on formats that cannot do it, and skipped on the ones that can --
+        // so HDR was never actually enabled. The log message was inverted to match.
+        if (config.videoFormat.videoHDRSupported) {
             config.videoHDRAllowed = true;
         } else {
             NSLog(@"[HoloKitARKitNativeProvider] Current device does not support HDR video format, only 4K resolution is being used.");

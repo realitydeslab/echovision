@@ -197,6 +197,7 @@ namespace HoloKit.iOS
         private RenderTexture _cameraRt;
         private RenderTexture _frameRt;
         private TimeQueue _timeQueue = new TimeQueue();
+        private bool _useGpuPath = false;
         private HoloKitCameraManager _holokitCameraManager;
 
         // private readonly RingBuffer<float> __deviceRingBuffer;
@@ -266,15 +267,22 @@ namespace HoloKit.iOS
             var path = PathUtil.GetTemporaryFilePath();
             var sampleRate = AudioSettings.outputSampleRate;
             var channelCount = 2;
-            var width = Screen.width;
-            var height = Screen.height;
+            // Round down to multiples of 16 for HEVC hardware encoder compatibility
+            var width = Screen.width & ~15;
+            var height = Screen.height & ~15;
 
             // ARGBHalf will make sure the camera renders post-processing.
             var _descriptor = new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGBHalf, 32);
             _cameraRt = new RenderTexture(_descriptor);
-            _frameRt = new RenderTexture(width, height, 0);
+            _frameRt = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
+            Debug.Log($"Camera Render Texture: {width}x{height}");
             int status = HoloKitVideoRecorder_StartRecording(path, width, height, sampleRate, channelCount);
             _timeQueue.Clear();
+
+            _useGpuPath = HoloKitVideoRecorder_IsGPUPathAvailable();
+            HoloKitVideoRecorder_ResetGPUCounters();
+            Debug.Log($"[HoloKitVideoRecorder] GPU zero-copy path: {(_useGpuPath ? "enabled" : "unavailable, falling back to CPU readback")}");
+
             if (status != 0)
             {
                 Debug.LogError("Cannot Start Video");
@@ -299,6 +307,13 @@ namespace HoloKit.iOS
             }
 
             AsyncGPUReadback.WaitAllRequests();
+
+            if (_useGpuPath)
+            {
+                Debug.Log($"[HoloKitVideoRecorder] GPU frames submitted={HoloKitVideoRecorder_GetSubmittedFrameCount()} " +
+                          $"dropped={HoloKitVideoRecorder_GetDroppedFrameCount()}");
+            }
+
             HoloKitVideoRecorder_EndRecording();
             IsRecording = false;
 
@@ -375,8 +390,15 @@ namespace HoloKit.iOS
 
         unsafe void OnAudioFilterRead(float[] data, int channels)
         {
-            if (!IsRecording) return;
-            CommitSamples(data, channels);
+            if (IsRecording)
+                CommitSamples(data, channels);
+
+            // Always silence the listener output, even when not recording.
+            // The microphone is routed into the global mix via audiosourceForRecording
+            // (volume 0.5 -> Master group at 0 dB), so leaving it audible feeds the mic
+            // back into itself through the speaker and self-oscillates. Recording is
+            // unaffected: CommitSamples above already captured the mix.
+            System.Array.Clear(data, 0, data.Length);
         }
 
         // The sample buffer MUST be a linear PCM buffer interleaved by channel.
@@ -401,7 +423,21 @@ namespace HoloKit.iOS
             source.Render();
             source.targetTexture = prevTarget;
             Graphics.Blit(_cameraRt, _frameRt, new Vector2(1, -1), new Vector2(0, 1));
-            AsyncGPUReadback.Request(_frameRt, 0, OnSourceReadback);
+
+            if (_useGpuPath)
+            {
+                // Zero-copy: the frame is blitted straight into an IOSurface-backed
+                // CVPixelBuffer on the render thread, so pixels never reach the CPU.
+                // The timestamp travels with the frame, so a dropped frame cannot
+                // desynchronise the ones after it.
+                HoloKitVideoRecorder_EnqueueGPUFrame(_frameRt.GetNativeTexturePtr(), _timeQueue.Dequeue());
+                GL.IssuePluginEvent(HoloKitVideoRecorder_GetRenderEventFunc(), 1);
+                return;
+            }
+
+            // Fallback for any backend that is not Metal (the plugin reports this at
+            // StartRecording). Reads the frame back to the CPU and copies it.
+            AsyncGPUReadback.Request(_frameRt, 0, UnityEngine.TextureFormat.RGBA32, OnSourceReadback);
         }
         public void ToggleRecording()
         {
@@ -435,6 +471,30 @@ namespace HoloKit.iOS
 
         [DllImport(DllName)]
         public static extern void HoloKitVideoRecorder_EndRecording();
+
+        // Zero-copy GPU path. Implemented in VideoRecorderMetalBridge.mm, built for
+        // both iOS and macOS so the Editor runs the same code that ships.
+        //
+        // MarshalAs(I1) matters: C++ bool is 1 byte, but the .NET default for bool is
+        // the 4-byte Win32 BOOL, which would read three bytes of garbage.
+        [DllImport(DllName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool HoloKitVideoRecorder_IsGPUPathAvailable();
+
+        [DllImport(DllName)]
+        private static extern void HoloKitVideoRecorder_EnqueueGPUFrame(IntPtr texturePtr, double timestamp);
+
+        [DllImport(DllName)]
+        private static extern IntPtr HoloKitVideoRecorder_GetRenderEventFunc();
+
+        [DllImport(DllName)]
+        private static extern int HoloKitVideoRecorder_GetSubmittedFrameCount();
+
+        [DllImport(DllName)]
+        private static extern int HoloKitVideoRecorder_GetDroppedFrameCount();
+
+        [DllImport(DllName)]
+        private static extern void HoloKitVideoRecorder_ResetGPUCounters();
     }
 }
 #endif
