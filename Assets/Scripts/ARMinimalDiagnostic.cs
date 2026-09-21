@@ -52,7 +52,13 @@ public class ARMinimalDiagnostic : MonoBehaviour
         m_Timer = 0f;
 
         Matrix4x4 m = args.displayMatrix ?? Matrix4x4.identity;
-        Debug.Log($"[ARMin] orientation={Screen.orientation} size={Screen.width}x{Screen.height} " +
+        // deviceOrientation is the accelerometer's view of the physical pose,
+        // Screen.orientation the interface pose. When they agree the rendered
+        // background must look upright, whatever way the phone is being held --
+        // which is the only orientation check that does not depend on knowing
+        // how the user happens to be holding it.
+        Debug.Log($"[ARMin] t={Time.realtimeSinceStartup:F1} device={Input.deviceOrientation} " +
+                  $"orientation={Screen.orientation} size={Screen.width}x{Screen.height} " +
                   $"hasMatrix={args.displayMatrix.HasValue} " +
                   $"m00={m[0, 0]:F3} m01={m[0, 1]:F3} m10={m[1, 0]:F3} m11={m[1, 1]:F3} " +
                   $"m20={m[2, 0]:F3} m21={m[2, 1]:F3}");

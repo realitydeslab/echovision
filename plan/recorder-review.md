@@ -285,3 +285,26 @@ the CPU path is used.
 **This bug was invisible in the Editor**, where every verification frame was a grayscale LiDAR
 mesh. A grayscale image is unchanged by swapping R and B. Only a colour frame from the device
 camera exposed it.
+
+---
+
+# 4. 4K background is now a recording option
+
+`ARBackgroundVideoEnhancementManager` was in the scene with `m_IsEnabled: 1`, which keeps
+ARKit's 4K/HDR capture running for the whole session. Only the recording benefits from the
+extra detail, and the phone was already running hot, so the flag is now off in the scene and
+`HoloKitVideoRecorder` turns it on for the duration of the recording instead:
+
+- `RecordIn4K` (serialized, default on) is read at `StartRecording`.
+- The previous value is saved and restored at `EndRecording`.
+- If `HoloKitARKitManager` or `ARBackgroundVideoEnhancementManager` is missing the recorder
+  warns and records at the standard background resolution rather than dereferencing null --
+  the enhancement manager's setter goes straight through `HoloKitARKitManager.Instance`.
+
+Device log for one 12 s recording:
+
+```
+14:06:27  AR background video enhancement disabled.   <- startup, scene default
+14:06:36  AR background video enhancement enabled.    <- StartRecording
+14:06:48  AR background video enhancement disabled.   <- EndRecording, restored
+```

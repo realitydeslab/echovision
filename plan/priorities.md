@@ -16,6 +16,8 @@
 | **Zero-copy GPU recording path** | Editor: `submitted=300 dropped=0`; ffprobe confirms exactly 300 frames with correct picture |
 | **GPU path working on device** | iPhone 15 Pro: `submitted=355 dropped=0`, 357 frames in the file, 30 fps held, no crash |
 | **Recording colour verified against the live screen** | Mean per-channel error 3.4/255 vs a `devicectl` screenshot of the same moment |
+| **iOS 27 AR background rotation** | Worked around with a custom background material. Portrait matches AR Foundation bit-identically; landscape verified upright on device |
+| **4K background as a recording option** | `RecordIn4K` on the recorder; native log confirms enable/disable bracketing the recording |
 | iOS Xcode project export | Built via the project's own `iOS.asset` build profile |
 
 ---
@@ -68,13 +70,12 @@ at the moment `vol > 0.02`.
 |---|---|---|
 | 10 | ~~Add `AVVideoAverageBitRateKey`, `AVVideoExpectedSourceFrameRateKey`, `AVVideoMaxKeyFrameIntervalKey`~~ | **done** - bitrate scales with pixel count, clamped 8-60 Mbps. On device 9.2 -> **20.4 Mbps** at 2544x1168 |
 | 11 | ~~Add `AVVideoColorPropertiesKey` (BT.709)~~ | **done** - ffprobe now reports `color_space=bt709` instead of `unknown` |
-| 12 | Attach `ARBackgroundVideoEnhancementManager` for 4K | Turns high resolution into real detail rather than an upscale |
+| 12 | ~~Attach `ARBackgroundVideoEnhancementManager` for 4K~~ | **done, and made a recording option.** `HoloKitVideoRecorder.RecordIn4K` turns 4K/HDR on at `StartRecording` and restores it at `EndRecording`, so the extra battery and heat are only paid while recording. Device log confirms the bracket: enabled 14:06:36, disabled 14:06:48 |
 | 13 | ~~Avoid the CPU readback~~ | **done** - zero-copy GPU path |
 | 14 | ~~IOSurface pixel buffer attributes~~ | **done** - required by the GPU path |
 | 15 | Make the frame-rate gate configurable | Currently hardcoded to 60 in `TimeQueue` |
 
-Items 10 and 11 are done. Item 12 is the remaining quality lever: without it the high
-resolution is an upscale rather than real detail.
+Items 10, 11 and 12 are done. Item 15 is the only quality item left, and it is minor.
 
 ---
 

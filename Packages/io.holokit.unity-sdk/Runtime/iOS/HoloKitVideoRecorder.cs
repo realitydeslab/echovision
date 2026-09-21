@@ -190,6 +190,28 @@ namespace HoloKit.iOS
         [SerializeField]
         private bool _recordMicrophone = false;
 
+        [Tooltip("Turn ARKit's 4K/HDR background video on for the duration of the recording. " +
+                 "Leaving it on all the time costs battery and heat, and only the recording " +
+                 "benefits from the extra detail, so it is switched on at StartRecording and " +
+                 "restored at EndRecording.")]
+        [SerializeField]
+        private bool _recordIn4K = true;
+
+        /// <summary>
+        /// Turn ARKit's 4K/HDR background video on while recording. Without it a
+        /// high-resolution recording is an upscale of the standard background
+        /// rather than real detail.
+        /// </summary>
+        public bool RecordIn4K
+        {
+            get => _recordIn4K;
+            set => _recordIn4K = value;
+        }
+
+        private ARBackgroundVideoEnhancementManager _videoEnhancement;
+        private bool _videoEnhancementWasEnabled;
+        private bool _videoEnhancementOverridden;
+
         //public MicInput _micInput;
         //public TMPro.TextMeshProUGUI _buttonText;
 
@@ -278,6 +300,8 @@ namespace HoloKit.iOS
             // var sampleRate = _audioDevice != null ? _audioDevice.sampleRate : 24000;
             // var channelCount = _audioDevice != null ? _audioDevice.channelCount : 2;
 
+            BeginVideoEnhancementOverride();
+
             var path = PathUtil.GetTemporaryFilePath();
             var sampleRate = AudioSettings.outputSampleRate;
             var channelCount = 2;
@@ -351,6 +375,7 @@ namespace HoloKit.iOS
 
             HoloKitVideoRecorder_EndRecording();
             ReleaseGpuSlots();
+            EndVideoEnhancementOverride();
             IsRecording = false;
 
             OnHoloKitRenderModeChanged(_holokitCameraManager.ScreenRenderMode);
@@ -447,6 +472,59 @@ namespace HoloKit.iOS
 
             HoloKitVideoRecorder_AppendAudioFrame(ptr, length, timestamp);
             nativeArray.Dispose();
+        }
+
+        /// <summary>
+        /// Switches ARKit's 4K/HDR background video on for the recording, keeping
+        /// the previous setting so it can be put back afterwards.
+        /// </summary>
+        void BeginVideoEnhancementOverride()
+        {
+            _videoEnhancementOverridden = false;
+
+            if (!_recordIn4K)
+            {
+                return;
+            }
+
+            // The enhancement manager drives the native provider through
+            // HoloKitARKitManager, which is a plain scene singleton: without it
+            // the setter dereferences null.
+            if (HoloKitARKitManager.Instance == null)
+            {
+                Debug.LogWarning("[HoloKitVideoRecorder] RecordIn4K needs a HoloKitARKitManager in the scene; recording at the standard background resolution.");
+                return;
+            }
+
+            if (_videoEnhancement == null)
+            {
+                _videoEnhancement = FindFirstObjectByType<ARBackgroundVideoEnhancementManager>();
+            }
+
+            if (_videoEnhancement == null)
+            {
+                Debug.LogWarning("[HoloKitVideoRecorder] RecordIn4K needs an ARBackgroundVideoEnhancementManager in the scene; recording at the standard background resolution.");
+                return;
+            }
+
+            _videoEnhancementWasEnabled = _videoEnhancement.IsEnabled;
+            _videoEnhancementOverridden = true;
+            _videoEnhancement.IsEnabled = true;
+            Debug.Log($"[HoloKitVideoRecorder] 4K background enabled for recording (was {_videoEnhancementWasEnabled}).");
+        }
+
+        void EndVideoEnhancementOverride()
+        {
+            if (!_videoEnhancementOverridden || _videoEnhancement == null)
+            {
+                return;
+            }
+
+            _videoEnhancementOverridden = false;
+            if (HoloKitARKitManager.Instance != null)
+            {
+                _videoEnhancement.IsEnabled = _videoEnhancementWasEnabled;
+            }
         }
 
         /// <summary>
