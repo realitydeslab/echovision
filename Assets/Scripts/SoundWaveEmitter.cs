@@ -75,6 +75,18 @@ public class SoundWaveEmitter : MonoBehaviour
     float[] rippleThicknessList;
 
 
+    void OnEnable() => Application.onBeforeRender += RefreshStencilTransform;
+    void OnDisable() => Application.onBeforeRender -= RefreshStencilTransform;
+
+    [BeforeRenderOrder(200)] // after the iOS camera compatibility transform
+    void RefreshStencilTransform()
+    {
+        if (depthImageProcessor == null) return;
+        var matrix = depthImageProcessor.DisplayRotatioMatrix;
+        vfx.SetMatrix4x4("HumanStencilTextureMatrix", matrix);
+        matMeshing.SetMatrix("_HumanStencilTextureMatrix", matrix);
+    }
+
     void Start()
     {
         // Init Soundwave and Attractors
@@ -277,7 +289,7 @@ public class SoundWaveEmitter : MonoBehaviour
             Texture2D human_tex = depthImageProcessor.HumanStencilTexture;
             if (human_tex != null)
             {
-                human_tex.wrapMode = TextureWrapMode.Repeat;
+                human_tex.wrapMode = TextureWrapMode.Clamp;
                 vfx.SetTexture("HumanStencilTexture", human_tex);
                 vfx.SetMatrix4x4("HumanStencilTextureMatrix", depthImageProcessor.DisplayRotatioMatrix);
                 matMeshing.SetTexture("_HumanStencilTexture", human_tex);
