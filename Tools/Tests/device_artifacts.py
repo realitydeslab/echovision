@@ -32,12 +32,15 @@ for i, (frames, dropped, path) in enumerate(re.findall(r"\[STATE\] MOVIE frames=
     info = json.loads(subprocess.check_output(["ffprobe", "-v", "error", "-count_frames", "-show_streams", "-of", "json", str(destination)]))
     video = next(s for s in info["streams"] if s["codec_type"] == "video")
     audio = next(s for s in info["streams"] if s["codec_type"] == "audio")
+    if int(dropped) != 0:
+        errors.append(f"Movie {i}: recorder dropped {dropped} frames")
     if int(video["nb_read_frames"]) != int(frames):
         errors.append(f"Movie {i}: decoded frame count differs from submissions")
     delta = abs(float(video["start_time"]) + float(video["duration"]) - float(audio["start_time"]) - float(audio["duration"]))
     if delta > .2:
         errors.append(f"Movie {i}: audio/video end-time difference {delta:.3f}s")
-    subprocess.run(["ffmpeg", "-v", "error", "-i", str(destination), "-f", "null", "-"], check=True, capture_output=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-xerror", "-err_detect", "explode", "-i", str(destination),
+                    "-enc_time_base:v", "1:600", "-fps_mode", "passthrough", "-f", "null", "-"], check=True, capture_output=True)
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", "1", "-i", str(destination), "-frames:v", "1",
                     "-vf", "scale=900:-1", str(destination.with_suffix(".png"))], check=True)
     movies.append(dict(file=destination.name, frames=int(frames), dropped=int(dropped),

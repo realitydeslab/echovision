@@ -25,3 +25,7 @@ The installed Release/archive belongs to that checkpoint. No push or upload.
 ## Verification boundary
 
 Cleanup EditMode regression: 17/17 passed. The previous Release checkpoint remains available and installed. Render-setting restoration still needs device inspection; the user's new human-stencil alignment report is a separate open issue. The existing background/mesh and audio passes do not prove human-stencil registration.
+
+## Final follow-up
+
+`8205fb1` replaces CPU mesh copying with GPU compute packing and fixes actual AR sleep; `1169500` repairs human stencil mapping using the rendered background transform. These are evidence-driven changes beyond the original recovery checkpoint. The camera manager's original orientation state machine, requested REC visual and inherited phone parameters remain intact. The macOS bundle is removed and the native camera bridge has the HoloKit prefix (`444a768`). Current Release/install evidence supersedes the checkpoint-only status above: see `release-validation-2026-09-21.md`.
