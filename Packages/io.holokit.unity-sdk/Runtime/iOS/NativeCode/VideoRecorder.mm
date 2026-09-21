@@ -25,24 +25,14 @@
 @property (nonatomic, strong) AVAssetWriterInputPixelBufferAdaptor* bufferAdaptor;
 @property (assign) AudioStreamBasicDescription audioFormat;
 @property (assign) CMFormatDescriptionRef cmFormat;
-@property (nonatomic, strong) AVCaptureSession* captureSession;
 @property (assign) bool isRecording;
+@property (assign) bool isFinishing;
 @property (assign) int width;
 @property (assign) int height;
-@property (nonatomic, strong) AVCaptureDevice* audioDeviceMic;
-@property (nonatomic, strong) AVCaptureDeviceInput* audioInputMic;
-@property (nonatomic, strong) AVAudioEngine* audioEngine;
-@property (nonatomic, strong) AVCaptureAudioDataOutput* audioOutput;
 
-// --- zero-copy GPU path ---
-// NOTE: deliberately NOT named `metalDevice` -- that would synthesise a setter
-// called `setMetalDevice:`, which collides with the public method of the same name
-// and makes it recurse into itself.
+// IOSurface-backed recording textures.
 @property (nonatomic, strong) id<MTLDevice> currentMetalDevice;
 @property (assign) CVMetalTextureCacheRef metalTextureCache;
-/// AVAssetWriterInput is not thread-safe and the GPU completion handler fires on an
-/// arbitrary thread, so every append is funnelled through this serial queue.
-@property (nonatomic, strong) dispatch_queue_t appendQueue;
 
 // Slot-based GPU path. Parallel arrays, one entry per slot.
 @property (assign) CVPixelBufferRef* slotBuffers;
@@ -69,80 +59,9 @@
     return _sharedObject;
 }
 
-// - (void) startMicrophone {
-//     self.captureSession = [[AVCaptureSession alloc] init];
-//     [self.captureSession setSessionPreset:AVCaptureSessionPresetHigh];
-//     self.audioDeviceMic = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
-//     self.audioInputMic = [AVCaptureDeviceInput deviceInputWithDevice:self.audioDeviceMic error:nil];
-//     if ([self.captureSession canAddInput:self.audioInputMic]) {
-//         [self.captureSession addInput:self.audioInputMic];
-//     }
-//     self.audioOutput = [[AVCaptureAudioDataOutput alloc] init];
-//     [self.audioOutput setSampleBufferDelegate:self queue:dispatch_get_main_queue()];
-//      if ([self.captureSession canAddOutput:self.audioOutput]) {
-//         [self.captureSession addOutput:self.audioOutput];
-//     }
-
-//     // Initialize AVAudioEngine
-//     self.audioEngine = [[AVAudioEngine alloc] init];
-//     self.outputNode = [self.audioEngine outputNode];
-//     [self.outputNode setVoiceProcessingEnabled:YES];
-//     self.outputFormat = [outputNode inputFormatForBus: 0];
-//     playerNode = [[AVAudioPlayerNode alloc] init];
-//     [self.audioEngine attachNode: playerNode];
-//     AVAudioMixerNode *mixerNode = [self.audioEngine mainMixerNode];
-//     [self.audioEngine connect:inputNode to:mixerNode format:inputFormat];
-//     NSArray<AVAudioSessionPortDescription *> *inputPorts = [audioSession availableInputs];
-
-//     for (AVAudioSessionPortDescription *port in inputPorts) {
-//         if ([port.portType isEqualToString:AVAudioSessionPortUSBAudio]) {
-//             usbPort = port;
-//             break;
-//         }
-//     }
-//     NSError *inputError = nil;
-//     [audioSession setPreferredInput:usbPort error:&inputError];
-
-
-//     [self.outputNode installTapOnBus:0
-//           bufferSize:1024
-//           format:recordingFormat
-//           block:^(AVAudioPCMBuffer *buffer, AVAudioTime *when) {
-//                    [request appendBuffer:buffer];
-                   
-//     }];
-    
-//     [self.audioEngine prepare];
-//     [self.audioEngine start];
-
-//     [engine connect: playerNode to: mainMixerNode format: outputFormat];
-
-//     // Create AVAudioPlayerNodes for each microphone
-//     AVAudioPlayerNode *playerNode1 = [[AVAudioPlayerNode alloc] init];
-
-// //    self.mixerNode = [self.audioEngine mainMixerNode];
-//     [self.audioEngine attachNode:playerNode1];
-//     [self.audioEngine attachNode:playerNode2];
-    
-// //    [self.audioEngine connect:playerNode1 to:self.mixerNode format:nil];
-// //    [self.audioEngine connect:playerNode2 to:self.mixerNode format:nil];
-// //    NSError *audioEngineError;
-// //    [self.audioEngine startAndReturnError:&audioEngineError];
-// //    if (audioEngineError) {
-// //        NSLog(@"Error starting AVAudioEngine: %@", audioEngineError.localizedDescription);
-// //    }
-// //
-//    AVAudioFormat *audioOutputFormat = [self.audioEngine.outputNode outputFormatForBus:0];
-//    CMFormatDescriptionRef audioFormatDescription = CMAudioFormatDescriptionCreate(audioOutputFormat.streamDescription,
-//        sizeof(AudioStreamBasicDescription), kCMAudioFormatFlags_IsFloat);
-
-//     // Start AVCaptureSession
-//     [self.captureSession startRunning];
-// }
-
 - (int)startRecording:(const char *)filePath width:(int)width height:(int)height audioSampleRate:(float)audioSampleRate audioChannelCount:(int)audioChannelCount
 {
-    if (self.writer)
+    if (self.writer || self.isFinishing)
     {
         NSLog(@"Recording has already been initiated.");
         return -1;
@@ -151,13 +70,10 @@
     // Asset writer setup
     NSURL* filePathURL = [NSURL fileURLWithPath:[NSString stringWithUTF8String:filePath]];
 
-    // Delete existing file if present — AVAssetWriter fails if file already exists
-    NSFileManager *fm = [NSFileManager defaultManager];
-    if ([fm fileExistsAtPath:filePathURL.path]) {
-        [fm removeItemAtURL:filePathURL error:nil];
-    }
+    if (width <= 0 || height <= 0 || audioSampleRate <= 0 ||
+        (audioChannelCount != 1 && audioChannelCount != 2)) return -1;
 
-    NSError* err;
+    NSError* err = nil;
     self.writer = [[AVAssetWriter alloc] initWithURL: filePathURL
                                         fileType: AVFileTypeMPEG4
                                            error: &err];
@@ -235,7 +151,7 @@
     audioFormat = {0};
     audioFormat.mSampleRate = audioSampleRate; // Sample rate, 44100Hz is CD quality
     audioFormat.mFormatID = kAudioFormatLinearPCM; // Specify the data format to be PCM
-    audioFormat.mFormatFlags = kLinearPCMFormatFlagIsFloat; // Flags specific for the format
+    audioFormat.mFormatFlags = kAudioFormatFlagsNativeFloatPacked; // Flags specific for the format
     audioFormat.mFramesPerPacket = 1; // Each packet contains one frame for PCM data
     audioFormat.mChannelsPerFrame = (uint32_t) audioChannelCount; // Set the number of channels
     audioFormat.mBitsPerChannel = sizeof(float) * 8; // Number of bits per channel, 32 for float
@@ -261,6 +177,11 @@
     }
     self.cmFormat = cmFormat;
    
+    if (![self.writer canAddInput:self.videoWriterInput] ||
+        ![self.writer canAddInput:self.audioWriterInput]) {
+        NSLog(@"[VideoRecorder] HEVC/AAC inputs unavailable for this writer");
+        return -1;
+    }
     [self.writer addInput:self.videoWriterInput];
     [self.writer addInput:self.audioWriterInput];
     
@@ -287,11 +208,6 @@
         return -1;
     }
 
-    if (self.appendQueue == nil) {
-        self.appendQueue = dispatch_queue_create("io.holokit.videorecorder.append",
-                                                 DISPATCH_QUEUE_SERIAL);
-    }
-
     self.isRecording = YES;
     NSLog(@"Recording started: %dx%d, writer status: %ld, gpuPath: %@",
           width, height, (long)self.writer.status,
@@ -312,15 +228,16 @@
         return -1;
     }
 
+    if (self.writer.status == AVAssetWriterStatusFailed) return -1;
     if (!self.audioWriterInput.isReadyForMoreMediaData)
     {
-        NSLog(@"Audio Writer is not ready.");
-        return -1;
+        return -3; // temporary encoder backpressure
     }
 
     // Write _audioInputWriter with buffer
 
-    CMTime presentationTimestamp = CMTimeMakeWithSeconds(time, 240); // Adjust timescale as needed
+    if (size <= 0 || size % self.audioFormat.mBytesPerFrame != 0) return -1;
+    CMTime presentationTimestamp = CMTimeMakeWithSeconds(time, (int32_t)self.audioFormat.mSampleRate);
     
     CMBlockBufferRef blockBuffer;
     OSStatus status = CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, NULL, size,
@@ -457,12 +374,12 @@
     CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
 
     // Buffer submission
-    [self.bufferAdaptor appendPixelBuffer:pixelBuffer
-                    withPresentationTime:CMTimeMakeWithSeconds(time, 240)];
+    BOOL appended = [self.bufferAdaptor appendPixelBuffer:pixelBuffer
+                    withPresentationTime:CMTimeMakeWithSeconds(time, 1000000000)];
     
     CVPixelBufferRelease(pixelBuffer);
 
-    return 0;
+    return appended ? 0 : -1;
 }
 
 - (void)setMetalDevice:(id<MTLDevice>)device
@@ -509,61 +426,40 @@
         return 0;
     }
 
-    NSDictionary* attrs = @{
-        (NSString*)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA),
-        (NSString*)kCVPixelBufferWidthKey: @(width),
-        (NSString*)kCVPixelBufferHeightKey: @(height),
-        (NSString*)kCVPixelBufferMetalCompatibilityKey: @YES,
-        (NSString*)kCVPixelBufferIOSurfacePropertiesKey: @{}
-    };
-
     self.slotBuffers = (CVPixelBufferRef*)calloc(count, sizeof(CVPixelBufferRef));
     self.slotCVTextures = (CVMetalTextureRef*)calloc(count, sizeof(CVMetalTextureRef));
     self.slotTextures = [NSMutableArray arrayWithCapacity:count];
-
-    int created = 0;
-    for (int i = 0; i < count; i++) {
-        CVPixelBufferRef pb = NULL;
-        if (CVPixelBufferCreate(kCFAllocatorDefault, width, height,
-                                kCVPixelFormatType_32BGRA,
-                                (__bridge CFDictionaryRef)attrs, &pb) != kCVReturnSuccess) {
-            break;
-        }
-
-        CVMetalTextureRef cvTex = NULL;
-        if (CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
-                                                      self.metalTextureCache, pb, NULL,
-                                                      MTLPixelFormatBGRA8Unorm,
-                                                      (size_t)width, (size_t)height, 0,
-                                                      &cvTex) != kCVReturnSuccess || cvTex == NULL) {
-            CVPixelBufferRelease(pb);
-            break;
-        }
-
-        id<MTLTexture> tex = CVMetalTextureGetTexture(cvTex);
-        if (tex == nil) {
-            CFRelease(cvTex);
-            CVPixelBufferRelease(pb);
-            break;
-        }
-
-        self.slotBuffers[i] = pb;
-        self.slotCVTextures[i] = cvTex;
-        [self.slotTextures addObject:tex];
-        created++;
-    }
-
-    self.slotCount = created;
-    NSLog(@"[VideoRecorder] Allocated %d/%d GPU slots at %dx%d", created, count, width, height);
-    return created;
+    for (int i = 0; i < count; i++) [self.slotTextures addObject:(id)[NSNull null]];
+    self.slotCount = count;
+    return count;
 }
 
-- (void*)gpuSlotTexture:(int)index
+- (void*)acquireGPUSlot:(int)index
 {
-    if (index < 0 || index >= self.slotCount) {
+    if (!self.isRecording || index < 0 || index >= self.slotCount) return NULL;
+    // The C# fence has passed before a slot is recycled. AVAssetWriter can
+    // still retain its previous buffer; the pool will not return that buffer.
+    self.slotTextures[index] = (id)[NSNull null];
+    if (self.slotCVTextures[index]) CFRelease(self.slotCVTextures[index]);
+    if (self.slotBuffers[index]) CVPixelBufferRelease(self.slotBuffers[index]);
+    self.slotCVTextures[index] = NULL;
+    self.slotBuffers[index] = NULL;
+    NSDictionary* limits = @{(NSString*)kCVPixelBufferPoolAllocationThresholdKey: @8};
+    CVPixelBufferRef pb = NULL;
+    if (CVPixelBufferPoolCreatePixelBufferWithAuxAttributes(kCFAllocatorDefault,
+            self.bufferAdaptor.pixelBufferPool, (__bridge CFDictionaryRef)limits, &pb) != kCVReturnSuccess)
         return NULL;
-    }
-    return (__bridge void*)self.slotTextures[index];
+    CVMetalTextureRef cvTex = NULL;
+    CVReturn result = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+        self.metalTextureCache, pb, NULL, MTLPixelFormatBGRA8Unorm,
+        self.width, self.height, 0, &cvTex);
+    if (result != kCVReturnSuccess || !cvTex) { CVPixelBufferRelease(pb); return NULL; }
+    id<MTLTexture> texture = CVMetalTextureGetTexture(cvTex);
+    if (!texture) { CFRelease(cvTex); CVPixelBufferRelease(pb); return NULL; }
+    self.slotBuffers[index] = pb;
+    self.slotCVTextures[index] = cvTex;
+    self.slotTextures[index] = texture;
+    return (__bridge void*)texture;
 }
 
 - (int)submitGPUSlot:(int)index time:(double)time
@@ -583,7 +479,7 @@
         return -1;
     }
 
-    CMTime pts = CMTimeMakeWithSeconds(time, 240);
+    CMTime pts = CMTimeMakeWithSeconds(time, 1000000000);
     if (![self.bufferAdaptor appendPixelBuffer:pb withPresentationTime:pts]) {
         NSLog(@"[VideoRecorder] appendPixelBuffer failed. status=%ld error=%@",
               (long)self.writer.status, self.writer.error);
@@ -611,120 +507,83 @@
     self.slotCount = 0;
 }
 
+- (void)resetWriter
+{
+    self.isRecording = NO;
+    self.writer = nil;
+    self.videoWriterInput = nil;
+    self.audioWriterInput = nil;
+    self.bufferAdaptor = nil;
+    if (self.cmFormat) { CFRelease(self.cmFormat); self.cmFormat = NULL; }
+}
+
 - (void)endRecording
 {
-    if (!self.isRecording) {
-        return;
-    }
-
-    if (!self.writer)
-    {
-        NSLog(@"Recording hasn't been initiated.");
-        return;
-    }
-    
-    // Frames submitted through the GPU path append asynchronously on appendQueue once
-    // their blit completes. Drain that queue before marking the inputs finished,
-    // otherwise the tail of the recording is silently discarded.
-    if (self.appendQueue != nil) {
-        dispatch_sync(self.appendQueue, ^{});
-    }
-
-    [self.videoWriterInput markAsFinished];
-    [self.audioWriterInput markAsFinished];
-    
-#if TARGET_OS_IOS
-    NSString* path = self.writer.outputURL.path;
-    [self.writer finishWritingWithCompletionHandler: ^{
-        if (UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(path)) {
-            UISaveVideoAtPathToSavedPhotosAlbum(path, nil, nil, nil);
-        }
-    }];
-#else
-    [self.writer finishWritingWithCompletionHandler: ^{}];
-#endif
-    self.writer = NULL;
-    self.videoWriterInput = NULL;
-    self.audioWriterInput = NULL;
-    self.bufferAdaptor = NULL;
+    if (!self.isRecording) return;
     self.isRecording = NO;
-
-    [self releaseGPUSlots];
-
-    if (self.metalTextureCache != NULL) {
-        CVMetalTextureCacheFlush(self.metalTextureCache, 0);
+    AVAssetWriter* writer = self.writer;
+    if (writer.status == AVAssetWriterStatusWriting) {
+        [self.videoWriterInput markAsFinished];
+        [self.audioWriterInput markAsFinished];
+        self.isFinishing = YES;
+        [writer finishWritingWithCompletionHandler:^{
+            if (writer.status == AVAssetWriterStatusCompleted) {
+                NSLog(@"[VideoRecorder] SAVED %@", writer.outputURL.path);
+#if TARGET_OS_IOS
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if (UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(writer.outputURL.path))
+                        UISaveVideoAtPathToSavedPhotosAlbum(writer.outputURL.path, nil, nil, nil);
+                });
+#endif
+            } else NSLog(@"[VideoRecorder] FINALIZE FAILED %@", writer.error);
+            @synchronized(self) { self.isFinishing = NO; }
+        }];
+    } else {
+        NSLog(@"[VideoRecorder] RECORDING FAILED %@", writer.error);
+        [writer cancelWriting];
     }
+    [self resetWriter];
 }
 
 @end
 
 
-// Diagnostics, readable from C#. Only the slot path writes these, and only from
-// the main thread, so plain ints are enough.
-static int g_SubmittedFrames = 0;
-static int g_DroppedFrames = 0;
-
+// Serialize native lifecycle and appends across Unity's main/audio threads.
 extern "C" {
-
-int HoloKitVideoRecorder_StartRecording(const char* filePath, int width, int height,
-                                        float audioSampleRate, int audioChannelCount) {
-    return [[VideoRecorder sharedInstance] startRecording:filePath width:width height:height audioSampleRate:audioSampleRate audioChannelCount:audioChannelCount];
+int HoloKitVideoRecorder_StartRecording(const char* path, int width, int height, float rate, int channels) {
+    VideoRecorder* recorder = [VideoRecorder sharedInstance];
+    @synchronized(recorder) {
+        if (recorder.isRecording || recorder.isFinishing) return -2;
+        int result = [recorder startRecording:path width:width height:height audioSampleRate:rate audioChannelCount:channels];
+        if (result != 0) { [recorder.writer cancelWriting]; [recorder resetWriter]; }
+        return result;
+    }
 }
-
-int HoloKitVideoRecorder_AppendAudioFrame(void* source, int size, double time)
-{
-    return [[VideoRecorder sharedInstance] appendAudioFrame:source size:size time:time];
+int HoloKitVideoRecorder_AppendAudioFrame(void* data, int size, double time) {
+    VideoRecorder* recorder = [VideoRecorder sharedInstance];
+    @synchronized(recorder) { return [recorder appendAudioFrame:data size:size time:time]; }
 }
-
-int HoloKitVideoRecorder_AppendVideoFrame(void* source, int size, double time)
-{
-    return [[VideoRecorder sharedInstance] appendVideoFrame:source size:size time:time];
+int HoloKitVideoRecorder_AppendVideoFrame(void* data, int size, double time) {
+    VideoRecorder* recorder = [VideoRecorder sharedInstance];
+    @synchronized(recorder) { return [recorder appendVideoFrame:data size:size time:time]; }
 }
-
-void HoloKitVideoRecorder_EndRecording(void)
-{
-    [[VideoRecorder sharedInstance] endRecording];
+void HoloKitVideoRecorder_EndRecording() {
+    VideoRecorder* recorder = [VideoRecorder sharedInstance];
+    @synchronized(recorder) { [recorder endRecording]; }
 }
-
-// --- Slot-based GPU path ---
-// Unity copies into these textures with Graphics.CopyTexture, so no Unity
-// command buffer (and therefore no IUnityInterfaces) is needed.
-
-int HoloKitVideoRecorder_AllocateGPUSlots(int count, int width, int height)
-{
+int HoloKitVideoRecorder_IsFinishing() {
+    VideoRecorder* recorder = [VideoRecorder sharedInstance];
+    @synchronized(recorder) { return recorder.isFinishing ? 1 : 0; }
+}
+int HoloKitVideoRecorder_AllocateGPUSlots(int count, int width, int height) {
     return [[VideoRecorder sharedInstance] allocateGPUSlots:count width:width height:height];
 }
-
-void* HoloKitVideoRecorder_GetGPUSlotTexture(int index)
-{
-    return [[VideoRecorder sharedInstance] gpuSlotTexture:index];
+void* HoloKitVideoRecorder_AcquireGPUSlot(int index) {
+    return [[VideoRecorder sharedInstance] acquireGPUSlot:index];
 }
-
-int HoloKitVideoRecorder_SubmitGPUSlot(int index, double time)
-{
-    int result = [[VideoRecorder sharedInstance] submitGPUSlot:index time:time];
-    if (result == 0) {
-        g_SubmittedFrames++;
-    } else {
-        g_DroppedFrames++;
-    }
-    return result;
+int HoloKitVideoRecorder_SubmitGPUSlot(int index, double time) {
+    VideoRecorder* recorder = [VideoRecorder sharedInstance];
+    @synchronized(recorder) { return [recorder submitGPUSlot:index time:time]; }
 }
-
-void HoloKitVideoRecorder_ReleaseGPUSlots(void)
-{
-    [[VideoRecorder sharedInstance] releaseGPUSlots];
-}
-
-
-int HoloKitVideoRecorder_GetSubmittedFrameCount(void) { return g_SubmittedFrames; }
-
-int HoloKitVideoRecorder_GetDroppedFrameCount(void) { return g_DroppedFrames; }
-
-void HoloKitVideoRecorder_ResetGPUCounters(void)
-{
-    g_SubmittedFrames = 0;
-    g_DroppedFrames = 0;
-}
-
+void HoloKitVideoRecorder_ReleaseGPUSlots() { [[VideoRecorder sharedInstance] releaseGPUSlots]; }
 }

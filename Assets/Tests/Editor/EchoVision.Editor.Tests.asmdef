@@ -1,0 +1,6 @@
+{
+  "name": "EchoVision.Editor.Tests",
+  "references": ["HoloKit", "Unity.XR.ARFoundation"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}
