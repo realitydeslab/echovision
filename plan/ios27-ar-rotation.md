@@ -34,42 +34,50 @@ matrix for LandscapeLeft and LandscapeRight despite their being 180 degrees apar
 
 ## The workaround
 
-`ARCameraBackground` can be driven with a custom material
-(`useCustomMaterial` + `customMaterial`), and it keeps feeding that material the camera
-textures, the shader keywords and `_UnityDisplayTransform` exactly as it feeds its own. So the
-shader is the stock `Unlit/ARKitBackground` with one change: the UV remap may come from
-`_EchoDisplayTransform` instead. `_EchoDisplayTransformValid` selects between them, so the
-material still renders correctly on its own if the script is absent.
+`ARCameraBackground` can be driven with a custom material (`useCustomMaterial` +
+`customMaterial`), and it keeps feeding that material the camera textures, the shader keywords
+and `_UnityDisplayTransform` exactly as it feeds its own. So the shader is the stock
+`Unlit/ARKitBackground` with one change: the UV remap may come from `_EchoDisplayTransform`
+instead. `_EchoDisplayTransformValid` selects between them, so the material still renders
+correctly on its own if the script is absent.
 
-The transform is rebuilt from the screen orientation, the camera texture size and the viewport
-size:
+## What the transform actually is
 
-1. An unrotated basis per orientation. Portrait is AR Foundation's own (correct) portrait
-   matrix with the scale divided out: texture +U runs down the screen, +V runs left. The other
-   three are that basis rotated. The determinant is -1 throughout because the texture's V axis
-   is opposite to Unity's.
-2. Aspect fill: cover the viewport and crop the overhang, never letterbox.
-3. Recentre the cropped window.
+**On iOS 27 ARKit hands back a camera texture that is already oriented to the interface.** The
+correct display transform therefore applies *no rotation at all*, in any orientation — only a
+V-axis flip, because the texture's V runs opposite to Unity's, plus an aspect-fill crop:
 
-It follows the stock row-vector convention, `texX = a*u + b*v + tx`, so it is a drop-in.
+```
+a = 1, b = 0, c = 0, d = -1        (then scaled by the aspect-fill factors)
+```
 
-## How it was verified
+There is nothing orientation-dependent left. AR Foundation still applies its own rotation on
+top of an already-rotated image, which is why its matrix is wrong — and wrong in **portrait as
+well as landscape**.
 
-1. **Portrait is bit-identical to AR Foundation's**, translation terms included. Portrait is
-   the one orientation AR Foundation gets right, so this checks the convention, the property
-   plumbing and the aspect maths in one shot.
-2. **Landscape verified upright on device.** The accelerometer pose and the interface pose were
-   logged together (`device=LandscapeLeft orientation=LandscapeLeft`); when they agree the
-   render must look upright whatever way the phone is being held. It did -- books vertical,
-   shelves horizontal. This is the case that was broken.
-3. LandscapeRight and PortraitUpsideDown are the two verified cases rotated 180 degrees by
-   construction. LandscapeRight was observed 180 degrees from LandscapeLeft, which is what a
-   correct implementation gives when the physical pose does not change. Neither was
-   independently confirmed against a matching physical pose.
+### How this was established, and the mistake before it
 
-Note that `devicectl device orientation set` simulates the accelerometer, so forcing an
-orientation rotates the interface but not the real camera. "Is the scene upright" is only a
-valid test when the interface pose and the physical pose agree, which is why both are logged.
+An earlier version of this fix assumed AR Foundation's *portrait* matrix was correct, because
+portrait "looked fine", and derived the other three orientations by rotating that basis. That
+reproduced AR Foundation's portrait error exactly, bit for bit, and the exactness was then
+mistaken for confirmation. Landscape happened to come out right, which masked it.
+
+The question was settled by measurement instead: a calibration switch cycled the four candidate
+bases on device, six seconds each, holding portrait, and each was photographed.
+
+| basis | linear part | result in portrait |
+|---|---|---|
+| 0 quarter turn (the derived one) | `0,-1,-1,0` | bookshelf on its side |
+| 1 quarter turn, other way | `0,1,1,0` | bookshelf on its side |
+| **2 no rotation** | **`1,0,0,-1`** | **upright, AR overlay registered** |
+| 3 half turn | `-1,0,0,1` | upside down |
+
+Basis 2 is also what landscape independently needed, which is the point: one basis serves every
+orientation.
+
+Verified after the change, with the interface pose and the accelerometer pose agreeing in each
+case: portrait shows books vertical and shelves horizontal; landscape likewise, with the AR
+particles registered on the shelves.
 
 ## Removing it
 

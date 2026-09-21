@@ -143,7 +143,7 @@ namespace HoloKit.iOS
             }
 
             var orientation = Screen.orientation;
-            var displayTransform = BuildDisplayTransform(orientation, texWidth, texHeight, Screen.width, Screen.height);
+            var displayTransform = BuildDisplayTransform(texWidth, texHeight, Screen.width, Screen.height);
 
             m_Material.SetMatrix(k_DisplayTransformId, displayTransform);
             m_Material.SetFloat(k_DisplayTransformValidId, 1f);
@@ -228,9 +228,10 @@ namespace HoloKit.iOS
         /// Builds the screen-UV to texture-UV transform, in the same row-vector
         /// convention the stock shader uses for _UnityDisplayTransform:
         /// texX = a*u + b*v + tx, texY = c*u + d*v + ty.
+        ///
+        /// It does not depend on the orientation -- see the comment inside.
         /// </summary>
-        static Matrix4x4 BuildDisplayTransform(
-            ScreenOrientation orientation, int texWidth, int texHeight, int viewWidth, int viewHeight)
+        static Matrix4x4 BuildDisplayTransform(int texWidth, int texHeight, int viewWidth, int viewHeight)
         {
             // Unrotated basis, before the aspect crop. The camera texture is always
             // the sensor's landscape frame; only the mapping from screen to sensor
@@ -241,23 +242,32 @@ namespace HoloKit.iOS
             // left. Rotating the device moves those two axes together. The
             // determinant is -1 throughout because the texture's V axis is opposite
             // to Unity's.
-            float a0, b0, c0, d0;
-            switch (orientation)
-            {
-                case ScreenOrientation.LandscapeLeft:
-                    a0 = 1f; b0 = 0f; c0 = 0f; d0 = -1f;
-                    break;
-                case ScreenOrientation.LandscapeRight:
-                    a0 = -1f; b0 = 0f; c0 = 0f; d0 = 1f;
-                    break;
-                case ScreenOrientation.PortraitUpsideDown:
-                    a0 = 0f; b0 = 1f; c0 = 1f; d0 = 0f;
-                    break;
-                default: // Portrait
-                    a0 = 0f; b0 = -1f; c0 = -1f; d0 = 0f;
-                    break;
-            }
+            // Measured on device, not derived. On iOS 27 ARKit hands back a camera
+            // texture that is already oriented to the interface, so the display
+            // transform must apply no rotation at all -- in any orientation. Only
+            // the V axis is flipped, because the texture's V runs opposite to
+            // Unity's.
+            //
+            // This was established by cycling the four candidate bases on device in
+            // portrait and photographing each: the quarter-turn bases put the
+            // bookshelf on its side, and this one stands it upright with the AR
+            // overlay correctly registered. Landscape, verified separately, wants
+            // the same basis -- which is the point: there is nothing
+            // orientation-dependent left.
+            //
+            // AR Foundation still applies its own rotation on top, which is why its
+            // matrix is wrong, and why it is wrong in portrait too. An earlier
+            // version of this file trusted AR Foundation's portrait matrix and
+            // reproduced its error exactly.
+            const float a0 = 1f, b0 = 0f, c0 = 0f, d0 = -1f;
 
+            return Compose(a0, b0, c0, d0, texWidth, texHeight, viewWidth, viewHeight);
+        }
+
+        static Matrix4x4 Compose(
+            float a0, float b0, float c0, float d0,
+            int texWidth, int texHeight, int viewWidth, int viewHeight)
+        {
             // Aspect fill: cover the viewport and crop the overhang, never letterbox.
             bool quarterTurned = Mathf.Approximately(a0, 0f);
             float sensorAspect = (float)texWidth / texHeight;

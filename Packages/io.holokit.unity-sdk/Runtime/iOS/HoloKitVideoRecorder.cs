@@ -513,6 +513,22 @@ namespace HoloKit.iOS
                 return;
             }
 
+            // Stereo deliberately runs without 4K: ARBackgroundVideoEnhancementManager
+            // has m_DisableVideoEnhancementInStereoMode to save power, and stereo
+            // does not draw the camera background at all, so there is no detail to
+            // gain. Overriding it here would also reconfigure the ARKit session
+            // just as recording starts.
+            //
+            // Note this does NOT fix stereo recording, which fails for an unrelated
+            // reason: the audio append puts AVAssetWriter into the failed state
+            // within ~125ms. Verified by retest with the override skipped.
+            if (_holokitCameraManager != null &&
+                _holokitCameraManager.ScreenRenderMode == ScreenRenderMode.Stereo)
+            {
+                Debug.Log("[HoloKitVideoRecorder] Stereo mode: leaving 4K background off for this recording.");
+                return;
+            }
+
             // The enhancement manager drives the native provider through
             // HoloKitARKitManager, which is a plain scene singleton: without it
             // the setter dereferences null.
