@@ -65,6 +65,7 @@ public class AudioProcessor : MonoBehaviour
     float[] _spectrum;
     float _fSample;
 
+    // Analysis adapted from https://stackoverflow.com/questions/53030560/read-microphone-decibels-and-pitch-frequency
     void AnalyzeSound()
     {
         // Read raw clip data directly to avoid mixer group volume attenuation

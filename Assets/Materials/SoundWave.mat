@@ -78,7 +78,7 @@ Material:
     - _QueueOffset: 0
     - _RippleBandGamma: 7.34
     - _SoundPitch: 0
-    - _SoundVolume: 0.00000006337045
+    - _SoundVolume: 0
     - _SoundwaveSpeed: 0
     - _Step: 8.78
     - _StepValue: 0.95485705
@@ -93,6 +93,6 @@ Material:
     - _WiggleStrength: 0.1
     m_Colors:
     - _Color: {r: 16, g: 0, b: 0, a: 1}
-    - _WaveOrigin: {r: -4.6, g: 1.5, b: -3.29, a: 0}
+    - _WaveOrigin: {x: 0, y: 0, z: 0, w: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

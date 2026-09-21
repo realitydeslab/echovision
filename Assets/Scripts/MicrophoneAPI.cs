@@ -141,8 +141,7 @@ public class MicrophoneAPI : MonoBehaviour
             videoRecorder._microphoneAudioSource = audiosourceForRecording;
         }
         videoRecorder.ToggleRecording();
-        recordingText.text = videoRecorder.IsRecording ? "● REC" : "Start Recording";
-        recordingText.color = videoRecorder.IsRecording ? UnityEngine.Color.green : UnityEngine.Color.black;
+        recordingText.text = videoRecorder.IsRecording ? "Stop Recording" : "Start Recording";
     }
 
     public void StartRecording()
