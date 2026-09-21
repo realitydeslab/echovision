@@ -23,7 +23,7 @@ namespace HoloKit.iOS
 
         public bool IsRecording { get; private set; }
         public string LastRecordingPath { get; private set; }
-        public bool IsFinishing => HoloKitVideoRecorder_IsFinishing() != 0;
+        public bool IsFinishing => !Application.isEditor && HoloKitVideoRecorder_IsFinishing() != 0;
         public bool UsesGpuPath => _useGpuPath;
         public int SubmittedFrames { get; private set; }
         public int DroppedFrames { get; private set; }
@@ -65,6 +65,11 @@ namespace HoloKit.iOS
 
         public void StartRecording()
         {
+            if (Application.isEditor)
+            {
+                Debug.LogWarning("[Recorder] Native recording requires an iOS device.");
+                return;
+            }
             if (IsRecording || IsFinishing) return;
             if (_camera == null || _microphoneAudioSource == null || _microphoneAudioSource.clip == null)
             {
@@ -295,11 +300,7 @@ namespace HoloKit.iOS
             if (_cameraManager != null) _cameraManager.OnScreenRenderModeChanged -= ApplyRenderMode;
         }
 
-#if UNITY_EDITOR
-        const string DllName = "UnityHoloKit";
-#else
         const string DllName = "__Internal";
-#endif
         [DllImport(DllName)] public static extern int HoloKitVideoRecorder_StartRecording(string path, int width, int height, float sampleRate, int channels);
         [DllImport(DllName)] public static extern int HoloKitVideoRecorder_AppendVideoFrame(IntPtr data, int size, double time);
         [DllImport(DllName)] public static extern int HoloKitVideoRecorder_AppendAudioFrame(IntPtr data, int size, double time);

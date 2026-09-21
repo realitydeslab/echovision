@@ -125,7 +125,7 @@ public class DeviceStateWalk : MonoBehaviour
         Debug.Log($"[STATE] {label} orientation={Screen.orientation} physical={Input.deviceOrientation} mode={manager.ScreenRenderMode} recording={recorder.IsRecording} gpu={recorder.UsesGpuPath} size={Screen.width}x{Screen.height} volume={FindFirstObjectByType<AudioProcessor>().AudioVolume:F4}");
         var bg = cameraToTest.GetComponent<ARCameraBackground>();
         Debug.Log($"[BACKGROUND] matrix={bg.material.GetMatrix("_UnityDisplayTransform")} textureY={bg.material.GetTexture("_textureY")?.width}x{bg.material.GetTexture("_textureY")?.height}");
-        if (sessions.Count > 0 && EchoVision_GetARCameraReference(sessions[0].nativePtr, (int)Screen.orientation,
+        if (sessions.Count > 0 && HoloKit_GetARCameraReference(sessions[0].nativePtr, (int)Screen.orientation,
             Screen.width, Screen.height, view, projection, display) != 0)
         {
             var nativeView = new Matrix4x4();
@@ -152,7 +152,7 @@ public class DeviceStateWalk : MonoBehaviour
     }
 
     [DllImport("__Internal")]
-    static extern int EchoVision_GetARCameraReference(IntPtr session, int orientation, int width, int height,
+    static extern int HoloKit_GetARCameraReference(IntPtr session, int orientation, int width, int height,
         [Out] float[] view, [Out] float[] projection, [Out] float[] display);
 }
 #endif

@@ -3,7 +3,14 @@
 import array, ctypes as c, json, math, pathlib, subprocess, sys, time
 root = pathlib.Path(__file__).resolve().parents[2]
 out = pathlib.Path(sys.argv[1]); out.mkdir(parents=True, exist_ok=True)
-lib = c.CDLL(str(root/'Packages/io.holokit.unity-sdk/Runtime/macOS/UnityHoloKit.bundle/Contents/MacOS/UnityHoloKit'))
+native = root/'Packages/io.holokit.unity-sdk/Runtime/iOS/NativeCode'
+library = out/'libRecorderTest.dylib'
+# Host-only test artifact; never import a macOS plugin into the Unity project.
+subprocess.run(['xcrun','clang++','-dynamiclib',str(native/'VideoRecorder.mm'),
+                '-o',str(library),'-fobjc-arc','-std=c++17','-mmacosx-version-min=12.0',
+                '-I',str(native),*[arg for name in ['Foundation','AVFoundation','CoreMedia',
+                'CoreVideo','Accelerate','AudioToolbox','Metal'] for arg in ['-framework',name]]], check=True)
+lib = c.CDLL(str(library.resolve()))
 start = lib.HoloKitVideoRecorder_StartRecording
 start.argtypes = [c.c_char_p,c.c_int,c.c_int,c.c_float,c.c_int]
 video = lib.HoloKitVideoRecorder_AppendVideoFrame; video.argtypes = [c.c_void_p,c.c_int,c.c_double]

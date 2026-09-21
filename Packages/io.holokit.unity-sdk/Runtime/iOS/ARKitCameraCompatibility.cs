@@ -51,7 +51,7 @@ namespace HoloKit.iOS
 #if !UNITY_EDITOR
             if (sessions.Count == 0) SubsystemManager.GetSubsystems(sessions);
             if (sessions.Count == 0 || !sessions[0].running) return;
-            if (EchoVision_GetARCameraReference(sessions[0].nativePtr, (int)Screen.orientation,
+            if (HoloKit_GetARCameraReference(sessions[0].nativePtr, (int)Screen.orientation,
                 Screen.width, Screen.height, view, projection, display) == 0) return;
             var nativeView = new Matrix4x4();
             for (int i=0; i<16; i++) nativeView[i] = view[i];
@@ -89,7 +89,7 @@ namespace HoloKit.iOS
         }
 
         [DllImport("__Internal")]
-        static extern int EchoVision_GetARCameraReference(IntPtr session, int orientation, int width, int height,
+        static extern int HoloKit_GetARCameraReference(IntPtr session, int orientation, int width, int height,
             [Out] float[] view, [Out] float[] projection, [Out] float[] display);
     }
 }

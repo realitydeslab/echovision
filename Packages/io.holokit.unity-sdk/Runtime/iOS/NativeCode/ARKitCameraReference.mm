@@ -2,7 +2,7 @@
 #import "HoloKitARKitNativeProvider.h"
 
 // Native pose and background reference for the iOS 27 compatibility path.
-extern "C" int EchoVision_GetARCameraReference(void* nativeSession, int orientation,
+extern "C" int HoloKit_GetARCameraReference(void* nativeSession, int orientation,
     int width, int height, float* view, float* projection, float* display) {
     if (!nativeSession || orientation < 1 || orientation > 4) return 0;
     ARSession* session = (__bridge ARSession*)((UnityXRNativeSession*)nativeSession)->sessionPtr;
