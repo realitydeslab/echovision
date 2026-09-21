@@ -2340,6 +2340,7 @@ MonoBehaviour:
   meshManager: {fileID: 1419121179}
   trackedPoseDriver: {fileID: 1418006797}
   vfx: {fileID: 1735498855}
+  meshPacking: {fileID: 7200000, guid: f8168eb94f284af895bf58ac088b9643, type: 3}
   bufferInitialCapacity: 100000
   dynamicallyResizeBuffer: 0
 --- !u!73398921 &1735498854
@@ -2543,6 +2544,7 @@ MonoBehaviour:
   - {fileID: 1225988120}
   - {fileID: 1230832750}
   - {fileID: 1735498851}
+  - {fileID: 1368870906}
   coverImage: {fileID: 158205891}
   OnEnterSleepMode:
     m_PersistentCalls:

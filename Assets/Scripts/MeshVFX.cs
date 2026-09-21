@@ -1,18 +1,13 @@
 // SPDX-FileCopyrightText: Copyright 2024-2025 Reality Design Lab <dev@reality.design>
 // SPDX-FileContributor: Botao Amber Hu <amber@reality.design>
 // SPDX-License-Identifier: MIT
-using System.Collections;
 using System.Collections.Generic;
+using Unity.Profiling;
 using UnityEngine;
-using UnityEngine.XR;
-using UnityEngine.XR.ARFoundation;
-using UnityEngine.XR.ARSubsystems;
-using TMPro;
-#if UNITY_IOS
-using HoloKit;
-#endif
 using UnityEngine.InputSystem.XR;
+using UnityEngine.Rendering;
 using UnityEngine.VFX;
+using UnityEngine.XR.ARFoundation;
 
 public class MeshVFX : MonoBehaviour
 {
@@ -20,225 +15,139 @@ public class MeshVFX : MonoBehaviour
     [SerializeField] ARMeshManager meshManager;
     [SerializeField] TrackedPoseDriver trackedPoseDriver;
     [SerializeField] VisualEffect vfx;
-
+    [SerializeField] ComputeShader meshPacking;
     [Header("Buffer Settings")]
     [SerializeField] int bufferInitialCapacity = 64000;
     [SerializeField] bool dynamicallyResizeBuffer = false;
-    private const int BUFFER_STRIDE = 12; // 12 Bytes for a Vector3 (4,4,4)
 
-    string vertexBufferPropertyName = "MeshPointCache";
-    List<Vector3> listVertex;
-    GraphicsBuffer bufferVertex;
-    
-    string normalBufferPropertyName = "MeshNormalCache";
-    List<Vector3> listNormal;
-    GraphicsBuffer bufferNormal;
+    const int BufferStride = 12;
+    static readonly VertexAttribute[] RequiredAttributes = { VertexAttribute.Position, VertexAttribute.Normal };
+    static readonly ProfilerMarker UploadMarker = new("EchoVision.MeshVFX.GPUPack");
+    readonly List<(float distance, int index)> meshOrder = new();
+    GraphicsBuffer vertexBuffer, normalBuffer;
+    bool dirty = true;
+    Vector3 lastHeadPosition;
 
-    List<(float, int)> listMeshDistance = new List<(float, int)>();
-    List<int> listRandomIndex = new List<int>();
+    void Awake()
+    {
+        if (!SystemInfo.supportsComputeShaders || meshPacking == null)
+        {
+            Debug.LogError("[MeshVFX] GPU mesh packing requires a compute shader and a supported GPU.");
+            enabled = false; return;
+        }
+        EnsureBuffer(ref vertexBuffer, bufferInitialCapacity, "MeshPointCache");
+        EnsureBuffer(ref normalBuffer, bufferInitialCapacity, "MeshNormalCache");
+    }
+
+    void OnEnable()
+    {
+        dirty = true;
+        meshManager.meshInfosChanged.AddListener(OnMeshesChanged);
+    }
+
+    void OnDisable() => meshManager.meshInfosChanged.RemoveListener(OnMeshesChanged);
+    void OnMeshesChanged(ARMeshInfosChangedEventArgs _) => dirty = true;
 
     void LateUpdate()
     {
-        //ShowDebugInfo();
+        var meshes = meshManager.meshes;
+        if (meshes == null) return;
+        // Origin changes must still reach the VFX even when geometry is unchanged.
+        Transform meshTransform = meshes.Count > 0 ? meshes[0].transform : null;
+        vfx.SetVector3("MeshTransform_position", meshTransform != null ? meshTransform.position : Vector3.zero);
+        vfx.SetVector3("MeshTransform_angles", meshTransform != null ? meshTransform.eulerAngles : Vector3.zero);
+        vfx.SetVector3("MeshTransform_scale", meshTransform != null ? meshTransform.localScale : Vector3.one);
 
-        IList<MeshFilter> mesh_list = meshManager.meshes;
-
-        if(mesh_list != null)
+        Vector3 head = trackedPoseDriver.transform.position;
+        // Re-select the nearest points after 5 cm of movement; particles still render every frame.
+        if (!dirty && (head-lastHeadPosition).sqrMagnitude < .0025f) return;
+        using var sample = UploadMarker.Auto();
+        dirty = false; lastHeadPosition = head;
+        meshOrder.Clear();
+        int total = 0;
+        for (int i=0; i<meshes.Count; i++)
         {
-            listVertex.Clear();
-            listNormal.Clear();
-
-            int mesh_count = mesh_list.Count; 
-            int vertex_count = 0;
-            int triangle_count = 0;
-            Vector3 head_pos = trackedPoseDriver.transform.position;
-
-            float distance = 0;
-            Vector3 min_pos = Vector3.zero;
-            Vector3 max_pos = Vector3.zero;
-
-            if(dynamicallyResizeBuffer)
+            var filter = meshes[i];
+            if (filter == null || filter.sharedMesh == null) continue;
+            Vector3 center = filter.transform.TransformPoint(filter.sharedMesh.bounds.center);
+            meshOrder.Add(((head-center).sqrMagnitude, i));
+            total += filter.sharedMesh.vertexCount;
+        }
+        if (dynamicallyResizeBuffer)
+        {
+            for (int i=meshOrder.Count-1; i>0; i--)
             {
-                // randomize the order of mesh
-                listRandomIndex.Clear();
-                for (int i = 0; i < mesh_list.Count; i++)
-                {
-                    listRandomIndex.Add(i);
-                }
-
-                int n = listRandomIndex.Count;
-                while (n > 1)
-                {
-                    n--;
-                    int k = Random.Range(0, n + 1);
-                    int value = listRandomIndex[k];
-                    listRandomIndex[k] = listRandomIndex[n];
-                    listRandomIndex[n] = value;
-                }
-
-                // push to buffer
-                for (int i = 0; i < listRandomIndex.Count; i++)
-                {
-                    int index = listRandomIndex[i];
-                    MeshFilter mesh = mesh_list[index];
-
-                    listVertex.AddRange(mesh.sharedMesh.vertices);
-                    listNormal.AddRange(mesh.sharedMesh.normals);
-
-                    vertex_count += mesh.sharedMesh.vertexCount;
-                    triangle_count += mesh.sharedMesh.triangles.Length / 3;
-
-                    min_pos = Vector3.Min(min_pos, mesh.sharedMesh.bounds.min);
-                    max_pos = Vector3.Max(max_pos, mesh.sharedMesh.bounds.max);
-                }
-            }
-            else
-            {
-                // sort all meshes by distance
-                listMeshDistance.Clear();
-                for (int i = 0; i < mesh_list.Count; i++)
-                {
-                    MeshFilter mesh = mesh_list[i];
-
-                    distance = Vector3.Distance(head_pos, mesh.sharedMesh.bounds.center);
-
-                    listMeshDistance.Add((distance, i));
-                }
-                listMeshDistance.Sort((x, y) => x.Item1.CompareTo(y.Item1));
-
-
-                // push nearest to buffer
-                for (int i = 0; i < listMeshDistance.Count; i++)
-                {
-                    int index = listMeshDistance[i].Item2;
-                    MeshFilter mesh = mesh_list[index];
-
-                    listVertex.AddRange(mesh.sharedMesh.vertices);
-                    listNormal.AddRange(mesh.sharedMesh.normals);
-
-                    vertex_count += mesh.sharedMesh.vertexCount;
-                    triangle_count += mesh.sharedMesh.triangles.Length / 3;
-
-                    min_pos = Vector3.Min(min_pos, mesh.sharedMesh.bounds.min);
-                    max_pos = Vector3.Max(max_pos, mesh.sharedMesh.bounds.max);
-
-                    if (vertex_count > bufferInitialCapacity)
-                        break;
-                }
-
-                if (vertex_count > bufferInitialCapacity)
-                {
-                    listVertex.RemoveRange(bufferInitialCapacity, vertex_count - bufferInitialCapacity);
-                    listNormal.RemoveRange(bufferInitialCapacity, vertex_count - bufferInitialCapacity);
-                }
-            }
-
-
-            // Set Buffer data, but before that ensure there is enough capacity
-            EnsureBufferCapacity(ref bufferVertex, listVertex.Count, BUFFER_STRIDE, vfx, vertexBufferPropertyName);
-            bufferVertex.SetData(listVertex);
-
-            EnsureBufferCapacity(ref bufferNormal, listNormal.Count, BUFFER_STRIDE, vfx, normalBufferPropertyName);
-            bufferNormal.SetData(listNormal);
-
-
-            // Push Changes to VFX
-            vfx.SetInt("MeshPointCount", listVertex.Count);
-
-
-            // Push Transform to VFX
-            // As meshes may not locate at (0,0,0) like they did in iOS.
-            // We need to push transform into VFX for converting local position to world position
-            if (mesh_list.Count > 0)
-            {
-                vfx.SetVector3("MeshTransform_position", mesh_list[0].transform.position);
-                vfx.SetVector3("MeshTransform_angles", mesh_list[0].transform.rotation.eulerAngles);
-                vfx.SetVector3("MeshTransform_scale", mesh_list[0].transform.localScale);
-            }
-            else
-            {
-                vfx.SetVector3("MeshTransform_position", Vector3.zero);
-                vfx.SetVector3("MeshTransform_angles", Vector3.zero);
-                vfx.SetVector3("MeshTransform_scale", Vector3.one);
+                int j=Random.Range(0,i+1);
+                (meshOrder[i],meshOrder[j])=(meshOrder[j],meshOrder[i]);
             }
         }
-    }
+        else meshOrder.Sort((a,b) => a.distance.CompareTo(b.distance));
 
-    private void EnsureBufferCapacity(ref GraphicsBuffer buffer, int capacity, int stride, VisualEffect _vfx, string vfxProperty)
-    {
-        // Reallocate new buffer only when null or capacity is not sufficient
-        if (buffer == null || (dynamicallyResizeBuffer && buffer.count < capacity)) // remove dynamic allocating function
+        int count = dynamicallyResizeBuffer ? total : Mathf.Min(total, bufferInitialCapacity);
+        EnsureBuffer(ref vertexBuffer, count, "MeshPointCache");
+        EnsureBuffer(ref normalBuffer, count, "MeshNormalCache");
+        int offset = 0;
+        foreach (var entry in meshOrder)
         {
-            //Debug.Log("Graphic Buffer reallocated!");
-            // Buffer memory must be released
-            buffer?.Release();
-            // Vfx Graph uses structured buffer
-            buffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, capacity, stride);
-            // Update buffer referenece
-            _vfx.SetGraphicsBuffer(vfxProperty, buffer);
+            var filter = meshes[entry.index];
+            int length = Mathf.Min(filter.sharedMesh.vertexCount, count-offset);
+            if (length <= 0) break;
+            Matrix4x4 toReference = meshTransform.worldToLocalMatrix * filter.transform.localToWorldMatrix;
+            if (!PackMesh(filter.sharedMesh, toReference, offset, length))
+            {
+                vfx.SetInt("MeshPointCount", 0); enabled = false; return;
+            }
+            offset += length;
         }
+        vfx.SetInt("MeshPointCount", offset);
     }
 
-    private void ReleaseBuffer(ref GraphicsBuffer buffer)
+    bool PackMesh(Mesh mesh, Matrix4x4 toReference, int offset, int count)
     {
-        // Buffer memory must be released
+        // ARKit supplies float3 position/normal streams. Never read mesh arrays back to the CPU.
+        foreach (var attribute in RequiredAttributes)
+        {
+            if (!mesh.HasVertexAttribute(attribute) || mesh.GetVertexAttributeFormat(attribute) != VertexAttributeFormat.Float32
+                || mesh.GetVertexAttributeDimension(attribute) < 3)
+            {
+                Debug.LogError($"[MeshVFX] Unsupported GPU mesh attribute: {attribute}");
+                return false;
+            }
+        }
+        if ((mesh.vertexBufferTarget & GraphicsBuffer.Target.Raw) == 0)
+            mesh.vertexBufferTarget |= GraphicsBuffer.Target.Raw;
+        int positionStream = mesh.GetVertexAttributeStream(VertexAttribute.Position);
+        int normalStream = mesh.GetVertexAttributeStream(VertexAttribute.Normal);
+        // Mesh updates can replace its buffers; acquire fresh handles for each pack.
+        using var positions = mesh.GetVertexBuffer(positionStream);
+        using var normals = mesh.GetVertexBuffer(normalStream);
+        meshPacking.SetBuffer(0, "SourcePositions", positions);
+        meshPacking.SetBuffer(0, "SourceNormals", normals);
+        meshPacking.SetBuffer(0, "Positions", vertexBuffer);
+        meshPacking.SetBuffer(0, "Normals", normalBuffer);
+        meshPacking.SetInt("PositionStride", mesh.GetVertexBufferStride(positionStream));
+        meshPacking.SetInt("NormalStride", mesh.GetVertexBufferStride(normalStream));
+        meshPacking.SetInt("PositionOffset", mesh.GetVertexAttributeOffset(VertexAttribute.Position));
+        meshPacking.SetInt("NormalOffset", mesh.GetVertexAttributeOffset(VertexAttribute.Normal));
+        meshPacking.SetInt("DestinationOffset", offset);
+        meshPacking.SetInt("VertexCount", count);
+        meshPacking.SetMatrix("ToReference", toReference);
+        meshPacking.SetMatrix("NormalToReference", toReference.inverse.transpose);
+        meshPacking.Dispatch(0, (count+63)/64, 1, 1);
+        return true;
+    }
+
+    void EnsureBuffer(ref GraphicsBuffer buffer, int capacity, string property)
+    {
+        capacity = Mathf.Max(1, capacity);
+        if (buffer != null && buffer.count >= capacity) return;
         buffer?.Release();
-        buffer = null;
-    }
-
-    // 
-    // https://forum.unity.com/threads/vfx-graph-siggraph-2021-video.1198156/
-    void Awake()
-    {
-
-        // Create initial graphics buffer
-        listVertex = new List<Vector3>(bufferInitialCapacity);
-        EnsureBufferCapacity(ref bufferVertex, bufferInitialCapacity, BUFFER_STRIDE, vfx, vertexBufferPropertyName);
-
-        listNormal = new List<Vector3>(bufferInitialCapacity);
-        EnsureBufferCapacity(ref bufferNormal, bufferInitialCapacity, BUFFER_STRIDE, vfx, normalBufferPropertyName);
-    }
-
-    void ShowDebugInfo()
-    {
-        IList<MeshFilter> mesh_list = meshManager.meshes;
-
-        if (mesh_list == null) return;
-
-        int mesh_count = mesh_list.Count;
-        int vertex_count = 0;
-        int triangle_count = 0;
-        Vector3 head_pos = trackedPoseDriver.transform.position;
-        float distance = 0;
-        Vector3 min_pos = Vector3.zero;
-        Vector3 max_pos = Vector3.zero;
-        for (int i = 0; i < mesh_list.Count; i++)
-        {
-            MeshFilter mesh = mesh_list[i];
-
-            vertex_count += mesh.sharedMesh.vertexCount;
-            triangle_count += mesh.sharedMesh.triangles.Length / 3;
-
-            min_pos = Vector3.Min(min_pos, mesh.sharedMesh.bounds.min);
-            max_pos = Vector3.Max(max_pos, mesh.sharedMesh.bounds.max);
-
-            distance = Vector3.Distance(head_pos, mesh.sharedMesh.bounds.center);
-
-            //HelperModule.Instance.SetInfo("Mesh" + i.ToString(), string.Format("VerCount:{0}, Dis:{1}, Min:{2}, Max:{3}", mesh.sharedMesh.vertexCount, distance.ToString("0.000"), min_pos, max_pos));
-            //HelperModule.Instance.SetLabel(i.ToString(), mesh.sharedMesh.bounds.center, i.ToString() + "|" + distance.ToString("0.00"));
-        }
-
-        //HelperModule.Instance.SetInfo("VertexCount", vertex_count.ToString());
-        //HelperModule.Instance.SetInfo("TriangleCount", triangle_count.ToString());
-        //HelperModule.Instance.SetInfo("BoundsMin", min_pos.ToString());
-        //HelperModule.Instance.SetInfo("BoundsMax", max_pos.ToString());
-        //HelperModule.Instance.SetInfo("Center", ((min_pos + max_pos) * 0.5f).ToString());
+        buffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, capacity, BufferStride);
+        vfx.SetGraphicsBuffer(property, buffer);
     }
 
     void OnDestroy()
     {
-        ReleaseBuffer(ref bufferVertex);
-
-        ReleaseBuffer(ref bufferNormal);
+        vertexBuffer?.Release(); normalBuffer?.Release();
     }
- }
+}

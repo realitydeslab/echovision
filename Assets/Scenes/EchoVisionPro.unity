@@ -1188,6 +1188,7 @@ MonoBehaviour:
   meshManager: {fileID: 1646377074}
   trackedPoseDriver: {fileID: 1003260478}
   vfx: {fileID: 1080259960}
+  meshPacking: {fileID: 7200000, guid: f8168eb94f284af895bf58ac088b9643, type: 3}
   bufferInitialCapacity: 100000
   dynamicallyResizeBuffer: 0
 --- !u!4 &1080259963

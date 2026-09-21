@@ -28,6 +28,7 @@ public class PowerSaver : MonoBehaviour
     float animationDuration = 2;
     float animationTime = 0;
     float animationDirection = 0;
+    int awakeFrameRate;
     
 
     void Update()
@@ -91,6 +92,7 @@ public class PowerSaver : MonoBehaviour
             return;
 
         sleepMode = true;
+        awakeFrameRate = Application.targetFrameRate;
         animationDirection = 1;
 
         // if is recording, stop recording
@@ -105,7 +107,8 @@ public class PowerSaver : MonoBehaviour
         sleepMode = false;
         animationDirection = -1;
 
-        // enable object list before aniamtion
+        // Restore rendering before resuming AR and fading the cover away.
+        Application.targetFrameRate = awakeFrameRate;
         SetObjectListState(true);
     }
 
@@ -115,5 +118,7 @@ public class PowerSaver : MonoBehaviour
         {
             go.SetActive(state);
         }
+        // The ARSession in this list may restore its cached frame rate on disable.
+        if (!state) Application.targetFrameRate = 5;
     }
 }

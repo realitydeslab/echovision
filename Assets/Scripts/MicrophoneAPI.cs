@@ -115,7 +115,7 @@ public class MicrophoneAPI : MonoBehaviour
     /// </summary>
     void OnApplicationFocus(bool focus)
     {
-        if (focus)
+        if (focus && isActiveAndEnabled)
         {
             if (verbose)
                 Debug.Log($"[{ this.GetType().Name}] OnFocus : StartMicrophone");

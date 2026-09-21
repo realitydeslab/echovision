@@ -1,0 +1,20 @@
+#pragma kernel PackMesh
+
+ByteAddressBuffer SourcePositions;
+ByteAddressBuffer SourceNormals;
+RWStructuredBuffer<float3> Positions;
+RWStructuredBuffer<float3> Normals;
+uint PositionStride, NormalStride, PositionOffset, NormalOffset;
+uint DestinationOffset, VertexCount;
+float4x4 ToReference, NormalToReference;
+
+[numthreads(64, 1, 1)]
+void PackMesh(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= VertexCount) return;
+    float3 position = asfloat(SourcePositions.Load3(id.x * PositionStride + PositionOffset));
+    float3 normal = asfloat(SourceNormals.Load3(id.x * NormalStride + NormalOffset));
+    Positions[DestinationOffset + id.x] = mul(ToReference, float4(position, 1)).xyz;
+    float3 transformedNormal = mul((float3x3)NormalToReference, normal);
+    Normals[DestinationOffset + id.x] = transformedNormal * rsqrt(max(dot(transformedNormal, transformedNormal), 1e-12));
+}
