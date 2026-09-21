@@ -36,6 +36,15 @@ namespace HoloKit.iOS
     [DisallowMultipleComponent]
     public class ARBackgroundOrientationFix : MonoBehaviour
     {
+        /// <summary>
+        /// The corrected screen-UV to texture-UV transform for the current frame,
+        /// or null when the workaround is not running. Anything else that consumes
+        /// <c>ARCameraFrameEventArgs.displayMatrix</c> -- depth overlays, stencil
+        /// sampling, VFX -- must use this instead, or it will disagree with the
+        /// background this component is drawing.
+        /// </summary>
+        public static Matrix4x4? CorrectedDisplayMatrix { get; private set; }
+
         const string k_MaterialResource = "ARKitBackgroundOrientationFix";
 
         static readonly int k_DisplayTransformId = Shader.PropertyToID("_EchoDisplayTransform");
@@ -64,6 +73,7 @@ namespace HoloKit.iOS
 
         ARCameraBackground m_Background;
         ARCameraManager m_CameraManager;
+        Camera m_Camera;
         Material m_Material;
         ScreenOrientation m_LoggedOrientation = ScreenOrientation.AutoRotation;
 
@@ -94,6 +104,8 @@ namespace HoloKit.iOS
                 yield break;
             }
 
+            m_Camera = m_Background.GetComponent<Camera>();
+
             m_Background.useCustomMaterial = true;
             m_Background.customMaterial = m_Material;
             m_CameraManager.frameReceived += OnCameraFrameReceived;
@@ -107,6 +119,8 @@ namespace HoloKit.iOS
             {
                 m_CameraManager.frameReceived -= OnCameraFrameReceived;
             }
+
+            CorrectedDisplayMatrix = null;
 
             // Hand the stock path back, so disabling this component really does
             // restore the original behaviour.
@@ -124,25 +138,66 @@ namespace HoloKit.iOS
                 // Without the texture size the aspect crop cannot be computed, so
                 // fall back to AR Foundation's matrix rather than guess.
                 m_Material.SetFloat(k_DisplayTransformValidId, 0f);
+                CorrectedDisplayMatrix = null;
                 return;
             }
 
             var orientation = Screen.orientation;
-            var transform = BuildDisplayTransform(orientation, texWidth, texHeight, Screen.width, Screen.height);
+            var displayTransform = BuildDisplayTransform(orientation, texWidth, texHeight, Screen.width, Screen.height);
 
-            m_Material.SetMatrix(k_DisplayTransformId, transform);
+            m_Material.SetMatrix(k_DisplayTransformId, displayTransform);
             m_Material.SetFloat(k_DisplayTransformValidId, 1f);
+            CorrectedDisplayMatrix = displayTransform;
 
             if (orientation != m_LoggedOrientation)
             {
                 m_LoggedOrientation = orientation;
-                var arf = eventArgs.displayMatrix ?? Matrix4x4.zero;
-                Debug.Log($"[ARBgFix] {orientation} screen={Screen.width}x{Screen.height} tex={texWidth}x{texHeight}\n" +
-                          $"  ours: a={transform[0, 0]:F3} b={transform[1, 0]:F3} tx={transform[2, 0]:F3} | " +
-                          $"c={transform[0, 1]:F3} d={transform[1, 1]:F3} ty={transform[2, 1]:F3}\n" +
-                          $"  arf : a={arf[0, 0]:F3} b={arf[1, 0]:F3} tx={arf[2, 0]:F3} | " +
-                          $"c={arf[0, 1]:F3} d={arf[1, 1]:F3} ty={arf[2, 1]:F3}");
+                LogOrientationState(eventArgs, orientation, displayTransform, texWidth, texHeight);
             }
+        }
+
+        /// <summary>
+        /// Reports both halves of AR Foundation's orientation handling: the display
+        /// transform that maps the background, and the projection matrix and camera
+        /// pose that place the 3D content. The background can be right while the
+        /// content is rotated, so both have to be visible to tell them apart.
+        /// </summary>
+        void LogOrientationState(
+            ARCameraFrameEventArgs eventArgs, ScreenOrientation orientation,
+            Matrix4x4 ours, int texWidth, int texHeight)
+        {
+            var arf = eventArgs.displayMatrix ?? Matrix4x4.zero;
+
+            // A perspective matrix has m00 = 1/(aspect*tan(halfFov)) and
+            // m11 = 1/tan(halfFov), so m11/m00 recovers the aspect it was built
+            // for. If that disagrees with the screen aspect, the content is being
+            // drawn through a frustum meant for the other orientation.
+            string projection = "projection=none";
+            if (eventArgs.projectionMatrix.HasValue)
+            {
+                var p = eventArgs.projectionMatrix.Value;
+                float projAspect = Mathf.Approximately(p[0, 0], 0f) ? 0f : p[1, 1] / p[0, 0];
+                projection = $"projAspect={projAspect:F3} screenAspect={(float)Screen.width / Screen.height:F3}";
+            }
+
+            // With the phone held upright in any orientation the camera's up vector
+            // should be near world up. Roughly 90 degrees means the pose is a
+            // quarter turn out.
+            string pose = "pose=no camera";
+            if (m_Camera != null)
+            {
+                float upError = Vector3.Angle(m_Camera.transform.up, Vector3.up);
+                pose = $"camUpVsWorldUp={upError:F0}deg euler={m_Camera.transform.eulerAngles}";
+            }
+
+            Debug.Log($"[ARBgFix] {orientation} device={Input.deviceOrientation} " +
+                      $"screen={Screen.width}x{Screen.height} tex={texWidth}x{texHeight}\n" +
+                      $"  ours: a={ours[0, 0]:F3} b={ours[1, 0]:F3} tx={ours[2, 0]:F3} | " +
+                      $"c={ours[0, 1]:F3} d={ours[1, 1]:F3} ty={ours[2, 1]:F3}\n" +
+                      $"  arf : a={arf[0, 0]:F3} b={arf[1, 0]:F3} tx={arf[2, 0]:F3} | " +
+                      $"c={arf[0, 1]:F3} d={arf[1, 1]:F3} ty={arf[2, 1]:F3}\n" +
+                      $"  {projection}\n" +
+                      $"  {pose}");
         }
 
         static bool TryGetCameraTextureSize(ARCameraFrameEventArgs eventArgs, out int width, out int height)
