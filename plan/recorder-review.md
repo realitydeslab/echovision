@@ -131,6 +131,12 @@ NSDictionary* colorProps = @{
 };
 ```
 
+Correction: an earlier draft of this section argued that "the author deliberately bypassed
+mixer group volume attenuation", and used that to infer the attenuation was real. That
+`clip.GetData` call was added by *this* change set, not by the original author, so it cannot be
+evidence about the original design. BUG-2 below therefore rests only on the mixer values, and
+remains unverified.
+
 Supporting evidence: `HoloKitVideoRecorder.cs:427-428` already documents `videoBitRate` and
 `audioBitRate` parameters that **do not exist in the function signature** - the original author
 intended this and did not finish it.
@@ -141,7 +147,9 @@ intended this and did not finish it.
 - **Timestamp desync**: the queue was dequeued unconditionally while native could still drop the
   frame, shifting every later timestamp. The timestamp now travels with the frame.
 - **`assert` compiled out in Release**, allowing an out-of-bounds read on a size mismatch;
-  replaced with a runtime check.
+  replaced with a runtime check. **Correction:** this was first claimed while only the Metal
+  path had been changed; the CPU `appendVideoFrame:` still carried the bare `assert` until a
+  later review caught it. Both paths now check at runtime.
 - **CPU readback removed**: ~713 MB/s of GPU->CPU->GPU traffic at 60 fps, replaced by a
   zero-copy Metal blit into an IOSurface-backed `CVPixelBuffer`.
 - **IOSurface / Metal compatibility attributes** added to the pixel buffer pool.
@@ -225,8 +233,8 @@ last two frames of every recording would be dropped.
 | | value |
 |---|---|
 | GPU path | enabled (`Allocated 3/3 GPU slots at 2544x1168`) |
-| Frames submitted / dropped | **354 / 0** |
-| Video frames in the file | 354 — exactly matches |
+| Frames submitted / dropped | **354 / 0** (under-reported: the counters were read before the tail flush, since fixed) |
+| Video frames in the file | 354 |
 | Resolution | 2544x1168 |
 | Duration | video 11.80 s, audio 11.89 s (0.09 s apart) |
 | Frame rate during recording | 30.0 fps, no dip |

@@ -45,18 +45,38 @@ public class DepthImageProcessor : MonoBehaviour
     /// </summary.
     Matrix4x4 m_DisplayRotationMatrix = Matrix4x4.identity;
 
+    // Latches so the unsupported-stencil warning is logged once, not every frame.
+    bool m_WarnedNoHumanStencil;
+
     public Matrix4x4 DisplayRotatioMatrix { get => m_DisplayRotationMatrix; }
 
     public Texture2D HumanStencilTexture
     {
         get
         {
+            if (occlusionManager == null)
+            {
+                return null;
+            }
+
+            // AR Foundation throws NotSupportedException out of
+            // UpdatableTextureFactory.Create when the stencil descriptor's type is
+            // None, which happens on devices and configurations without human
+            // segmentation. Checking currentHumanStencilMode is not enough -- the
+            // mode can be enabled while the descriptor is still empty -- so the
+            // throw has to be caught. Letting it escape aborts the caller's Update
+            // for the rest of the frame.
             try
             {
                 return occlusionManager.humanStencilTexture;
             }
-            catch (System.Exception)
+            catch (System.NotSupportedException e)
             {
+                if (!m_WarnedNoHumanStencil)
+                {
+                    m_WarnedNoHumanStencil = true;
+                    Debug.LogWarning($"[DepthImageProcessor] Human stencil unavailable, disabling it for this session: {e.Message}");
+                }
                 return null;
             }
         }

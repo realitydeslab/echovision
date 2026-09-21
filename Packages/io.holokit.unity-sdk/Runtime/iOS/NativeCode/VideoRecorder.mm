@@ -440,9 +440,19 @@
     dstBuffer.width = self.width;
     dstBuffer.rowBytes = bytesPerRow;
 
+    // NDEBUG strips assert() from Release builds, so a size mismatch used to
+    // reach vImage and read past the end of the source buffer in exactly the
+    // configuration that ships. Check at runtime instead.
+    if (size != self.width * self.height * 4) {
+        NSLog(@"[VideoRecorder] Frame size mismatch: got %d, expected %d. Dropping frame.",
+              size, self.width * self.height * 4);
+        CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+        CVPixelBufferRelease(pixelBuffer);
+        return -1;
+    }
+
     // RGBA to BGRA: swap R (index 0) and B (index 2)
     const uint8_t permuteMap[4] = { 2, 1, 0, 3 };
-    assert(size == self.width * self.height * 4);
     vImagePermuteChannels_ARGB8888(&srcBuffer, &dstBuffer, permuteMap, kvImageNoFlags);
     CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
 
@@ -476,121 +486,6 @@
         NSLog(@"[VideoRecorder] CVMetalTextureCacheCreate failed (%d); GPU path unavailable.", ret);
         self.metalTextureCache = NULL;
     }
-}
-
-- (int)appendVideoFrameFromMetalTexture:(id<MTLTexture>)srcTexture
-                          commandBuffer:(id<MTLCommandBuffer>)commandBuffer
-                                   time:(double)time
-{
-    if (!self.isRecording) {
-        return -2;
-    }
-    if (!self.writer || !self.bufferAdaptor.pixelBufferPool) {
-        return -1;
-    }
-    if (srcTexture == nil || commandBuffer == nil || self.metalTextureCache == NULL) {
-        return -1;
-    }
-
-    // Replaces the old assert(), which compiled out in Release and let a mismatched
-    // frame run off the end of the buffer.
-    if ((int)srcTexture.width != self.width || (int)srcTexture.height != self.height) {
-        NSLog(@"[VideoRecorder] Texture %lux%lu does not match recording size %dx%d.",
-              (unsigned long)srcTexture.width, (unsigned long)srcTexture.height,
-              self.width, self.height);
-        return -1;
-    }
-
-    // Writer backpressure. -3 tells the caller this frame was dropped on purpose so it
-    // can put the timestamp back instead of letting audio and video drift apart.
-    if (!self.videoWriterInput.isReadyForMoreMediaData) {
-        return -3;
-    }
-
-    CVPixelBufferRef pixelBuffer = NULL;
-    CVReturn ret = CVPixelBufferPoolCreatePixelBuffer(NULL, self.bufferAdaptor.pixelBufferPool,
-                                                      &pixelBuffer);
-    if (ret != kCVReturnSuccess) {
-        NSLog(@"[VideoRecorder] CVPixelBufferPoolCreatePixelBuffer failed (%d)", ret);
-        return -1;
-    }
-
-    // Wrap the pixel buffer as an MTLTexture. Because it is IOSurface-backed this shares
-    // memory with the pixel buffer -- no copy, no CPU involvement.
-    CVMetalTextureRef cvTexture = NULL;
-    ret = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
-                                                    self.metalTextureCache,
-                                                    pixelBuffer,
-                                                    NULL,
-                                                    MTLPixelFormatBGRA8Unorm,
-                                                    (size_t)self.width,
-                                                    (size_t)self.height,
-                                                    0,
-                                                    &cvTexture);
-    if (ret != kCVReturnSuccess || cvTexture == NULL) {
-        NSLog(@"[VideoRecorder] CVMetalTextureCacheCreateTextureFromImage failed (%d)", ret);
-        CVPixelBufferRelease(pixelBuffer);
-        return -1;
-    }
-
-    id<MTLTexture> dstTexture = CVMetalTextureGetTexture(cvTexture);
-    if (dstTexture == nil) {
-        CFRelease(cvTexture);
-        CVPixelBufferRelease(pixelBuffer);
-        return -1;
-    }
-
-    // blitCommandEncoder requires matching pixel formats. Unity may hand us the sRGB
-    // variant of BGRA8; reinterpret it through a texture view rather than converting.
-    id<MTLTexture> blitSource = srcTexture;
-    if (srcTexture.pixelFormat != MTLPixelFormatBGRA8Unorm) {
-        blitSource = [srcTexture newTextureViewWithPixelFormat:MTLPixelFormatBGRA8Unorm];
-        if (blitSource == nil) {
-            NSLog(@"[VideoRecorder] Cannot reinterpret source format %lu as BGRA8Unorm.",
-                  (unsigned long)srcTexture.pixelFormat);
-            CFRelease(cvTexture);
-            CVPixelBufferRelease(pixelBuffer);
-            return -1;
-        }
-    }
-
-    id<MTLBlitCommandEncoder> blit = [commandBuffer blitCommandEncoder];
-    if (blit == nil) {
-        CFRelease(cvTexture);
-        CVPixelBufferRelease(pixelBuffer);
-        return -1;
-    }
-    [blit copyFromTexture:blitSource
-              sourceSlice:0
-              sourceLevel:0
-             sourceOrigin:MTLOriginMake(0, 0, 0)
-               sourceSize:MTLSizeMake((NSUInteger)self.width, (NSUInteger)self.height, 1)
-                toTexture:dstTexture
-         destinationSlice:0
-         destinationLevel:0
-        destinationOrigin:MTLOriginMake(0, 0, 0)];
-    [blit endEncoding];
-
-    // Hand the buffer to the writer only once the GPU has actually finished the blit.
-    CMTime presentationTime = CMTimeMakeWithSeconds(time, 240);
-    __weak VideoRecorder* weakSelf = self;
-    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> _Nonnull cb) {
-        VideoRecorder* strongSelf = weakSelf;
-        dispatch_async(strongSelf.appendQueue ?: dispatch_get_main_queue(), ^{
-            if (strongSelf != nil && strongSelf.isRecording &&
-                strongSelf.videoWriterInput.isReadyForMoreMediaData) {
-                if (![strongSelf.bufferAdaptor appendPixelBuffer:pixelBuffer
-                                           withPresentationTime:presentationTime]) {
-                    NSLog(@"[VideoRecorder] appendPixelBuffer failed. status=%ld error=%@",
-                          (long)strongSelf.writer.status, strongSelf.writer.error);
-                }
-            }
-            CFRelease(cvTexture);
-            CVPixelBufferRelease(pixelBuffer);
-        });
-    }];
-
-    return 0;
 }
 
 #pragma mark - Slot-based GPU path
@@ -764,12 +659,10 @@
 @end
 
 
-// Defined in VideoRecorderMetalBridge.mm, shared so both GPU paths report through
-// the same counters that HoloKitVideoRecorder logs when recording stops. Declared
-// at file scope, not inside the extern "C" block below: the definitions have C++
-// linkage, so a C-linkage declaration here would fail to resolve.
-extern int g_SubmittedFrames;
-extern int g_DroppedFrames;
+// Diagnostics, readable from C#. Only the slot path writes these, and only from
+// the main thread, so plain ints are enough.
+static int g_SubmittedFrames = 0;
+static int g_DroppedFrames = 0;
 
 extern "C" {
 
@@ -823,5 +716,15 @@ void HoloKitVideoRecorder_ReleaseGPUSlots(void)
     [[VideoRecorder sharedInstance] releaseGPUSlots];
 }
 
+
+int HoloKitVideoRecorder_GetSubmittedFrameCount(void) { return g_SubmittedFrames; }
+
+int HoloKitVideoRecorder_GetDroppedFrameCount(void) { return g_DroppedFrames; }
+
+void HoloKitVideoRecorder_ResetGPUCounters(void)
+{
+    g_SubmittedFrames = 0;
+    g_DroppedFrames = 0;
 }
 
+}

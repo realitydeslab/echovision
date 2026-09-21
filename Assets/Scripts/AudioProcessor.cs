@@ -25,6 +25,10 @@ public class AudioProcessor : MonoBehaviour
         _fSample = AudioSettings.outputSampleRate;
     }
     
+    [Tooltip("Log RMS, dB and pitch ten times a second. Off by default: this is a " +
+             "diagnostic trace, not something a shipping build should emit.")]
+    [SerializeField] bool _logAnalysis = false;
+
     float _debugTimer = 0;
     void Update()
     {
@@ -36,11 +40,14 @@ public class AudioProcessor : MonoBehaviour
         audioVolume = Remap(DbValue, -10, 10, 0, 1, true);
         audioPitch = Remap(PitchValue, 0, 600, 0, 1, true);
 
-        _debugTimer += Time.deltaTime;
-        if (_debugTimer > 0.1f)
+        if (_logAnalysis)
         {
-            _debugTimer = 0;
-            Debug.Log($"[Audio] RMS={RmsValue:F6} dB={DbValue:F1} vol={audioVolume:F3} pitchHz={PitchValue:F0} pitchNorm={audioPitch:F3}");
+            _debugTimer += Time.deltaTime;
+            if (_debugTimer > 0.1f)
+            {
+                _debugTimer = 0;
+                Debug.Log($"[Audio] RMS={RmsValue:F6} dB={DbValue:F1} vol={audioVolume:F3} pitchHz={PitchValue:F0} pitchNorm={audioPitch:F3}");
+            }
         }
     }
 

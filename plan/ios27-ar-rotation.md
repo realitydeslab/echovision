@@ -73,9 +73,16 @@ valid test when the interface pose and the physical pose agree, which is why bot
 
 ## Removing it
 
-Delete the three files. The component restores `useCustomMaterial = false` in `OnDestroy`, and
-the shader falls back to `_UnityDisplayTransform`, so nothing else needs unwinding. Leaving it
-in place after Unity ships a fix would over-rotate the background.
+Delete the three files, and drop the `CorrectedDisplayMatrix` branch in
+`DepthImageProcessor.OnCameraFrameEventReceived`. The component restores
+`useCustomMaterial = false` in `OnDestroy`, and the shader falls back to
+`_UnityDisplayTransform`, so nothing else needs unwinding.
+
+Note it is safe to leave in place: the transform is computed from the orientation, the texture
+size and the viewport, and never composed with AR Foundation's, so a fixed AR Foundation would
+not double-rotate it. An earlier version of this note claimed it would over-rotate; that was
+wrong. There is no iOS-version gate for the same reason -- the computed transform is correct on
+iOS 26 as well.
 
 ## Tooling that made this cheap
 

@@ -290,6 +290,16 @@ namespace HoloKit.iOS
 
         public void StartRecording()
         {
+            // StartRecording is public, so a caller can reach it without going
+            // through ToggleRecording. Starting twice would orphan both
+            // full-screen RenderTextures and leave a second CommitFrames
+            // coroutine running against the same writer.
+            if (IsRecording)
+            {
+                Debug.LogWarning("[HoloKitVideoRecorder] Already recording; ignoring StartRecording.");
+                return;
+            }
+
             //_microphoneAudioSource.loop = true;
             //while (!(Microphone.GetPosition(null) > 0))
             //{
@@ -324,36 +334,37 @@ namespace HoloKit.iOS
             int status = HoloKitVideoRecorder_StartRecording(path, width, height, sampleRate, channelCount);
             _timeQueue.Clear();
 
-            _useGpuPath = HoloKitVideoRecorder_IsGPUPathAvailable();
             HoloKitVideoRecorder_ResetGPUCounters();
-
-            // The IUnityInterfaces route is unavailable on iOS (UnityPluginLoad is
-            // never called for a statically linked plugin), so fall back to slots
-            // that Unity fills via Graphics.CopyTexture.
-            if (!_useGpuPath && bgraSupported)
-            {
-                _useGpuPath = TryAllocateGpuSlots(width, height);
-            }
+            _useGpuPath = bgraSupported && TryAllocateGpuSlots(width, height);
 
             Debug.Log($"[HoloKitVideoRecorder] GPU zero-copy path: {(_useGpuPath ? "enabled" : "unavailable, falling back to CPU readback")}");
 
             if (status != 0)
             {
+                // Everything allocated above has to go back, or a failed start
+                // leaks two full-screen RenderTextures and the GPU slots, and
+                // leaves 4K enhancement switched on with nothing to switch it off.
                 Debug.LogError("Cannot Start Video");
+                ReleaseGpuSlots();
+                EndVideoEnhancementOverride();
+                ReleaseRenderTextures();
+                return;
             }
-            else
-            {
-                IsRecording = true;
-            }
+
+            IsRecording = true;
 
             OnHoloKitRenderModeChanged(_holokitCameraManager.ScreenRenderMode);
 
             StartCoroutine(CommitFrames());
-
         }
 
         public void EndRecording()
         {
+            if (!IsRecording)
+            {
+                return;
+            }
+
             if (_recordMicrophone && _microphoneAudioSource != null)
             {
                 _microphoneAudioSource.Stop();
@@ -362,16 +373,20 @@ namespace HoloKit.iOS
 
             AsyncGPUReadback.WaitAllRequests();
 
-            if (_useGpuPath)
-            {
-                Debug.Log($"[HoloKitVideoRecorder] GPU frames submitted={HoloKitVideoRecorder_GetSubmittedFrameCount()} " +
-                          $"dropped={HoloKitVideoRecorder_GetDroppedFrameCount()}");
-            }
 
             // The slot path submits each frame k_SlotLatency frames late, so the
             // last few are still pending here. Flush them before the writer
             // finishes, or the tail of every recording is silently lost.
             FlushGpuSlots();
+
+            // Read the counters only after the flush: the tail slots are
+            // submitted there, so logging earlier always under-reported by up
+            // to k_SlotLatency frames.
+            if (_useGpuPath)
+            {
+                Debug.Log($"[HoloKitVideoRecorder] GPU frames submitted={HoloKitVideoRecorder_GetSubmittedFrameCount()} " +
+                          $"dropped={HoloKitVideoRecorder_GetDroppedFrameCount()}");
+            }
 
             HoloKitVideoRecorder_EndRecording();
             ReleaseGpuSlots();
@@ -380,10 +395,21 @@ namespace HoloKit.iOS
 
             OnHoloKitRenderModeChanged(_holokitCameraManager.ScreenRenderMode);
 
-            Destroy(_frameRt);
-            _frameRt = null;
-            Destroy(_cameraRt);
-            _cameraRt = null;
+            ReleaseRenderTextures();
+        }
+
+        void ReleaseRenderTextures()
+        {
+            if (_frameRt != null)
+            {
+                Destroy(_frameRt);
+                _frameRt = null;
+            }
+            if (_cameraRt != null)
+            {
+                Destroy(_cameraRt);
+                _cameraRt = null;
+            }
         }
 
         unsafe void OnSourceReadback(AsyncGPUReadbackRequest request)
@@ -533,7 +559,6 @@ namespace HoloKit.iOS
         /// </summary>
         bool TryAllocateGpuSlots(int width, int height)
         {
-#if !UNITY_EDITOR && UNITY_IOS
             if ((SystemInfo.copyTextureSupport & UnityEngine.Rendering.CopyTextureSupport.RTToTexture) == 0)
             {
                 Debug.LogWarning("[HoloKitVideoRecorder] CopyTexture RT->Texture unsupported; using CPU readback.");
@@ -568,9 +593,6 @@ namespace HoloKit.iOS
 
             Debug.Log($"[HoloKitVideoRecorder] GPU slots ready: {created} at {width}x{height}");
             return true;
-#else
-            return false;
-#endif
         }
 
         /// <summary>
@@ -579,7 +601,6 @@ namespace HoloKit.iOS
         /// </summary>
         void FlushGpuSlots()
         {
-#if !UNITY_EDITOR && UNITY_IOS
             if (_gpuSlots == null)
             {
                 return;
@@ -597,14 +618,26 @@ namespace HoloKit.iOS
                 HoloKitVideoRecorder_SubmitGPUSlot(slot, _gpuSlotTimes[slot]);
                 _gpuSlotPending[slot] = false;
             }
-#endif
         }
 
         void ReleaseGpuSlots()
         {
-#if !UNITY_EDITOR && UNITY_IOS
+            if (_gpuSlots != null)
+            {
+                // CreateExternalTexture returns ordinary Unity objects. Dropping
+                // the array frees nothing, so every record/stop cycle would leak
+                // one wrapper per slot. Destroy them before native frees the
+                // textures underneath them.
+                for (int i = 0; i < _gpuSlots.Length; i++)
+                {
+                    if (_gpuSlots[i] != null)
+                    {
+                        Destroy(_gpuSlots[i]);
+                    }
+                }
+            }
+
             HoloKitVideoRecorder_ReleaseGPUSlots();
-#endif
             _gpuSlots = null;
             _gpuSlotTimes = null;
             _gpuSlotPending = null;
@@ -613,7 +646,6 @@ namespace HoloKit.iOS
 
         void CommitFrameToGpuSlot()
         {
-#if !UNITY_EDITOR && UNITY_IOS
             int slot = _gpuSlotCursor;
             _gpuSlotCursor = (_gpuSlotCursor + 1) % _gpuSlots.Length;
 
@@ -635,7 +667,6 @@ namespace HoloKit.iOS
             Graphics.CopyTexture(_frameRt, _gpuSlots[slot]);
             _gpuSlotTimes[slot] = _timeQueue.Dequeue();
             _gpuSlotPending[slot] = true;
-#endif
         }
 
         void CommitFrame(Camera source)
@@ -697,16 +728,6 @@ namespace HoloKit.iOS
         //
         // MarshalAs(I1) matters: C++ bool is 1 byte, but the .NET default for bool is
         // the 4-byte Win32 BOOL, which would read three bytes of garbage.
-        [DllImport(DllName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool HoloKitVideoRecorder_IsGPUPathAvailable();
-
-        [DllImport(DllName)]
-        private static extern void HoloKitVideoRecorder_EnqueueGPUFrame(IntPtr texturePtr, double timestamp);
-
-        [DllImport(DllName)]
-        private static extern IntPtr HoloKitVideoRecorder_GetRenderEventFunc();
-
         [DllImport(DllName)]
         private static extern int HoloKitVideoRecorder_GetSubmittedFrameCount();
 
