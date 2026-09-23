@@ -3,12 +3,16 @@
 // SPDX-License-Identifier: MIT
 
 using UnityEngine;
-using UnityEngine.Audio;
+#if UNITY_IOS
+using HoloKit.iOS;
+#endif
 
 public class AudioProcessor : MonoBehaviour
 {
-    [SerializeField]  AudioSource audioSource;
-    public AudioSource AudioSource { get => audioSource; set => audioSource = value; }
+#if UNITY_IOS
+    [SerializeField] HoloKitMicrophoneCapture microphoneInput;
+    public HoloKitMicrophoneCapture MicrophoneInput => microphoneInput;
+#endif
 
     float audioVolume = 0;
     public float AudioVolume { get { return audioVolume; } }
@@ -32,8 +36,15 @@ public class AudioProcessor : MonoBehaviour
     float _debugTimer = 0;
     void Update()
     {
-        if (audioSource == null)
+#if UNITY_IOS
+        if (microphoneInput == null || !microphoneInput.IsReady)
+        {
+            audioVolume = audioPitch = 0;
             return;
+        }
+#else
+        return;
+#endif
 
         AnalyzeSound();
 
@@ -68,18 +79,11 @@ public class AudioProcessor : MonoBehaviour
     // Analysis adapted from https://stackoverflow.com/questions/53030560/read-microphone-decibels-and-pitch-frequency
     void AnalyzeSound()
     {
-        // Read raw clip data directly to avoid mixer group volume attenuation
-        if (audioSource.clip != null && audioSource.clip.channels > 0)
-        {
-            int clipPos = audioSource.timeSamples;
-            int startPos = clipPos - QSamples;
-            if (startPos < 0) startPos += audioSource.clip.samples;
-            audioSource.clip.GetData(_samples, startPos % audioSource.clip.samples);
-        }
-        else
-        {
-            audioSource.GetOutputData(_samples, 0);
-        }
+#if UNITY_IOS
+        microphoneInput.ReadLatestSamples(_samples);
+        microphoneInput.ReadSpectrum(_spectrum);
+        _fSample = microphoneInput.SampleRate;
+#endif
 
         int i;
         float sum = 0;
@@ -91,7 +95,6 @@ public class AudioProcessor : MonoBehaviour
         DbValue = 20 * Mathf.Log10(RmsValue / RefValue); // calculate dB
         if (DbValue < -160) DbValue = -160; // clamp it to -160dB min
                                             // get sound spectrum
-        audioSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
         float maxV = 0;
         var maxN = 0;
         for (i = 0; i < QSamples; i++)

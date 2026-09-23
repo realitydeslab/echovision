@@ -24,6 +24,7 @@ MonoBehaviour:
     m_path: Assets/Scenes/EchoVision.unity
   m_ScriptingDefines:
   - ECHOVISION_DEVICETEST
+  - HOLOKIT_RECORDER_TESTS
   m_PlayerSettingsYaml:
     m_Settings: []
   references:
