@@ -9,7 +9,7 @@
     "com.unity.visualeffectgraph": "17.4.0",
     "com.unity.xr.arfoundation": "6.4.3",
     "com.unity.xr.arkit": "6.4.3",
-    "io.holokit.unity-sdk": "https://github.com/holokit/holokit-unity-sdk.git",
+    "io.holokit.unity-sdk": "file:../../holokit-unity-sdk",
     "com.unity.modules.accessibility": "1.0.0",
     "com.unity.modules.adaptiveperformance": "1.0.0",
     "com.unity.modules.ai": "1.0.0",
@@ -44,5 +44,8 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
-  }
+  },
+  "testables": [
+    "io.holokit.unity-sdk"
+  ]
 }

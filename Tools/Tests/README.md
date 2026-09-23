@@ -1,12 +1,19 @@
 # Recovery checks
 
+Recorder stop, memory, and background regression probes live in the SDK. See the
+[SDK recorder regression guide](../../../holokit-unity-sdk/Tests/Recorder/README.md)
+for build defines and reusable device runners. EchoVision keeps only its scene
+and mask-sleep adapter in `Assets/Tests/EchoVisionRecorderTestAdapter.cs`.
+
 Use Unity CLI with Unity 6000.3.24f1. The shipping profile is `iOS`; the automatic device walker exists only in the `iOS Recovery Tests` development profile.
 
 ```sh
 unity test . --mode EditMode --output /tmp/echovision-editmode.xml --editor-version 6000.3.24f1 -- -buildTarget iOS
-python3 Tools/Tests/native_recorder.py /tmp/echovision-native-tests
+python3 ../holokit-unity-sdk/Tests/Recorder/Tools/native_recorder.py /tmp/echovision-native-tests
 unity build . --profile 'iOS Recovery Tests' --output-path Build_RecoveryTests --editor-version 6000.3.24f1 --allow-dirty-build
 ```
+
+For manual inspection of the recovery build, copy a one-shot `Documents/recorder-test-mode.txt` containing `manual` into the app container before launch. This suppresses the automatic orientation walker; the application stays under normal user control.
 
 Build/sign the exported Xcode project for a connected iPhone, install it, and launch with `xcrun devicectl device process launch --device <UDID> --terminate-existing --console org.realitydeslab.echovision`, redirecting console output to a file. The walker starts automatically and reports `[STATE] COMPLETE failures=0`. It requests four interface orientations, records five GPU movies, verifies rendered pose/4K state and exercises mode changes during recording. iPhone may reject upside-down portrait; check the requested/effective log rather than counting it as coverage.
 

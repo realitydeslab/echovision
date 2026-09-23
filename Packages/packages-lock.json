@@ -255,9 +255,9 @@
       "url": "https://packages.unity.com"
     },
     "io.holokit.unity-sdk": {
-      "version": "file:io.holokit.unity-sdk",
+      "version": "file:../../holokit-unity-sdk",
       "depth": 0,
-      "source": "embedded",
+      "source": "local",
       "dependencies": {
         "com.unity.xr.arfoundation": "6.4.3",
         "com.unity.xr.arkit": "6.4.3"
