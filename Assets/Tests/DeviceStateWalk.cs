@@ -17,6 +17,10 @@ public class DeviceStateWalk : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Install()
     {
+#if HOLOKIT_RECORDER_TESTS
+        if (HoloKit.Tests.RecorderStopProbe.Requested ||
+            HoloKit.Tests.RecorderStopProbe.RequestedMode == "manual") return;
+#endif
         Debug.Log("[STATE] START automatic recovery test profile");
         new GameObject(nameof(DeviceStateWalk)).AddComponent<DeviceStateWalk>();
     }
@@ -46,7 +50,7 @@ public class DeviceStateWalk : MonoBehaviour
         if (Time.unscaledTime >= audioLogTime)
         {
             audioLogTime = Time.unscaledTime + .25f;
-            Debug.Log($"[AUDIO-TRIGGER] volume={audioProcessor.AudioVolume:F4} pitch={audioProcessor.AudioPitch:F4} micPosition={Microphone.GetPosition(null)} analysisPosition={audioProcessor.AudioSource.timeSamples} recording={recorder.IsRecording} mode={manager.ScreenRenderMode}");
+            Debug.Log($"[AUDIO-TRIGGER] volume={audioProcessor.AudioVolume:F4} pitch={audioProcessor.AudioPitch:F4} micReady={audioProcessor.MicrophoneInput.IsReady} micRate={audioProcessor.MicrophoneInput.SampleRate} recording={recorder.IsRecording} mode={manager.ScreenRenderMode}");
         }
     }
 
@@ -108,6 +112,9 @@ public class DeviceStateWalk : MonoBehaviour
         Check(!recorder.IsFinishing, "writer finalized");
         Check(File.Exists(recorder.LastRecordingPath) && new FileInfo(recorder.LastRecordingPath).Length > 1024, "movie exists");
         Check(recorder.SubmittedFrames > 0, "video frames submitted");
+        Check(!recorder.AudioFailed, "recorded audio drained without loss");
+        Check(microphone.MicrophoneInput.IsReady && microphone.MicrophoneInput.ConsumerCount == 1,
+            "analysis microphone remains active after recording");
         Debug.Log($"[STATE] MOVIE frames={recorder.SubmittedFrames} dropped={recorder.DroppedFrames} path={recorder.LastRecordingPath}");
         yield return new WaitForSeconds(1);
     }
@@ -123,6 +130,9 @@ public class DeviceStateWalk : MonoBehaviour
         // Sample after TrackedPoseDriver and the compatibility callback rendered this frame.
         yield return new WaitForEndOfFrame();
         Debug.Log($"[STATE] {label} orientation={Screen.orientation} physical={Input.deviceOrientation} mode={manager.ScreenRenderMode} recording={recorder.IsRecording} gpu={recorder.UsesGpuPath} size={Screen.width}x{Screen.height} volume={FindFirstObjectByType<AudioProcessor>().AudioVolume:F4}");
+        Check(microphone.MicrophoneInput.IsReady &&
+            microphone.MicrophoneInput.ConsumerCount == (recorder.IsRecording ? 2 : 1),
+            "analysis and recorder hold independent microphone leases");
         var bg = cameraToTest.GetComponent<ARCameraBackground>();
         Debug.Log($"[BACKGROUND] matrix={bg.material.GetMatrix("_UnityDisplayTransform")} textureY={bg.material.GetTexture("_textureY")?.width}x{bg.material.GetTexture("_textureY")?.height}");
         if (sessions.Count > 0 && HoloKit_GetARCameraReference(sessions[0].nativePtr, (int)Screen.orientation,
@@ -134,6 +144,16 @@ public class DeviceStateWalk : MonoBehaviour
             var referencePose = flip * nativeView.inverse * flip;
             float angle = Quaternion.Angle(referencePose.rotation, cameraToTest.transform.localRotation);
             Check(angle < 2f, $"{label} rendered pose matches ARKit ({angle:F2} degrees)");
+            // The virtual camera must take ARKit's projection for the current capture format
+            // (4K changes the intrinsics), not keep the 1920x1440 field of view.
+            Matrix4x4 unityProjection = cameraToTest.projectionMatrix;
+            float Fov(float focal) => 2 * Mathf.Atan(1 / focal) * Mathf.Rad2Deg;
+            float unityH = Fov(unityProjection.m00), unityV = Fov(unityProjection.m11);
+            float nativeH = Fov(projection[0]), nativeV = Fov(projection[5]);
+            if (manager.ScreenRenderMode == ScreenRenderMode.Mono)
+                Check(Mathf.Abs(unityH - nativeH) < 0.5f && Mathf.Abs(unityV - nativeV) < 0.5f,
+                    $"{label} virtual camera FOV follows ARKit (unity {unityH:F2}x{unityV:F2}, native {nativeH:F2}x{nativeV:F2} deg)");
+            Debug.Log($"[FOV] {label} texture={display[6]}x{display[7]} mode={manager.ScreenRenderMode} unityH={unityH:F2} unityV={unityV:F2} nativeH={nativeH:F2} nativeV={nativeV:F2}");
             if (recorder.IsRecording)
             {
                 Check(recorder.UsesGpuPath, "GPU capture selected");
