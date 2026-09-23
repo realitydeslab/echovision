@@ -15,7 +15,9 @@ public class MicrophoneAPI : MonoBehaviour
     {
         if (microphoneInput != null)
         {
-            bool ready = microphoneInput.Acquire(this, MicrophoneProcessing.Environment);
+            // Same processing as the recorder (Default: iOS automatic gain, as with Unity's Microphone,
+            // which the sound-wave thresholds were tuned for).
+            bool ready = microphoneInput.Acquire(this, videoRecorder.EnvironmentProcessing);
             if (!ready && !microphoneInput.IsPreparing) Debug.LogError("[EchoVision] " + microphoneInput.LastError);
         }
         else Debug.LogError("[EchoVision] Assign the shared microphone input.");
