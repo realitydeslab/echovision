@@ -1200,7 +1200,9 @@ MonoBehaviour:
   m_Ipd: 0.064
   m_FarClipPlane: 50
   m_ShowAlignmentMarkerInStereoMode: 0
+  m_StereoBarItems: 27
   m_SupportedMonoScreenOrientations: 9
+  m_StereoFrameRate: 60
   m_HoloKitGeneration: 0
   m_iOSPhoneModelList: {fileID: 11400000, guid: 97e080f80a8ae49d78e255ae53b17e11,
     type: 2}

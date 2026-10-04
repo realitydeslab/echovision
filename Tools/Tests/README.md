@@ -15,7 +15,7 @@ unity build . --profile 'iOS Recovery Tests' --output-path Build_RecoveryTests -
 
 For manual inspection of the recovery build, copy a one-shot `Documents/recorder-test-mode.txt` containing `manual` into the app container before launch. This suppresses the automatic orientation walker; the application stays under normal user control.
 
-Build/sign the exported Xcode project for a connected iPhone, install it, and launch with `xcrun devicectl device process launch --device <UDID> --terminate-existing --console org.realitydeslab.echovision`, redirecting console output to a file. The walker starts automatically and reports `[STATE] COMPLETE failures=0`. It requests four interface orientations, records five GPU movies, verifies rendered pose/4K state and exercises mode changes during recording. iPhone may reject upside-down portrait; check the requested/effective log rather than counting it as coverage.
+Build/sign the exported Xcode project for a connected iPhone, install it, and launch with `xcrun devicectl device process launch --device <UDID> --terminate-existing --console org.realitydeslab.echovision`, redirecting console output to a file. The walker starts automatically and reports `[STATE] COMPLETE failures=0`. It requests four interface orientations, records six GPU movies (the last through the stereo bar's RECORD, which must include the microphone), verifies rendered pose/4K state, the 60 fps cap and the stereo bar, and exercises mode changes during recording. iPhone may reject upside-down portrait; check the requested/effective log rather than counting it as coverage.
 
 ```sh
 python3 Tools/Tests/device_artifacts.py /path/to/device.log /path/to/artifacts --device <UDID>

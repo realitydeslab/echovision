@@ -45,15 +45,31 @@ public class PowerSaverTests
         Set("animationTime", 2.01f); Call("UpdateAnimation");
         Assert.That(workload.activeSelf, Is.False);
         Assert.That(Application.targetFrameRate, Is.EqualTo(5));
+        var cover = root.GetComponentInChildren<Image>(true);
+        Assert.That(cover.raycastTarget, Is.True, "cover blocks taps while asleep");
         Call("ExitSleepMode");
         Assert.That(workload.activeSelf, Is.True);
         Assert.That(Application.targetFrameRate, Is.EqualTo(60));
+        Assert.That(cover.raycastTarget, Is.False, "cover lets taps through when awake");
     }
 
     [Test] public void WakeDuringFade_PreservesAwakeFrameRate()
     {
         Call("EnterSleepMode"); Call("ExitSleepMode");
         Assert.That(workload.activeSelf, Is.True);
+        Assert.That(Application.targetFrameRate, Is.EqualTo(60));
+    }
+
+    [Test] public void Asleep_UndoesExternalFrameRateChange()
+    {
+        Call("EnterSleepMode");
+        Set("animationTime", 2.01f); Call("UpdateAnimation");
+        // As HoloKitCameraManager does in Stereo when the thermal state changes.
+        Application.targetFrameRate = 40;
+        Set("idleOrientation", Input.deviceOrientation); Set("idleTime", 31f);
+        Call("Update");
+        Assert.That(Application.targetFrameRate, Is.EqualTo(5));
+        Call("ExitSleepMode");
         Assert.That(Application.targetFrameRate, Is.EqualTo(60));
     }
 

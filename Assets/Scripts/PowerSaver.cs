@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using HoloKit;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -29,6 +30,8 @@ public class PowerSaver : MonoBehaviour
     float animationTime = 0;
     float animationDirection = 0;
     int awakeFrameRate;
+    bool objectsAsleep;
+    const int SleepFrameRate = 5;
     
 
     void Update()
@@ -59,6 +62,11 @@ public class PowerSaver : MonoBehaviour
         }
 
         UpdateAnimation();
+
+        // HoloKitCameraManager re-applies the Stereo frame rate when the thermal state changes,
+        // which happens as the phone cools down during sleep.
+        if (objectsAsleep && Application.targetFrameRate != SleepFrameRate)
+            Application.targetFrameRate = SleepFrameRate;
     }
 
     void UpdateAnimation()
@@ -110,6 +118,12 @@ public class PowerSaver : MonoBehaviour
         // Restore rendering before resuming AR and fading the cover away.
         Application.targetFrameRate = awakeFrameRate;
         SetObjectListState(true);
+
+        // The thermal state may have changed while asleep. The setter re-applies the Stereo
+        // frame rate for the current state; it does nothing in Mono.
+        var cameraManager = FindFirstObjectByType<HoloKitCameraManager>();
+        if (cameraManager != null)
+            cameraManager.AdaptStereoFrameRateToThermalState = cameraManager.AdaptStereoFrameRateToThermalState;
     }
 
     void SetObjectListState(bool state)
@@ -118,7 +132,14 @@ public class PowerSaver : MonoBehaviour
         {
             go.SetActive(state);
         }
+        objectsAsleep = !state;
+        // Taps on the black cover must not reach the buttons below it, and the stereo bar
+        // draws above the cover, so it is hidden while asleep.
+        coverImage.raycastTarget = !state;
+        var cameraManager = FindFirstObjectByType<HoloKitCameraManager>();
+        if (cameraManager != null && cameraManager.StereoBar != null)
+            cameraManager.StereoBar.gameObject.SetActive(state && cameraManager.ScreenRenderMode == ScreenRenderMode.Stereo);
         // The ARSession in this list may restore its cached frame rate on disable.
-        if (!state) Application.targetFrameRate = 5;
+        if (!state) Application.targetFrameRate = SleepFrameRate;
     }
 }

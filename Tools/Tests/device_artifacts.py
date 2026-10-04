@@ -46,8 +46,8 @@ for i, (frames, dropped, path) in enumerate(re.findall(r"\[STATE\] MOVIE frames=
     movies.append(dict(file=destination.name, frames=int(frames), dropped=int(dropped),
                        width=video["width"], height=video["height"], video_duration=video["duration"],
                        audio_duration=audio["duration"], video_start=video["start_time"], audio_start=audio["start_time"], end_delta=delta, sample_rate=audio["sample_rate"], channels=audio["channels"]))
-if len(movies) != 5:
-    errors.append(f"Expected five movies, got {len(movies)}")
+if len(movies) != 6:
+    errors.append(f"Expected six movies, got {len(movies)}")
 for path in set(re.findall(r"\[STATE\] SCREENSHOT path=([^\r\n]+)", log)):
     name = pathlib.Path(path).name
     receive("Documents/" + name, args.output / name)

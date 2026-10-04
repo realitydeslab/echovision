@@ -84,6 +84,8 @@ public class DeviceStateWalk : MonoBehaviour
         manager.ScreenRenderMode = ScreenRenderMode.Stereo;
         yield return new WaitForSeconds(2);
         yield return Snapshot("stereo-idle");
+        Check(Application.targetFrameRate is > 0 and <= 60, $"stereo frame rate is at most 60 (target {Application.targetFrameRate})");
+        Check(manager.StereoBar != null && manager.StereoBar.isActiveAndEnabled && manager.StereoBar.HasControls, "stereo bar is shown in Stereo");
         microphone.StartRecording();
         yield return new WaitForSeconds(3);
         Check(recorder.IsRecording, "stereo recording remains active");
@@ -92,6 +94,7 @@ public class DeviceStateWalk : MonoBehaviour
         Screen.orientation = ScreenOrientation.Portrait;
         yield return new WaitForSeconds(2);
         yield return Snapshot("record-stereo-to-portrait");
+        Check(Application.targetFrameRate is > 0 and <= 60, $"mono frame rate is at most 60 (target {Application.targetFrameRate})");
         Screen.orientation = ScreenOrientation.LandscapeLeft;
         yield return new WaitForSeconds(2);
         yield return Snapshot("record-portrait-to-landscape");
@@ -100,6 +103,25 @@ public class DeviceStateWalk : MonoBehaviour
         Check(recorder.IsRecording, "recording survives mode and orientation changes");
         microphone.StopRecording();
         yield return FinishMovie();
+
+        // RECORD on the stereo bar takes its own start path, which drops the microphone when it
+        // thinks the permission is missing.
+        string barStart = null;
+        bool noPermission = false;
+        void Watch(string message, string stack, LogType type)
+        {
+            if (message.StartsWith("[Recorder] START")) barStart = message;
+            if (message.Contains("No microphone permission")) noPermission = true;
+        }
+        Application.logMessageReceived += Watch;
+        var toggle = typeof(HoloKit.UI.HoloKitStereoBar).GetMethod("ToggleRecording", BindingFlags.Instance | BindingFlags.NonPublic);
+        toggle.Invoke(manager.StereoBar, null);
+        yield return new WaitForSeconds(3);
+        toggle.Invoke(manager.StereoBar, null);
+        yield return FinishMovie();
+        Application.logMessageReceived -= Watch;
+        Check(!noPermission && barStart != null && barStart.Contains("sources=2"), $"stereo bar recording includes the microphone ({barStart})");
+
         manager.ScreenRenderMode = ScreenRenderMode.Mono;
         Screen.orientation = ScreenOrientation.AutoRotation;
         Debug.Log($"[STATE] COMPLETE failures={failures}");
@@ -129,7 +151,7 @@ public class DeviceStateWalk : MonoBehaviour
     {
         // Sample after TrackedPoseDriver and the compatibility callback rendered this frame.
         yield return new WaitForEndOfFrame();
-        Debug.Log($"[STATE] {label} orientation={Screen.orientation} physical={Input.deviceOrientation} mode={manager.ScreenRenderMode} recording={recorder.IsRecording} gpu={recorder.UsesGpuPath} size={Screen.width}x{Screen.height} volume={FindFirstObjectByType<AudioProcessor>().AudioVolume:F4}");
+        Debug.Log($"[STATE] {label} orientation={Screen.orientation} physical={Input.deviceOrientation} mode={manager.ScreenRenderMode} recording={recorder.IsRecording} fps={Application.targetFrameRate} gpu={recorder.UsesGpuPath} size={Screen.width}x{Screen.height} volume={FindFirstObjectByType<AudioProcessor>().AudioVolume:F4}");
         Check(microphone.MicrophoneInput.IsReady &&
             microphone.MicrophoneInput.ConsumerCount == (recorder.IsRecording ? 2 : 1),
             "analysis and recorder hold independent microphone leases");
