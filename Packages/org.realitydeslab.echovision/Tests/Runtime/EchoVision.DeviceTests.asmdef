@@ -1,0 +1,18 @@
+{
+  "name": "EchoVision.DeviceTests",
+  "references": [
+    "EchoVision",
+    "HoloKit",
+    "HoloKit.Recorder.Regression",
+    "Unity.XR.ARFoundation",
+    "Unity.XR.ARSubsystems"
+  ],
+  "includePlatforms": [
+    "Editor",
+    "iOS"
+  ],
+  "defineConstraints": [
+    "ECHOVISION_DEVICETEST"
+  ],
+  "autoReferenced": false
+}

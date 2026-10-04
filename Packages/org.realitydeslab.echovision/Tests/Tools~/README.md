@@ -1,9 +1,10 @@
 # Recovery checks
 
 Recorder stop, memory, and background regression probes live in the SDK. See the
-[SDK recorder regression guide](../../../holokit-unity-sdk/Tests/Recorder/README.md)
+[SDK recorder regression guide](../../../../../holokit-unity-sdk/Tests/Recorder/README.md)
 for build defines and reusable device runners. EchoVision keeps only its scene
-and mask-sleep adapter in `Assets/Tests/EchoVisionRecorderTestAdapter.cs`.
+and mask-sleep adapter in `Tests/Runtime/EchoVisionRecorderTestAdapter.cs` of the
+`org.realitydeslab.echovision` package. Run the commands below from the project root.
 
 Use Unity CLI with Unity 6000.3.24f1. The shipping profile is `iOS`; the automatic device walker exists only in the `iOS Recovery Tests` development profile.
 
@@ -18,7 +19,7 @@ For manual inspection of the recovery build, copy a one-shot `Documents/recorder
 Build/sign the exported Xcode project for a connected iPhone, install it, and launch with `xcrun devicectl device process launch --device <UDID> --terminate-existing --console org.realitydeslab.echovision`, redirecting console output to a file. The walker starts automatically and reports `[STATE] COMPLETE failures=0`. It requests four interface orientations, records six GPU movies (the last through the stereo bar's RECORD, which must include the microphone), verifies rendered pose/4K state, the 60 fps cap and the stereo bar, and exercises mode changes during recording. iPhone may reject upside-down portrait; check the requested/effective log rather than counting it as coverage.
 
 ```sh
-python3 Tools/Tests/device_artifacts.py /path/to/device.log /path/to/artifacts --device <UDID>
+python3 "Packages/org.realitydeslab.echovision/Tests/Tools~/device_artifacts.py" /path/to/device.log /path/to/artifacts --device <UDID>
 ```
 
 This exports movies/screenshots, decodes every video frame, compares decoded/submitted frame counts and checks audio/video end times. Visual registration still requires inspection. For an optional persistent LiDAR mesh overlay, copy `AlignmentProbe/Assets/` into the project `Assets/` for the test build and remove those copied assets before shipping.

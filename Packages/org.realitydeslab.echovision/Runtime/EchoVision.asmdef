@@ -1,0 +1,12 @@
+{
+  "name": "EchoVision",
+  "references": [
+    "HoloKit",
+    "Unity.XR.ARFoundation",
+    "Unity.XR.ARSubsystems",
+    "Unity.InputSystem",
+    "Unity.VisualEffectGraph.Runtime",
+    "UnityEngine.UI"
+  ],
+  "autoReferenced": true
+}

@@ -13,10 +13,10 @@ public class MeshGpuPackingTests
     public void GpuPacking_RespectsStreamsTransformsAndDestinationBounds(bool separateStreams)
     {
         Assert.That(SystemInfo.supportsComputeShaders, Is.True, "This check must run on a GPU");
-        var shader = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/VFX/MeshPointCache.compute");
+        var shader = AssetDatabase.LoadAssetAtPath<ComputeShader>("Packages/org.realitydeslab.echovision/VFX/MeshPointCache.compute");
         Assert.That(shader, Is.Not.Null);
         var root = new GameObject("GPU packing test"); root.SetActive(false);
-        var component = root.AddComponent(Type.GetType("MeshVFX, Assembly-CSharp", true));
+        var component = root.AddComponent(Type.GetType("MeshVFX, EchoVision", true));
         var type = component.GetType();
         const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
         var mesh = new Mesh();

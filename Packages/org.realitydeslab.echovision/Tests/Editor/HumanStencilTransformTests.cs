@@ -15,7 +15,7 @@ public class HumanStencilTransformTests
         Assert.That(shader, Is.Not.Null);
         var material = new Material(shader);
         background.customMaterial = material; background.useCustomMaterial = true;
-        var depth = root.AddComponent(Type.GetType("DepthImageProcessor, Assembly-CSharp", true));
+        var depth = root.AddComponent(Type.GetType("DepthImageProcessor, EchoVision", true));
         var type = depth.GetType();
         const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
         type.GetField("background",flags).SetValue(depth,background);

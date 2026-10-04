@@ -264,6 +264,19 @@
       },
       "hash": "7ef246317890501b5f1e3d16aed87e11d279c948"
     },
+    "org.realitydeslab.echovision": {
+      "version": "file:org.realitydeslab.echovision",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "io.holokit.unity-sdk": "0.6.0",
+        "com.unity.xr.arfoundation": "6.4.3",
+        "com.unity.inputsystem": "1.20.0",
+        "com.unity.render-pipelines.universal": "17.3.0",
+        "com.unity.visualeffectgraph": "17.3.0",
+        "com.unity.ugui": "2.0.0"
+      }
+    },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
       "depth": 0,

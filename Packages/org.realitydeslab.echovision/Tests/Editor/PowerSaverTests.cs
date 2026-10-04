@@ -20,7 +20,7 @@ public class PowerSaverTests
         previousFrameRate = Application.targetFrameRate;
         Application.targetFrameRate = 60;
         root = new GameObject("Sleep test"); root.SetActive(false);
-        saver = root.AddComponent(Type.GetType("PowerSaver, Assembly-CSharp", true));
+        saver = root.AddComponent(Type.GetType("PowerSaver, EchoVision", true));
         workload = new GameObject("AR workload");
         var cover = new GameObject("Cover", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         cover.transform.SetParent(root.transform);
