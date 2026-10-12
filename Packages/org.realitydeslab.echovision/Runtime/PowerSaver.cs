@@ -30,6 +30,7 @@ public class PowerSaver : MonoBehaviour
 
 
     bool sleepMode = false;
+    public bool IsAsleep => sleepMode;
     float idleTime = 0;
     float animationDuration = 2;
     float animationTime = 0;
