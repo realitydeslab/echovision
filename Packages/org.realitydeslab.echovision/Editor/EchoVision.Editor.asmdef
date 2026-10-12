@@ -1,0 +1,7 @@
+{
+  "name": "EchoVision.Editor",
+  "references": [],
+  "includePlatforms": [
+    "Editor"
+  ]
+}
