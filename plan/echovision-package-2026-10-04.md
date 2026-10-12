@@ -36,7 +36,16 @@ Stay in the project (Unity project configuration, not app content):
       iOS Recovery Tests export: EchoVision.DeviceTests linked; DeviceStateWalk.Install and
       EchoVisionRecorderTestAdapter.Install registered in RuntimeInitializeOnLoads.json
 - [x] P7 Report
-- [ ] P8 Device walker on a phone (no iPhone connected on 2026-10-04)
+- [x] P8 Committed: c4b7a6b (other session's SDK 7ef2463 work, old paths) + 5a3e572 (this refactor)
+- [x] P9 Device, Holo iPhone 15 A (iOS 27), 2026-10-04 16:31, build from 5a3e572 content:
+      walker `[STATE] COMPLETE failures=0`, 88 PASS (same as the pre-refactor run 3);
+      device_artifacts.py: 6 movies, 0 dropped, all with a 48 kHz mic track, errors [];
+      A/V end delta max 0.161 s (gate 0.2 s; run 3 max 0.037 s).
+      Hand use after the walker: sound-wave EMIT Mono/Stereo x recording off/on = 11/8/14/14.
+      Artifacts: Build_RecoveryArtifacts/pkg-refactor-2026-10-04/ (ignored).
+- [x] P10 16:42 Release 0.3.0 (from 5a3e572) installed on iPhone 15 A; launch: Build type 'Release',
+      no walker, no exceptions, microphone permission granted. The walker capture's 600 s timeout
+      SIGTERMed the test app at 16:41; it had been in the background since 16:34 (no one using it).
 
 ## Risks
 - IL2CPP strips an assembly no scene references -> `AlwaysLinkAssembly` on the device-test assembly.
@@ -48,4 +57,4 @@ Stay in the project (Unity project configuration, not app content):
 (none yet)
 
 ## Status
-Done except the on-device walker. Nothing committed.
+Done. iPhone 15 A runs the Release build from 5a3e572.

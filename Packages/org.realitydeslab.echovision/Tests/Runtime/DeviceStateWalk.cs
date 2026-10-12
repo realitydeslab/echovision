@@ -18,6 +18,11 @@ public class DeviceStateWalk : MonoBehaviour
     static void Install()
     {
 #if HOLOKIT_RECORDER_TESTS
+        if (HoloKit.Tests.RecorderStopProbe.RequestedMode.StartsWith("listen"))
+        {
+            new GameObject(nameof(ListenProbe)).AddComponent<ListenProbe>().Mode = HoloKit.Tests.RecorderStopProbe.RequestedMode;
+            return;
+        }
         if (HoloKit.Tests.RecorderStopProbe.Requested ||
             HoloKit.Tests.RecorderStopProbe.RequestedMode == "manual") return;
 #endif
@@ -32,6 +37,9 @@ public class DeviceStateWalk : MonoBehaviour
     readonly float[] view = new float[16], projection = new float[16], display = new float[8];
     readonly List<XRSessionSubsystem> sessions = new();
     int failures;
+    int take = -1;
+    HoloKit.UI.HoloKitDefaultUICanvas ui;
+    float takeStart;
     AudioProcessor audioProcessor;
     SoundWaveEmitter emitter;
     FieldInfo waveIndex;
@@ -61,13 +69,19 @@ public class DeviceStateWalk : MonoBehaviour
         recorder = FindFirstObjectByType<HoloKitVideoRecorder>();
         microphone = FindFirstObjectByType<MicrophoneAPI>();
         cameraToTest = recorder.GetComponent<Camera>();
+        RecordingMarker.Attach(cameraToTest);
+        ui = FindFirstObjectByType<HoloKit.UI.HoloKitDefaultUICanvas>();
+        Check(!recorder.CaptureCameraIn4K && QualityLabel() == "HD60", $"records HD60 by default ({QualityLabel()})");
         audioProcessor = FindFirstObjectByType<AudioProcessor>();
         emitter = FindFirstObjectByType<SoundWaveEmitter>();
         waveIndex = typeof(SoundWaveEmitter).GetField("nextEmitIndex", BindingFlags.Instance | BindingFlags.NonPublic);
         typeof(AudioProcessor).GetField("_logAnalysis", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(audioProcessor, true);
         SubsystemManager.GetSubsystems(sessions);
-        foreach (var orientation in new[] { ScreenOrientation.Portrait, ScreenOrientation.LandscapeLeft,
-            ScreenOrientation.PortraitUpsideDown, ScreenOrientation.LandscapeRight })
+        // EchoVision allows Portrait and LandscapeLeft only: upside down is the sleep gesture, and
+        // forcing an orientation the app does not declare can make iOS terminate it.
+        Check(!Screen.autorotateToPortraitUpsideDown && !Screen.autorotateToLandscapeRight,
+            "upside-down orientations are not allowed");
+        foreach (var orientation in new[] { ScreenOrientation.Portrait, ScreenOrientation.LandscapeLeft })
         {
             manager.ScreenRenderMode = ScreenRenderMode.Mono;
             Screen.orientation = orientation;
@@ -75,6 +89,7 @@ public class DeviceStateWalk : MonoBehaviour
             Debug.Log($"[STATE] requested={orientation} effective={Screen.orientation}");
             yield return Snapshot("idle");
             microphone.StartRecording();
+            StartTake();
             yield return new WaitForSeconds(3);
             Check(recorder.IsRecording, "recording remains active");
             yield return Snapshot("record");
@@ -85,11 +100,16 @@ public class DeviceStateWalk : MonoBehaviour
         yield return new WaitForSeconds(2);
         yield return Snapshot("stereo-idle");
         Check(Application.targetFrameRate is > 0 and <= 60, $"stereo frame rate is at most 60 (target {Application.targetFrameRate})");
-        Check(manager.StereoBar != null && manager.StereoBar.isActiveAndEnabled && manager.StereoBar.HasControls, "stereo bar is shown in Stereo");
+        // EchoVision keeps its own on-screen buttons in Stereo instead of the SDK's stereo bar.
+        Check(manager.StereoBar == null || !manager.StereoBar.isActiveAndEnabled, "no SDK stereo bar in Stereo");
+        Check(ui != null && ui.GetComponent<Canvas>().enabled && ui.RenderModeButtonText.text == "Mono",
+            $"Mono button shown in Stereo ({ui?.RenderModeButtonText.text})");
         microphone.StartRecording();
+        StartTake();
         yield return new WaitForSeconds(3);
         Check(recorder.IsRecording, "stereo recording remains active");
         yield return Snapshot("stereo-record");
+        Check(manager.ScreenRenderMode == ScreenRenderMode.Stereo, "still Stereo while recording");
         manager.ScreenRenderMode = ScreenRenderMode.Mono;
         Screen.orientation = ScreenOrientation.Portrait;
         yield return new WaitForSeconds(2);
@@ -104,8 +124,7 @@ public class DeviceStateWalk : MonoBehaviour
         microphone.StopRecording();
         yield return FinishMovie();
 
-        // RECORD on the stereo bar takes its own start path, which drops the microphone when it
-        // thinks the permission is missing.
+        // The on-screen REC button in Stereo, as a person would press it.
         string barStart = null;
         bool noPermission = false;
         void Watch(string message, string stack, LogType type)
@@ -114,16 +133,27 @@ public class DeviceStateWalk : MonoBehaviour
             if (message.Contains("No microphone permission")) noPermission = true;
         }
         Application.logMessageReceived += Watch;
-        var toggle = typeof(HoloKit.UI.HoloKitStereoBar).GetMethod("ToggleRecording", BindingFlags.Instance | BindingFlags.NonPublic);
-        toggle.Invoke(manager.StereoBar, null);
-        yield return new WaitForSeconds(3);
-        toggle.Invoke(manager.StereoBar, null);
+        // This take also covers the quality button: 4K30 for one take, then back to HD60.
+        ui.ToggleRecording4K();
+        Check(recorder.CaptureCameraIn4K && QualityLabel() == "4K30", $"quality button selects 4K30 ({QualityLabel()})");
+        var recordButton = ui.RecordButtonText.GetComponentInParent<UnityEngine.UI.Button>();
+        recordButton.onClick.Invoke();
+        StartTake();
+        yield return new WaitForSeconds(1.5f);
+        yield return Snapshot("stereo-button-4k");
+        yield return new WaitForSeconds(1.25f);
+        recordButton.onClick.Invoke();
         yield return FinishMovie();
         Application.logMessageReceived -= Watch;
-        Check(!noPermission && barStart != null && barStart.Contains("sources=2"), $"stereo bar recording includes the microphone ({barStart})");
+        Check(!noPermission && barStart != null && barStart.Contains("sources=2"), $"REC button recording in Stereo includes the microphone ({barStart})");
+        ui.ToggleRecording4K();
+        Check(!recorder.CaptureCameraIn4K && QualityLabel() == "HD60", $"quality button back to HD60 ({QualityLabel()})");
 
         manager.ScreenRenderMode = ScreenRenderMode.Mono;
         Screen.orientation = ScreenOrientation.AutoRotation;
+        yield return null;
+        Check(!Screen.autorotateToPortraitUpsideDown && !Screen.autorotateToLandscapeRight,
+            "Mono autorotation still excludes upside-down orientations");
         Debug.Log($"[STATE] COMPLETE failures={failures}");
     }
 
@@ -141,6 +171,20 @@ public class DeviceStateWalk : MonoBehaviour
         yield return new WaitForSeconds(1);
     }
 
+    // The host runner plays a spoken phrase on each cue; device_artifacts.py looks for it in the
+    // movie's microphone track and checks the orientation marker at every TAKE-FRAME time.
+    void StartTake()
+    {
+        take++;
+        takeStart = Time.realtimeSinceStartup;
+        Debug.Log($"[STATE] VOICE-CUE take={take}");
+    }
+
+    string QualityLabel() => ui.RecordIn4KButton.GetComponentInChildren<UnityEngine.UI.Text>().text;
+
+    void LogTakeFrame(string label) =>
+        Debug.Log($"[STATE] TAKE-FRAME take={take} t={Time.realtimeSinceStartup - takeStart:F2} label={label} orientation={Screen.orientation} mode={manager.ScreenRenderMode}");
+
     void Check(bool pass, string assertion)
     {
         if (!pass) failures++;
@@ -151,6 +195,7 @@ public class DeviceStateWalk : MonoBehaviour
     {
         // Sample after TrackedPoseDriver and the compatibility callback rendered this frame.
         yield return new WaitForEndOfFrame();
+        if (recorder.IsRecording) LogTakeFrame(label);
         Debug.Log($"[STATE] {label} orientation={Screen.orientation} physical={Input.deviceOrientation} mode={manager.ScreenRenderMode} recording={recorder.IsRecording} fps={Application.targetFrameRate} gpu={recorder.UsesGpuPath} size={Screen.width}x{Screen.height} volume={FindFirstObjectByType<AudioProcessor>().AudioVolume:F4}");
         Check(microphone.MicrophoneInput.IsReady &&
             microphone.MicrophoneInput.ConsumerCount == (recorder.IsRecording ? 2 : 1),
@@ -179,7 +224,9 @@ public class DeviceStateWalk : MonoBehaviour
             if (recorder.IsRecording)
             {
                 Check(recorder.UsesGpuPath, "GPU capture selected");
-                Check(display[6] == 3840 && display[7] == 2160, "4K camera input active");
+                bool fourK = recorder.CaptureCameraIn4K;
+                Check(fourK ? display[6] == 3840 && display[7] == 2160 : display[6] == 1920 && display[7] == 1440,
+                    $"{(fourK ? "4K" : "HD")} camera input while recording ({display[6]}x{display[7]})");
             }
             Debug.Log($"[REFERENCE] {label} poseErrorDegrees={angle:F2} nativeRotation={referencePose.rotation.eulerAngles} unityRotation={cameraToTest.transform.localEulerAngles} texture={display[6]}x{display[7]} display={string.Join(",",display)}");
         }
