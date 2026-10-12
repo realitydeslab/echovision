@@ -1908,7 +1908,7 @@ MonoBehaviour:
   _environmentProcessing: 2
   _gameGain: 1
   _microphoneGain: 1
-  _recordIn4K: 1
+  _recordIn4K: 0
 --- !u!114 &1418006797
 MonoBehaviour:
   m_ObjectHideFlags: 0
