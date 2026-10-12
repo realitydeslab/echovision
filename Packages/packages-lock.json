@@ -255,7 +255,7 @@
       "url": "https://packages.unity.com"
     },
     "io.holokit.unity-sdk": {
-      "version": "git+file:///Users/amber/Projects/HoloKit/HoloKit2/holokit-unity-sdk#5a16342dc11f479b2aaf418a4826cf3ac7c8bd91",
+      "version": "https://github.com/holokit/holokit-unity-sdk.git#5a16342dc11f479b2aaf418a4826cf3ac7c8bd91",
       "depth": 0,
       "source": "git",
       "dependencies": {
