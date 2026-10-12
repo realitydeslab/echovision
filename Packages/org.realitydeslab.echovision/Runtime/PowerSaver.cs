@@ -1,16 +1,21 @@
+using System;
 using System.Collections.Generic;
 using HoloKit;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class PowerSaver : MonoBehaviour
 {
+    // Turning the phone fully upside down - gravity pointing up the shown picture, e.g. the headset
+    // flipped over - is the gesture that puts EchoVision to sleep, so the app never rotates to
+    // an upside-down orientation. Judged by the direction of gravity, not the OS orientation.
     [SerializeField]
-    DeviceOrientation idleOrientation = DeviceOrientation.LandscapeRight;
+    float upsideDownWithinDegrees = 45;
 
     [SerializeField]
-    float secondToEnterSleepMode = 30;
+    float secondToEnterSleepMode = 5;
 
     [SerializeField]
     float secondToExitSleepMode = 2;
@@ -32,11 +37,12 @@ public class PowerSaver : MonoBehaviour
     int awakeFrameRate;
     bool objectsAsleep;
     const int SleepFrameRate = 5;
+    Func<Vector3> readScreenGravity = ReadScreenGravity;
     
 
     void Update()
     {
-        if (Input.deviceOrientation == idleOrientation)
+        if (IsUpsideDown(readScreenGravity()))
         {
             idleTime += Time.deltaTime;
             if(idleTime > secondToEnterSleepMode)
@@ -67,6 +73,35 @@ public class PowerSaver : MonoBehaviour
         // which happens as the phone cools down during sleep.
         if (objectsAsleep && Application.targetFrameRate != SleepFrameRate)
             Application.targetFrameRate = SleepFrameRate;
+    }
+
+    bool IsUpsideDown(Vector3 screenGravity) =>
+        screenGravity.sqrMagnitude > .25f && Vector3.Angle(screenGravity, Vector3.up) < upsideDownWithinDegrees;
+
+    // Gravity in screen space (x to the right of the shown picture, y up it), from CoreMotion's
+    // gravity, or the accelerometer where there is none. Zero without a sensor (the Editor).
+    static Vector3 ReadScreenGravity()
+    {
+        Vector3 gravity;
+        if (GravitySensor.current is { } sensor)
+        {
+            if (!sensor.enabled) InputSystem.EnableDevice(sensor);
+            gravity = sensor.gravity.ReadValue();
+        }
+        else if (Accelerometer.current is { } accelerometer)
+        {
+            if (!accelerometer.enabled) InputSystem.EnableDevice(accelerometer);
+            gravity = accelerometer.acceleration.ReadValue();
+        }
+        else return Vector3.zero;
+        if (InputSystem.settings.compensateForScreenOrientation) return gravity;
+        return Screen.orientation switch
+        {
+            ScreenOrientation.LandscapeLeft => new Vector3(-gravity.y, gravity.x, gravity.z),
+            ScreenOrientation.LandscapeRight => new Vector3(gravity.y, -gravity.x, gravity.z),
+            ScreenOrientation.PortraitUpsideDown => new Vector3(-gravity.x, -gravity.y, gravity.z),
+            _ => gravity,
+        };
     }
 
     void UpdateAnimation()

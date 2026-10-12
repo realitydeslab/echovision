@@ -2754,7 +2754,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   idleOrientation: 4
-  secondToEnterSleepMode: 30
+  secondToEnterSleepMode: 5
   secondToExitSleepMode: 2
   objectListToPutInSleepMode:
   - {fileID: 1418006793}
