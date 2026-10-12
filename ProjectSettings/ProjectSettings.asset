@@ -176,8 +176,8 @@ PlayerSettings:
     iPhone: org.realitydeslab.echovision
   buildNumber:
     Standalone: 0
-    VisionOS: 4
-    iPhone: 4
+    VisionOS: 5
+    iPhone: 5
     tvOS: 0
   overrideDefaultApplicationIdentifier: 1
   AndroidBundleVersionCode: 1
@@ -598,9 +598,13 @@ PlayerSettings:
   enableInternalProfiler: 0
   logObjCUncaughtExceptions: 1
   enableCrashReportAPI: 0
-  cameraUsageDescription: EchoVision uses the camera to see the room around you, so your sound waves appear on its walls and objects, and to record videos of what you see.
+  cameraUsageDescription: EchoVision uses the camera to see the room around you,
+    so your sound waves appear on its walls and objects, and to record videos of
+    what you see.
   locationUsageDescription: Used for AR
-  microphoneUsageDescription: EchoVision listens to your voice and the sounds around you to draw them as echoes in the room, and records sound with your videos. Sound is analysed on your device.
+  microphoneUsageDescription: EchoVision listens to your voice and the sounds around
+    you to draw them as echoes in the room, and records sound with your videos. Sound
+    is analysed on your device.
   bluetoothUsageDescription: 
   macOSTargetOSVersion: 12.0
   switchNMETAOverride: 
