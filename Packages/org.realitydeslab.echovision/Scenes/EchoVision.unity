@@ -1905,7 +1905,7 @@ MonoBehaviour:
   _microphoneInput: {fileID: 1225988127}
   _gameAudioListener: {fileID: 0}
   _includeMicrophone: 1
-  _environmentProcessing: 2
+  _environmentProcessing: 3
   _gameGain: 1
   _microphoneGain: 1
   _recordIn4K: 0

@@ -15,8 +15,8 @@ public class MicrophoneAPI : MonoBehaviour
     {
         if (microphoneInput != null)
         {
-            // Same processing as the recorder (Default: iOS automatic gain, as with Unity's Microphone,
-            // which the sound-wave thresholds were tuned for).
+            // Same processing as the recorder: Voice (automatic gain), so speech reaches the sound-wave
+            // threshold. Under Default, speech 5 cm away read about -47 dBFS and only taps emitted waves.
             bool ready = microphoneInput.Acquire(this, videoRecorder.EnvironmentProcessing);
             if (!ready && !microphoneInput.IsPreparing) Debug.LogError("[EchoVision] " + microphoneInput.LastError);
         }

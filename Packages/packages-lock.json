@@ -255,14 +255,14 @@
       "url": "https://packages.unity.com"
     },
     "io.holokit.unity-sdk": {
-      "version": "git+file:///Users/amber/Projects/HoloKit/HoloKit2/holokit-unity-sdk#b7891440298309d457c745781e6afffaa3f700da",
+      "version": "git+file:///Users/amber/Projects/HoloKit/HoloKit2/holokit-unity-sdk#5a16342dc11f479b2aaf418a4826cf3ac7c8bd91",
       "depth": 0,
       "source": "git",
       "dependencies": {
         "com.unity.xr.arfoundation": "6.4.3",
         "com.unity.xr.arkit": "6.4.3"
       },
-      "hash": "b7891440298309d457c745781e6afffaa3f700da"
+      "hash": "5a16342dc11f479b2aaf418a4826cf3ac7c8bd91"
     },
     "org.realitydeslab.echovision": {
       "version": "file:org.realitydeslab.echovision",
