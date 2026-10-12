@@ -1,7 +1,7 @@
 {
   "name": "org.realitydeslab.echovision",
   "displayName": "EchoVision",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "unity": "6000.3",
   "description": "EchoVision is a mixed reality art experience simulating bat echolocation: users' voices are visually represented in the surrounding environment. Built on the HoloKit Unity SDK for iPhones with a LiDAR camera (Mono and HoloKit Stereo) and for Apple Vision Pro.\n\nContains the app's scripts, scenes, VFX, materials, audio mixer and tests.",
   "author": {
