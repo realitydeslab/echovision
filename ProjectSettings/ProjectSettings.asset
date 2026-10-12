@@ -176,8 +176,8 @@ PlayerSettings:
     iPhone: org.realitydeslab.echovision
   buildNumber:
     Standalone: 0
-    VisionOS: 2
-    iPhone: 2
+    VisionOS: 3
+    iPhone: 3
     tvOS: 0
   overrideDefaultApplicationIdentifier: 1
   AndroidBundleVersionCode: 1
