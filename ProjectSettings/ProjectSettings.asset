@@ -598,9 +598,9 @@ PlayerSettings:
   enableInternalProfiler: 0
   logObjCUncaughtExceptions: 1
   enableCrashReportAPI: 0
-  cameraUsageDescription: Used for AR
+  cameraUsageDescription: EchoVision uses the camera to see the room around you, so your sound waves appear on its walls and objects, and to record videos of what you see.
   locationUsageDescription: Used for AR
-  microphoneUsageDescription: Used for AR
+  microphoneUsageDescription: EchoVision listens to your voice and the sounds around you to draw them as echoes in the room, and records sound with your videos. Sound is analysed on your device.
   bluetoothUsageDescription: 
   macOSTargetOSVersion: 12.0
   switchNMETAOverride: 
